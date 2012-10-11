@@ -1,4 +1,5 @@
 #Eclipse IDE files
+*.settings
 *.classpath
 *.project
 *.classpath
