@@ -1,0 +1,9 @@
+package ar.sessions.utils;
+
+public enum SessionStates {
+	WAITING_CONNECTION,
+	WAITING_SERVER_TO_READ,
+	WAITING_SERVER_TO_WRITE,
+	WAITING_CLIENT_TO_READ,
+	WAITING_CLIENT_TO_WRITE
+}
