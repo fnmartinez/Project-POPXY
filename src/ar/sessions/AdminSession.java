@@ -39,7 +39,8 @@ public class AdminSession implements Session {
 		this.adminChannel = ((ServerSocketChannel) key.channel()).accept();
 		adminChannel.configureBlocking(false); 
         
-		sendWellcomeMsg();
+		writeStringIntoBuffer(answerBuf, WELLCOME_MSG);
+		
 		this.key = adminChannel.register(this.selector, SelectionKey.OP_WRITE, this);
 	}
 
@@ -62,12 +63,6 @@ public class AdminSession implements Session {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	private void sendWellcomeMsg() {	
-		for(int i=0; i < WELLCOME_MSG.length();i++){
-			answerBuf.putChar(WELLCOME_MSG.charAt(i));
-		}		
 	}
 	
 	private void writeStringIntoBuffer(ByteBuffer buf, String msg){
@@ -95,10 +90,8 @@ public class AdminSession implements Session {
         	
         	HeadCommands headCommand = ConfigurationProtocolParser.parseHeadCommand(commandBuf);
         	
-        	if(headCommand == HeadCommands.INVALID_COMMAND){        		
-        		for(int i=0; i < INV_COM_MSG.length();i++){
-        			answerBuf.putChar(INV_COM_MSG.charAt(i));
-        		}
+        	if(headCommand == HeadCommands.INVALID_COMMAND){ 
+        		writeStringIntoBuffer(answerBuf, INV_COM_MSG);
         		this.key.interestOps(SelectionKey.OP_WRITE);
         		return;
         	}
