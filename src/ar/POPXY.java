@@ -70,7 +70,7 @@ public class POPXY {
 						new AdminSession(key);
 					} else if (((ServerSocketChannel)key.channel()).socket().getLocalPort() == welcomeSocketPort) {
 						//TODO: create client session
-						new ClientSession(key, selector);
+						//new ClientSession(key, selector, this);
 					} else {
 						throw new UnexpectedException("ouch!");
 					}

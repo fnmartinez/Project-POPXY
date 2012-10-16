@@ -56,7 +56,7 @@ public class AdminSession implements Session {
 			this.key = adminChannel.register(this.selector, SelectionKey.OP_READ, this);
 			
 		} catch (ClosedChannelException e) {
-			// TODO Auto-generated catch block
+			// TODO Se cerro la conexion antes de q le pueda responder!!!
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -69,9 +69,14 @@ public class AdminSession implements Session {
 			answerBuf.putChar(WELLCOME_MSG.charAt(i));
 		}		
 	}
+	
+	private void writeStringIntoBuffer(ByteBuffer buf, String msg){
+		for(int i=0; i < msg.length();i++){
+			buf.putChar(msg.charAt(i));
+		}	
+	}
 
 	public void handleRead() {
-		// Admin socket channel has pending data
         long bytesRead = 0;
         commandBuf.clear();
         parametersBuf.clear();
