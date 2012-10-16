@@ -74,10 +74,10 @@ public class POPXY {
 				if(key.isAcceptable()) {
 					if(((ServerSocketChannel)key.channel()).socket().getLocalPort() == adminPort){
 						//TODO: Create admin session
-						new AdminSession(key, selector);
+						new AdminSession(key);
 					} else if (((ServerSocketChannel)key.channel()).socket().getLocalPort() == welcomeSocketPort) {
 						//TODO: create client session
-						new ClientSession(key, selector);
+						new ClientSession(key);
 					} else {
 						throw new UnexpectedException("ouch!");
 					}

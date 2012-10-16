@@ -40,14 +40,17 @@ public class ClientSession implements Session {
 	
 	private String username;
 	
-	private ByteBuffer toWrite;
-	private ByteBuffer toRead;
+	private ByteBuffer bufferToWrite;
+	private ByteBuffer bufferToRead;
+	private SocketChannel channelToWrite;
+	private SocketChannel channelToRead;
 	
-	public ClientSession(SelectionKey key, Selector selector) throws IOException {
-		this.selector = selector;
+	public ClientSession(SelectionKey key) throws IOException {
+		this.selector = key.selector();
 		this.proxy = POPXY.getInstance();
 		this.clientSocket = ((ServerSocketChannel)key.channel()).accept();
 		this.state = SessionStates.WAITING_CONNECTION_TO_SERVER;
+		this.channelToWrite = clientSocket;
 		this.firstContact = true;
 		clientSocket.register(selector, SelectionKey.OP_WRITE, this);
 	}
@@ -65,18 +68,23 @@ public class ClientSession implements Session {
 			try {
 				//TODO: Consultar bloqueo de IP
 				/*if(IPisBlocked()){
-					
+				 	mockServerBuffer.clear();
+				 	mockserverBuffer.put("-ERR/r/n".getBytes());
+				 	mockServerBuffer.flip();
+					toWrite = mockServerBuffer;
+					terminateConnection = true;
 				} else */if(firstContact) {
 					mockServerBuffer.clear();
 					mockServerBuffer.put("+OK/r/n".getBytes());
 					mockServerBuffer.flip();
-					toWrite = mockServerBuffer;
-					toRead = clientBuffer;
+					bufferToWrite = mockServerBuffer;
+					bufferToRead = clientBuffer;
 					firstContact = false;
 				}
 				
-				clientSocket.write(toWrite);
-				clientSocket.register(selector, SelectionKey.OP_READ, this);				
+				channelToWrite.write(bufferToWrite);
+				toSuscribe = clientSocket;
+				suscriptionMode = SelectionKey.OP_READ;
 			} catch (IOException e) {
 				// TODO: handle exception
 			}
@@ -118,24 +126,21 @@ public class ClientSession implements Session {
 						mockServerBuffer.put("-ERR/r/n".getBytes());
 						terminateConnection = true;
 						mockServerBuffer.flip();
-						toWrite = mockServerBuffer;
-						terminateConnection = true;
-						toSuscribe = clientSocket;
+						bufferToWrite = mockServerBuffer;
+						channelToWrite = toSuscribe = clientSocket;
 						suscriptionMode = SelectionKey.OP_WRITE;
 					} else {
 						if((client = proxy.getUser(username)) == null) {
-							toSuscribe = originServerSocket = (new Socket(proxy.getDefaultOriginServer(), proxy.getDefaultOriginServerPort)).getChannel();
+							channelToWrite = toSuscribe = originServerSocket = (new Socket(proxy.getDefaultOriginServer(), proxy.getDefaultOriginServerPort)).getChannel();
 						} else {
-							toSuscribe = originServerSocket = (new Socket(client.getServerAddress(), client.getServerPort())).getChannel();
+							channelToWrite = toSuscribe = originServerSocket = (new Socket(client.getServerAddress(), client.getServerPort())).getChannel();
 						}
 					}
 				} else {
 					mockServerBuffer.put("-ERR/r/n".getBytes());
-					terminateConnection = true;
 					mockServerBuffer.flip();
-					toWrite = mockServerBuffer;
-					terminateConnection = true;
-					toSuscribe = clientSocket;
+					bufferToWrite = mockServerBuffer;
+					channelToWrite = toSuscribe = clientSocket;
 					suscriptionMode = SelectionKey.OP_WRITE;
 				}
 			} catch (IOException e1) {

@@ -8,7 +8,7 @@ public class AdminSession implements Session {
 
 	private SocketChannel admin;
 	
-	public AdminSession(SelectionKey key, Selector selector) {
+	public AdminSession(SelectionKey key) {
 		// TODO Auto-generated constructor stub
 	}
 
