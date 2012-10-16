@@ -7,26 +7,33 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.rmi.UnexpectedException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
+import ar.elements.User;
 import ar.sessions.AdminSession;
 import ar.sessions.ClientSession;
 import ar.sessions.Session;
 
 public class POPXY {
 	
-	final static int defaultWelcomeSocketPort = 110;
-	final static int defaultAdminPort = 12345;
+	private final static int defaultWelcomeSocketPort = 110;
+	private final static int defaultAdminPort = 12345;
 	
-	static int welcomeSocketPort = defaultWelcomeSocketPort;
-	static int adminPort = defaultAdminPort; 
-
-	//static Map<String, User> users = new HashMap<String, User>();
+	private static int welcomeSocketPort = defaultWelcomeSocketPort;
+	private static int adminPort = defaultAdminPort; 
+	
+	private static POPXY instance = null;
+	
+	
+	private Map<String, User> users = new HashMap<String, User>();
 	
 	public static void main(String[] args) 
 		throws Exception{
 		
 		//Tomar conf;
+		POPXY proxy = POPXY.getInstance();
 		Selector selector = Selector.open();
 		ServerSocketChannel welcomeSocket = ServerSocketChannel.open();
 		ServerSocketChannel adminSocket = ServerSocketChannel.open();
@@ -97,5 +104,17 @@ public class POPXY {
 				keys.remove();
 			}
 		}
+	}
+
+	public static POPXY getInstance() {
+		if(instance == null) {
+			instance = new POPXY();
+		}
+		return instance;
+	}
+	
+	public User getUser(String userName) {
+		//TODO:
+		return null;
 	}
 }
