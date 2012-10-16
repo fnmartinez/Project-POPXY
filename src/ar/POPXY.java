@@ -15,7 +15,7 @@ import ar.sessions.Session;
 
 public class POPXY {
 	
-	final static int defaultWelcomeSocketPort = 110;
+	final static int defaultWelcomeSocketPort = 1110;
 	final static int defaultAdminPort = 12345;
 	
 	static int welcomeSocketPort = defaultWelcomeSocketPort;
@@ -38,8 +38,8 @@ public class POPXY {
 			adminSocket.socket().bind(new InetSocketAddress(adminPort));
 			adminSocket.configureBlocking(false);
 			
-			welcomeSocket.register(selector, SelectionKey.OP_ACCEPT, null);
-			adminSocket.register(selector, SelectionKey.OP_ACCEPT, null);
+			welcomeSocket.register(selector, SelectionKey.OP_ACCEPT);
+			adminSocket.register(selector, SelectionKey.OP_ACCEPT);
 			
 		}
 		catch(NotYetBoundException nybe){
@@ -55,7 +55,7 @@ public class POPXY {
 		while(true){
 			
 			if(selector.select() == 0) {
-				System.out.println("Ay Carumba!");
+				System.out.println("Error");
 				continue;
 			}
 			
@@ -67,7 +67,7 @@ public class POPXY {
 				if(key.isAcceptable()) {
 					if(((ServerSocketChannel)key.channel()).socket().getLocalPort() == adminPort){
 						//TODO: Create admin session
-						new AdminSession(key, selector);
+						new AdminSession(key);
 					} else if (((ServerSocketChannel)key.channel()).socket().getLocalPort() == welcomeSocketPort) {
 						//TODO: create client session
 						new ClientSession(key, selector);
