@@ -117,4 +117,19 @@ public class POPXY {
 		//TODO:
 		return null;
 	}
+
+	public boolean userIsBlocked(String username) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public String getDefaultOriginServer() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getDefaultOriginServerPort() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

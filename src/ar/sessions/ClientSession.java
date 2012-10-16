@@ -131,7 +131,7 @@ public class ClientSession implements Session {
 						suscriptionMode = SelectionKey.OP_WRITE;
 					} else {
 						if((client = proxy.getUser(username)) == null) {
-							channelToWrite = toSuscribe = originServerSocket = (new Socket(proxy.getDefaultOriginServer(), proxy.getDefaultOriginServerPort)).getChannel();
+							channelToWrite = toSuscribe = originServerSocket = (new Socket(proxy.getDefaultOriginServer(), proxy.getDefaultOriginServerPort())).getChannel();
 						} else {
 							channelToWrite = toSuscribe = originServerSocket = (new Socket(client.getServerAddress(), client.getServerPort())).getChannel();
 						}
