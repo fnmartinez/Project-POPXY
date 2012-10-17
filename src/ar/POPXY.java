@@ -114,13 +114,16 @@ public class POPXY {
 	}
 	
 	public User getUser(String userName) {
-		//TODO:
-		return null;
+		return users.get(userName);
 	}
 
 	public boolean userIsBlocked(String username) {
-		// TODO Auto-generated method stub
-		return false;
+		User user = users.get(username);
+		if(user == null){
+			return false;
+		}else{
+			return user.isBlocked();
+		}
 	}
 
 	public String getDefaultOriginServer() {
