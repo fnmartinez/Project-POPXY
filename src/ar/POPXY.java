@@ -20,9 +20,11 @@ public class POPXY {
 	
 	private final static int defaultWelcomeSocketPort = 1110;
 	private final static int defaultAdminPort = 12345;
+	private final static int defaultOriginPort = 110;
 	
 	private static int welcomeSocketPort = defaultWelcomeSocketPort;
 	private static int adminPort = defaultAdminPort; 
+	private static int originPort = defaultOriginPort; 
 	
 	private static POPXY instance = null;
 	
@@ -131,5 +133,25 @@ public class POPXY {
 	public int getDefaultOriginServerPort() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public void setWellcomePort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setAdminPort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setOriginPort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setStatsPort(Integer port) {
+		// TODO Auto-generated method stub
+		
 	}
 }
