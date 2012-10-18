@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import ar.POPXY;
 import ar.elements.User;
 
-public class LoginTimesFilter implements AppFilter{
+public class LoginTimesFilter extends AppFilter{
 
 	private POPXY proxy;
 	

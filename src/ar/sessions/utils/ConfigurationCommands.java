@@ -1,6 +1,7 @@
 package ar.sessions.utils;
 
 public enum ConfigurationCommands {
+		EXIT,
 		SET,
 		DELETE,
 		TIME_LOGIN,
@@ -14,7 +15,6 @@ public enum ConfigurationCommands {
 		RM_FILTER_DISPOSITION,
 		ORIGIN_SERVER,
 		ORIGIN_SERVER_PORT,
-		DEFAULT_SERVER,
 		CONFIG_LISTENING_PORT,
 		WELLCOME_LISTENING_PORT,
 		STA_LISTENING_PORT,

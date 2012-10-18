@@ -1,6 +1,5 @@
 package ar.elements;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -12,17 +11,19 @@ public class User {
 	// Configuraciones genrales
 	private static int globalLoginMax = -1;
 	private static List<Interval> globalLoginInterval = new ArrayList<Interval>();
+	private static String defaultServer;
+	private static int defaultPort;
 	// TODO variables globales para eliminacion de mails
 
 	private String user;
-	private InetAddress serverAddress;
+	private String serverAddress;
 	private int port;
 	private int loginMax;
 	private int loginCant;
 	private Calendar lastConnection;
 	private Interval loginInterval;
 
-	public User(String user, InetAddress serverAddress, int port) {
+	public User(String user, String serverAddress, int port) {
 		this.user = user;
 		this.serverAddress = serverAddress;
 		this.port = port;
@@ -36,7 +37,7 @@ public class User {
 		return this.port;
 	}
 
-	public InetAddress getServerAddress() {
+	public String getServerAddress() {
 		return this.serverAddress;
 	}
 
@@ -132,7 +133,7 @@ public class User {
 		this.loginInterval = loginInterval;
 	}
 
-	public void setServerAddress(InetAddress serverAddress) {
+	public void setServerAddress(String serverAddress) {
 		this.serverAddress = serverAddress;
 	}
 
@@ -165,4 +166,26 @@ public class User {
 		User.globalLoginMax = globalLoginMax;
 	}
 
+	public boolean isBlocked() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public static void setDefaultServer(String string) {
+		User.defaultServer = string;
+		
+	}
+
+	public static void setDefaultServerPort(int port) {
+		User.defaultPort = port;
+		
+	}
+
+	public void deleteLoginMax() {
+		this.loginMax = -1;
+	}
+
+	public static void deleteGlobalLoginMax() {
+		User.globalLoginMax = -1;
+	}
 }

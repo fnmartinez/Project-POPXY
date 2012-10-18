@@ -157,4 +157,34 @@ public class POPXY {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public void activateL33t() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateRotate() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateAnonimous() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateApp(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addIpToBlackList(String ip, String mask) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void deleteIpFromBlackList(String string, String mask) {
+		// TODO Auto-generated method stub
+		
+	}
 }
