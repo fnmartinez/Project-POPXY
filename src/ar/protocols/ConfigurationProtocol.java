@@ -1,5 +1,6 @@
 package ar.protocols;
 
+import ar.POPXY;
 import ar.sessions.utils.ConfigurationCommands;
 
 public class ConfigurationProtocol {
@@ -14,7 +15,7 @@ public class ConfigurationProtocol {
 	private static final String INV_USR_MSG = ERR_MSG + "Usuario inexistente\r\n";
 	private static final String EXT_MSG = OK_MSG + "Conexion cerrada exitosamente\r\n";
 
-	private static final String[] commands = { "EXT", "SET", "DEL"};
+	private static final String[] commands = { "EXT", "SET", "DEL", "STA"};
 	private static final String[] subCommands = {"TIMELOGIN", "CANTLOGIN", "BLACKIP", "RMFILTERDATE", "RMFILTERSENDER",
 		"RMFILTERHEADER",	"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",	"ORIGINSERVER", "ORIGINSERVERPORT",
 		"CONFIGLISTENINGPORT", "WELLCOMELISTENINGPORT", "STALISTENINGPORT",	"APP"};
@@ -48,7 +49,7 @@ public class ConfigurationProtocol {
 		
 		for(int i=0; i < subCommands.length; i++){
 			if(subCommand.equals(subCommands[i])){
-				return ConfigurationCommands.values()[i+3];
+				return ConfigurationCommands.values()[i+4];
 			}	
 		}
 		return null;
@@ -344,7 +345,7 @@ public class ConfigurationProtocol {
 	}
 
 	private static boolean isValidIp(String ip) {
-		String aux[] = ip.split(".");
+		String aux[] = ip.split("\\.");
 		int i = 0;
 		for(String octeto: aux){
 			Integer oct = Integer.parseInt(octeto);
@@ -364,9 +365,17 @@ public class ConfigurationProtocol {
 		return port != null;
 	}
 
-	//valido q el sender sea valido, por ejemplo kkenny@ddf.com
 	private static boolean isValidSender(String sender) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+
+	public static String getStatusMsg(POPXY popxy) {
+		String ret = OK_MSG + "\n";
+		//TODO
+		
+		
+		return ret;
 	}
 }

@@ -123,6 +123,12 @@ public class AdminSession implements Session {
         		return;
         	}
         	
+        	if(command == ConfigurationCommands.STATUS){
+        		this.answer(ConfigurationProtocol.getStatusMsg(POPXY.getInstance()));
+        		this.key.interestOps(SelectionKey.OP_WRITE);
+        		return;
+        	}
+        	
         	String subCommandAndParameters = byteBufferToString(parametersBuf);
         	
         	ConfigurationCommands subCommand = ConfigurationProtocol.getSubCommand(subCommandAndParameters);
@@ -132,6 +138,11 @@ public class AdminSession implements Session {
         		return;
         	}
         	String[] parameters = ConfigurationProtocol.getParameters(subCommandAndParameters, subCommand);
+        	if(parameters == null){
+        		this.answer(ConfigurationProtocol.getInvalidArgumentMsg());
+        		this.key.interestOps(SelectionKey.OP_WRITE);
+        		return;
+        	}
         	
         	switch(subCommand){
         		case  TIME_LOGIN:  				this.timeLogin(command, parameters); break;

@@ -4,6 +4,7 @@ public enum ConfigurationCommands {
 		EXIT,
 		SET,
 		DELETE,
+		STATUS,
 		TIME_LOGIN,
 		CANT_LOGIN,
 		BLACK_IP,
