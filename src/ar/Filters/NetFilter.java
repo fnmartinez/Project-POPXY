@@ -2,6 +2,19 @@ package ar.Filters;
 
 import java.nio.channels.Channel;
 
-public interface NetFilter {
-	public boolean filter(Channel ch);
+import ar.POPXY;
+
+public class NetFilter{
+
+	private POPXY proxy;
+	
+	public NetFilter(){
+		this.proxy = POPXY.getInstance();
+	}
+	
+	public boolean filter(Channel ch) {
+		
+		return false;
+	}
+	
 }

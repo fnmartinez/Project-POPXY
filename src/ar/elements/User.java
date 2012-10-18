@@ -10,21 +10,25 @@ import org.joda.time.Interval;
 
 public class User {
 	
+	//Configuraciones genrales
+	private static int globalLoginMax = -1;
+	private static Interval globalLoginInterval;
+	//TODO variables globales para eliminacion de mails
+	
 	private String user;
 	private InetAddress serverAddress;
 	private int port;
 	private int loginMax;
 	private int loginCant;
 	private Calendar lastConnection;
-	private Interval interval;
+	private Interval loginInterval;
 	
 	public User(String user, InetAddress serverAddress, int port){
 		this.user = user;
 		this.serverAddress = serverAddress;
 		this.port = port;
-		this.loginMax = Integer.MAX_VALUE;
+		this.loginMax = -1;
 		this.loginCant = 0;
-		
 		//TODO crear un intervalo que dure el dia 
 	}
 	
@@ -131,13 +135,13 @@ public class User {
 	}
 
 
-	public Interval getInterval() {
-		return interval;
+	public Interval getLoginInterval() {
+		return loginInterval;
 	}
 
 
-	public void setInterval(Interval interval) {
-		this.interval = interval;
+	public void setLoginInterval(Interval loginInterval) {
+		this.loginInterval = loginInterval;
 	}
 
 
@@ -147,11 +151,12 @@ public class User {
 
 
 	public boolean haveLoginsLeft() {
-		// Ver si esta en horario y ver si no alcanzo loginCant;
-		if(loginCant+1 > loginMax){
-			return false;
+		if(loginMax == -1){
+			return true;
+		}else if(loginCant < loginMax){
+			return true;
 		}
-		return true;
+		return false;
 	}
 	
 	public boolean isInInterval(){
@@ -159,7 +164,12 @@ public class User {
 		return true;
 	}
 	
-	
-	
+	public static void setGlobalLoginMax(int globalLoginMax){
+		User.globalLoginMax = globalLoginMax; 
+	}
 
+	public static void setGlobalLoginInterval(Interval globalLoginInterval){
+		User.globalLoginInterval = globalLoginInterval; 
+	}
+	
 }
