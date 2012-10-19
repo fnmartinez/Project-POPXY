@@ -3,4 +3,11 @@
   <groupId>Project-POPXY</groupId>
   <artifactId>Project-POPXY</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+  <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+   <version>1.6</version>
+  </dependency>
+</dependencies>
 </project>

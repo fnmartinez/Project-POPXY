@@ -20,9 +20,11 @@ public class POPXY {
 	
 	private final static int defaultWelcomeSocketPort = 1110;
 	private final static int defaultAdminPort = 12345;
+	private final static int defaultOriginPort = 110;
 	
 	private static int welcomeSocketPort = defaultWelcomeSocketPort;
 	private static int adminPort = defaultAdminPort; 
+	private static int originPort = defaultOriginPort; 
 	
 	private static POPXY instance = null;
 	
@@ -114,13 +116,16 @@ public class POPXY {
 	}
 	
 	public User getUser(String userName) {
-		//TODO:
-		return null;
+		return users.get(userName);
 	}
 
 	public boolean userIsBlocked(String username) {
-		// TODO Auto-generated method stub
-		return false;
+		User user = users.get(username);
+		if(user == null){
+			return false;
+		}else{
+			return user.isBlocked();
+		}
 	}
 
 	public String getDefaultOriginServer() {
@@ -136,5 +141,54 @@ public class POPXY {
 	public boolean IPisBlocked() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	public void setWellcomePort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setAdminPort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setOriginPort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setStatsPort(Integer port) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateL33t() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateRotate() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateAnonimous() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void activateApp(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addIpToBlackList(String ip, String mask) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void deleteIpFromBlackList(String string, String mask) {
+		// TODO Auto-generated method stub
 	}
 }
