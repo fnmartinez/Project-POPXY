@@ -132,4 +132,9 @@ public class POPXY {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	public boolean IPisBlocked() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
