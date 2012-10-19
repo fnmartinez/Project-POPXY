@@ -24,7 +24,6 @@ public class AdminSession implements Session {
 	
     private static final int HEAD_COMMAND_SIZE = 4;
     private static final int BUF_SIZE = 512;
-    private static final int ANSWER_BUF_SIZE = 100;
     
 	private static final int WELLCOME_CHANNEL = 0;
 	private static final int CONGIF_CHANNEL = 1;
@@ -48,7 +47,7 @@ public class AdminSession implements Session {
 		
 		this.commandBuf = ByteBuffer.allocate(HEAD_COMMAND_SIZE);
 		this.parametersBuf = ByteBuffer.allocate(BUF_SIZE);
-		this.answerBuf = ByteBuffer.allocate(ANSWER_BUF_SIZE);
+		this.answerBuf = this.parametersBuf;
 		
 		this.selector = key.selector();		
 		this.adminChannel = ((ServerSocketChannel) key.channel()).accept();
@@ -170,6 +169,7 @@ public class AdminSession implements Session {
 	}
 	
 	private void answer(String answer) {
+		this.answerBuf.clear();
 		this.answerBuf.put(answer.getBytes());
 		
 	}
@@ -310,6 +310,8 @@ public class AdminSession implements Session {
 		} else {
 			popxy.activateApp(parameters[0]);
 		}
+		this.answer(ConfigurationProtocol.getOkMsg());
+		return;
 	}
 	
 	

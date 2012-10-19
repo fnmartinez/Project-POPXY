@@ -2,6 +2,7 @@ package ar.protocols;
 
 import ar.POPXY;
 import ar.sessions.utils.ConfigurationCommands;
+import ar.sessions.utils.IpAndMask;
 
 public class ConfigurationProtocol {
 	
@@ -120,9 +121,6 @@ public class ConfigurationProtocol {
 		if(servAndPort.length > 2 || servAndPort.length < 1)
 			return null;
 		
-		if(!isValidIp(servAndPort[0]))
-			return null;
-		
 		if(servAndPort.length == 2){
 			if(!isValidPort(servAndPort[1]))
 				return null;
@@ -233,14 +231,14 @@ public class ConfigurationProtocol {
 		String parameters[] = new String[1];
 		String ip = commandAndParam[1];
 		
-		if(!isValidIp(ip)){
+		if(! IpAndMask.isValidIp(ip)){
 			return null;
 		}
 		
 		if(commandAndParam.length == 3){
 			parameters = new String[2];
 			String mask = commandAndParam[2];
-			if(!isValidIp(mask)){
+			if(! IpAndMask.isValidIp(mask)){
 				return null;
 			}
 			parameters[1] = mask;
@@ -324,7 +322,7 @@ public class ConfigurationProtocol {
 	}
 
 	public static String getOkMsg() {
-		return OK_MSG;
+		return OK_MSG+"\r\n";
 	}
 
 	public static String getInvalidArgumentMsg() {
@@ -344,24 +342,15 @@ public class ConfigurationProtocol {
 		return false;
 	}
 
-	private static boolean isValidIp(String ip) {
-		String aux[] = ip.split("\\.");
-		int i = 0;
-		for(String octeto: aux){
-			Integer oct = Integer.parseInt(octeto);
-			if(oct < 0 || oct > 255){
-				return false;
-			}
-			i++;
-		}
-		if(i == 4)
-			return true;
-		
-		return false;
-	}
 	
 	private static boolean isValidPort(String string) {
-		Integer port = Integer.parseInt(string);
+		Integer port;
+		try{
+			port = Integer.parseInt(string);
+		}
+		catch(NumberFormatException e){
+			return false;
+		}
 		return port != null;
 	}
 
@@ -373,7 +362,10 @@ public class ConfigurationProtocol {
 
 	public static String getStatusMsg(POPXY popxy) {
 		String ret = OK_MSG + "\n";
-		//TODO
+		ret = ret + " originserver \t " + popxy.getDefaultOriginServer()+":"+popxy.getDefaultOriginServerPort()+"\n";
+		ret = ret + " configListeningPort \t " + popxy.getAdminPort()+"\n";
+		ret = ret + " wellcomeListeningPort \t " + popxy.getWelcomeSocketPort()+"\n";
+		ret = ret + " statsListeningPort \t " + popxy.getStatsPort()+"\n";
 		
 		
 		return ret;
