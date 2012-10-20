@@ -4,7 +4,7 @@ import java.nio.channels.Channel;
 
 import ar.POPXY;
 
-public class IPFilter implements NetFilter{
+public class IPFilter extends NetFilter{
 
 	private POPXY proxy;
 	

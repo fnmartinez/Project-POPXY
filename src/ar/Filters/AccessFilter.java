@@ -20,11 +20,11 @@ public class AccessFilter {
 	}
 
 	private boolean loginIntervalFilter(User user) {
-		return user.haveLoginsLeft();
+		return user.isInInterval();
 	}
 
 	private boolean loginTimesFilter(User user) {
-		return user.isInInterval();
+		return user.haveLoginsLeft();
 	}
 
 }

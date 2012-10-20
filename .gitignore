@@ -3,5 +3,6 @@
 *.classpath
 *.project
 *.classpath
+*.class
 /target
 /.gitignore

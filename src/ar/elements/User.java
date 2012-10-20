@@ -1,13 +1,7 @@
 package ar.elements;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-
-import org.joda.time.Interval;
-
-import ar.POPXY;
 
 public class User {
 	
@@ -22,11 +16,13 @@ public class User {
 	private UserConfiguration userConfig;
 	private Stats stats;
 
+
 	public User(String user) {
 		this.user = user;
 		this.loginCant = 0;
 		this.lastConnection = Calendar.getInstance();  
 		this.userConfig = new UserConfiguration();
+		this.stats = new Stats();
 	}
 
 	public String getUser() {
@@ -35,8 +31,9 @@ public class User {
 
 	public void setUser(String user) {
 		this.user = user;
-	}
 	
+	}
+
 	public static UserConfiguration getGlobalConfiguration(){
 		return globalConfig;
 	}
@@ -65,16 +62,16 @@ public class User {
 		userConfig.setLeet(leet);
 	}
 	
-	public void setServerAddress(InetAddress serverAddress){
+	public void setServerAddress(String serverAddress){
 		userConfig.setServerAddress(serverAddress);
 	}
 
-	public static void setGlobalServerAddress(InetAddress serverAddress){
+	public static void setGlobalServerAddress(String serverAddress){
 		globalConfig.setServerAddress(serverAddress);
 	}
 	
-	public InetAddress getServerAddress(){
-		InetAddress server = userConfig.getServerAddress();
+	public String getServerAddress(){
+		String server = userConfig.getServerAddress();
 		if(server != null){
 			return server;
 		}else{
@@ -111,6 +108,7 @@ public class User {
 			return globalConfig.getLeet();
 		}
 	}
+
 	
 	public Boolean getRotate(){
 		Boolean r = userConfig.getRotate();
@@ -162,5 +160,18 @@ public class User {
 		//TODO
 		return true;
 	}
-	
+
+	public boolean isBlocked() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public void deleteLoginMax(){
+		userConfig.setLoginMax(-1);
+	}
+
+	public static void deleteGlobalLoginMax() {
+		globalConfig.setLoginMax(-1);
+	}
+
 }
