@@ -116,7 +116,12 @@ public class POPXY {
 	}
 	
 	public User getUser(String userName) {
-		return users.get(userName);
+		User user = users.get(userName);
+		if(user == null){
+			user = new User(userName);
+			users.put(userName, user);
+		}
+		return user;
 	}
 
 	public boolean userIsBlocked(String username) {

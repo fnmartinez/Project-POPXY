@@ -12,9 +12,12 @@ public class NetFilter{
 		this.proxy = POPXY.getInstance();
 	}
 	
-	public boolean filter(Channel ch) {
-		
-		return false;
-	}
+//    public boolean ipIsDenied(String ip) {
+//    	List<String> ipBlackList = proxy.getBlack
+//        if (ipBlackList != null && ip != null && !ip.equals("")) {
+//                return ipBlackList.contains(ip);
+//        }
+//        return false;
+//}
 	
 }

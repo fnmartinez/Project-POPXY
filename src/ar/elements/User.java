@@ -7,81 +7,26 @@ import java.util.List;
 
 import org.joda.time.Interval;
 
+import ar.POPXY;
+
 public class User {
-
-	// Configuraciones genrales
-	private static int globalLoginMax = -1;
-	private static List<Interval> globalLoginInterval = new ArrayList<Interval>();
-	// TODO variables globales para eliminacion de mails
-
+	
+	// Configuraciones Generales
+	private static UserConfiguration globalConfig;
+	private Stats globalStats;
+	
+	// Configuraciones propias de un usuario
 	private String user;
-	private InetAddress serverAddress;
-	private int port;
-	private int loginMax;
 	private int loginCant;
 	private Calendar lastConnection;
-	private Interval loginInterval;
+	private UserConfiguration userConfig;
+	private Stats stats;
 
-	public User(String user, InetAddress serverAddress, int port) {
+	public User(String user) {
 		this.user = user;
-		this.serverAddress = serverAddress;
-		this.port = port;
-		this.loginMax = -1;
 		this.loginCant = 0;
-		// TODO crear un intervalo que dure el dia
-	}
-
-	public int getServerPort() {
-
-		return this.port;
-	}
-
-	public InetAddress getServerAddress() {
-		return this.serverAddress;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + port;
-		result = prime * result
-				+ ((serverAddress == null) ? 0 : serverAddress.hashCode());
-		result = prime * result + ((user == null) ? 0 : user.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof User)) {
-			return false;
-		}
-		User other = (User) obj;
-
-		if (user == null) {
-			if (other.user != null) {
-				return false;
-			}
-		} else if (!user.equals(other.user)) {
-			return false;
-		}
-		return true;
-	}
-
-	public void login() {
-		Calendar now = Calendar.getInstance();
-		if (lastConnection == null
-				|| lastConnection.DAY_OF_YEAR != now.DAY_OF_YEAR) {
-			lastConnection = now;
-			loginCant = 0;
-		}
-		loginCant++;
+		this.lastConnection = Calendar.getInstance();  
+		this.userConfig = new UserConfiguration();
 	}
 
 	public String getUser() {
@@ -91,78 +36,131 @@ public class User {
 	public void setUser(String user) {
 		this.user = user;
 	}
-
-	public int getPort() {
-		return port;
+	
+	public static UserConfiguration getGlobalConfiguration(){
+		return globalConfig;
+	}
+	
+	public static void setGlobalLoginMax(int loginMax) {
+		globalConfig.setLoginMax(loginMax);
+	}
+	
+	public void setLoginMax(int loginMax){
+		userConfig.setLoginMax(loginMax);
+	}
+	
+	public static void setGlobalRotate(Boolean rotate){
+		globalConfig.setRotate(rotate);
+	}
+	
+	public void setRotate(Boolean rotate){
+		userConfig.setRotate(rotate);
+	}
+	
+	public static void setGlobalLeet(Boolean leet){
+		globalConfig.setLeet(leet);
+	}
+	
+	public void setLeet(Boolean leet){
+		userConfig.setLeet(leet);
+	}
+	
+	public void setServerAddress(InetAddress serverAddress){
+		userConfig.setServerAddress(serverAddress);
 	}
 
-	public void setPort(int port) {
-		this.port = port;
+	public static void setGlobalServerAddress(InetAddress serverAddress){
+		globalConfig.setServerAddress(serverAddress);
+	}
+	
+	public InetAddress getServerAddress(){
+		InetAddress server = userConfig.getServerAddress();
+		if(server != null){
+			return server;
+		}else{
+			return globalConfig.getServerAddress();
+		}
+	}
+	
+	public void setServerPort(int port){
+		userConfig.setPort(port);
+	}
+	
+	public static void setGlobalServerPort(int port){
+		globalConfig.setPort(port);
+	}
+	
+	public int getServerPort(){
+		int p = userConfig.getPort();
+		if(p != -1){
+			return p;
+		}else{
+			return globalConfig.getPort();
+		}
 	}
 
-	public int getLoginMax() {
-		return loginMax;
+	public static int getGlobalServerPort(){
+		return globalConfig.getPort();
 	}
-
-	public void setLoginMax(int loginMax) {
-		this.loginMax = loginMax;
+	
+	public Boolean getLeet(){
+		Boolean l = userConfig.getLeet();
+		if(l != null){
+			return l;
+		}else{
+			return globalConfig.getLeet();
+		}
 	}
-
-	public int getLoginCant() {
-		return loginCant;
+	
+	public Boolean getRotate(){
+		Boolean r = userConfig.getRotate();
+		if(r != null){
+			return r;
+		}else{
+			return globalConfig.getRotate();
+		}
 	}
-
-	public void setLoginCant(int loginCant) {
-		this.loginCant = loginCant;
+	
+	public void login() {
+		Calendar now = Calendar.getInstance();
+		if (lastConnection == null
+				|| lastConnection.DAY_OF_YEAR != now.DAY_OF_YEAR) {
+			lastConnection = now;
+			loginCant = 0;
+		}
+		loginCant++;
+		globalStats.incrementLoginCant();
+		stats.incrementLoginCant();
 	}
-
-	public Calendar getLastConnection() {
-		return lastConnection;
-	}
-
-	public void setLastConnection(Calendar lastConnection) {
-		this.lastConnection = lastConnection;
-	}
-
-	public Interval getLoginInterval() {
-		return loginInterval;
-	}
-
-	public void setLoginInterval(Interval loginInterval) {
-		this.loginInterval = loginInterval;
-	}
-
-	public void setServerAddress(InetAddress serverAddress) {
-		this.serverAddress = serverAddress;
-	}
-
+	
 	public boolean haveLoginsLeft() {
-		return haveGlobalLoginsLeft() && haveLocalLoginsLeft();
+		
+		if(userConfig.getLoginMax() == -1){
+			return haveGlobalLoginsLeft();
+		}else{
+			return loginCant < userConfig.getLoginMax();
+		}
 	}
 	
 	public boolean haveGlobalLoginsLeft(){
-		if(globalLoginMax == -1){
+		if(globalConfig.getLoginMax() == -1){
 			return true;
 		}else{
-			return loginCant < globalLoginMax;
+			return loginCant < globalConfig.getLoginMax();
 		}
 	}
 	
-	public boolean haveLocalLoginsLeft(){
-		if(loginMax == -1){
-			return true;
-		}else{
-			return loginCant < loginMax;
-		}
+	public static void initGlobalConfiguration(){
+		resetGlobalConfiguration();
 	}
-
+	
+	public static void resetGlobalConfiguration(){
+		globalConfig.resetGlobalConfiguration();
+	}
+	
 	public boolean isInInterval() {
-
+		//TODO
 		return true;
 	}
-
-	public static void setGlobalLoginMax(int globalLoginMax) {
-		User.globalLoginMax = globalLoginMax;
-	}
-
+	
 }
