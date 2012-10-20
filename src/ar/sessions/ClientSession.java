@@ -27,6 +27,46 @@ public class ClientSession implements Session {
 	private SocketChannel clientSocket;
 	private SocketChannel originServerSocket;
 	private Selector selector;
+	public SocketChannel getClientSocket() {
+		return clientSocket;
+	}
+
+	public void setClientSocket(SocketChannel clientSocket) {
+		this.clientSocket = clientSocket;
+	}
+
+	public SocketChannel getOriginServerSocket() {
+		return originServerSocket;
+	}
+
+	public void setOriginServerSocket(SocketChannel originServerSocket) {
+		this.originServerSocket = originServerSocket;
+	}
+
+	public ByteBuffer[] getClientBuffer() {
+		return clientBuffer;
+	}
+
+	public void setClientBuffer(ByteBuffer[] clientBuffer) {
+		this.clientBuffer = clientBuffer;
+	}
+
+	public ByteBuffer[] getFirstServerBuffer() {
+		return firstServerBuffer;
+	}
+
+	public void setFirstServerBuffer(ByteBuffer[] firstServerBuffer) {
+		this.firstServerBuffer = firstServerBuffer;
+	}
+
+	public ByteBuffer getSecondServerBuffer() {
+		return secondServerBuffer;
+	}
+
+	public void setSecondServerBuffer(ByteBuffer secondServerBuffer) {
+		this.secondServerBuffer = secondServerBuffer;
+	}
+
 	private POPXY proxy;
 
 	private ByteBuffer[] clientBuffer = {
