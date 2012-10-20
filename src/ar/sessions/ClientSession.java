@@ -2,6 +2,7 @@ package ar.sessions;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -109,8 +110,8 @@ public class ClientSession implements Session {
 				flipBuffer(mockServerBuffer);
 
 				clientSocket.write(mockServerBuffer);
-				channelToRead = toSuscribe = clientSocket;
-				bufferToRead = clientBuffer;
+				setToRead(clientSocket, clientBuffer);
+				toSuscribe = clientSocket;
 				suscriptionMode = SelectionKey.OP_READ;
 			} catch (IOException e) {
 				// TODO: handle exception
@@ -144,6 +145,16 @@ public class ClientSession implements Session {
 					}
 
 					break;
+				case PASS:
+					
+					try {
+						channelToWrite.write(bufferToWrite);
+						toSuscribe = channelToWrite;
+						suscriptionMode = SelectionKey.OP_READ;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				default:
 					break;
 				}
@@ -176,184 +187,148 @@ public class ClientSession implements Session {
 		switch (this.state) {
 		case AUTH_STATE:
 			switch (lastCommand) {
+				// This state happens when Session has just started or
+				// when there was no login.
 			case NONE:
-
-				if (this.mockingServer) {
-					// This is the first time the client connects
-					try {
-						// Read client buffer expecting only USER or QUIT
-						clearBuffer(clientBuffer);
-						clientSocket.read(clientBuffer);
-
-						clearBuffer(mockServerBuffer);
-
-						cmd = clientBuffer[0].toString().trim();
-						args = clientBuffer[1].toString().trim().split("\\s");
-
-						if (cmd.compareToIgnoreCase(POPHeadCommands.USER
-								.toString()) == 0
-								&& args != null
-								&& args[0] != null
-								&& args[0].compareTo("") != 0) {
-							if (proxy.userIsBlocked(args[0])) {
-								mockServerBuffer[0].put("-ERR/r/n".getBytes());
-								terminateConnection = true;
-
-								flipBuffer(mockServerBuffer);
-
-								bufferToWrite = mockServerBuffer;
-								channelToWrite = toSuscribe = clientSocket;
-								suscriptionMode = SelectionKey.OP_WRITE;
-							} else {
-								if ((client = proxy.getUser(args[0])) == null) {
-									toSuscribe = originServerSocket = (new Socket(
-											proxy.getDefaultOriginServer(),
-											proxy.getDefaultOriginServerPort()))
-											.getChannel();
-								} else {
-									toSuscribe = originServerSocket = (new Socket(
-											client.getServerAddress(),
-											client.getServerPort()))
-											.getChannel();
-								}
-
-								this.lastCommand = POPHeadCommands.USER;
-								this.verifyServerStatus = true;
-								suscriptionMode = SelectionKey.OP_CONNECT;
-							}
-						} else if (cmd.compareToIgnoreCase(POPHeadCommands.QUIT
-								.toString()) == 0) {
-							// TODO:
-							mockServerBuffer[0].put("+OK/r/n".getBytes());
-							flipBuffer(mockServerBuffer);
-
-							bufferToWrite = mockServerBuffer;
-							channelToWrite = toSuscribe = clientSocket;
-							suscriptionMode = SelectionKey.OP_WRITE;
-							this.terminateConnection = true;
-						} else {
-							mockServerBuffer[0].put("-ERR/r/n".getBytes());
-							flipBuffer(mockServerBuffer);
-
-							bufferToWrite = mockServerBuffer;
-							channelToWrite = toSuscribe = clientSocket;
-							suscriptionMode = SelectionKey.OP_WRITE;
-						}
-
-					} catch (IOException e) {
-						// TODO: handle exception
-					}
-				} else {
-					// The client has already given me his user name.
-					try {
-						clearBuffer(bufferToRead);
-						channelToRead.read(bufferToRead);
-
-						// I check the server is a valid POP3 server.
-						if (this.verifyServerStatus) {
-							if (this.recentlyConnected) {
-								if (this.bufferToRead[0].toString().trim()
-										.compareToIgnoreCase("+OK") == 0) {
-									// This means the origin server is correct.
-									setToWrite(toSuscribe = channelToRead,
-											clientBuffer);
-									
-									this.lastCommand = POPHeadCommands.USER;
-									this.recentlyConnected = false;
-									this.verifyServerStatus = true;
-								} else {
-									// TODO: terminate connection with client. Not a
-									// POP3 Server.
-								}
-							} else {
-								if (this.bufferToRead[0].toString().trim()
-										.compareToIgnoreCase("+OK") == 0) {
-									// This means the origin server is correct.
-									setToWrite(toSuscribe = channelToRead,
-											clientBuffer);
-									
-									this.lastCommand = POPHeadCommands.USER;
-									this.verifyServerStatus = true;
-								}
-							}
-						} else {
-							// We already checked the origin server. We try the
-							// user name given by the client.
-							// We just pass what the server says, even if its an
-							// error.
-							setToWrite(toSuscribe = clientSocket, bufferToRead);
-							if (this.bufferToRead[0].toString().trim()
-									.compareToIgnoreCase("+OK") == 0) {
-								// If the last command was valid, hence, given
-								// the actual state in the command
-								// sense the next state is USER.
-								this.verifyServerStatus = true;
-							}
-						}
-						suscriptionMode = SelectionKey.OP_WRITE;
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+				
+				try {
+					channelToRead.read(bufferToRead);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-
+				
+				cmd = bufferToRead[0].toString().trim();
+				args = bufferToRead[0].toString().trim().split("\\s");
+				
+				if (cmd.compareToIgnoreCase(POPHeadCommands.USER
+						.toString()) == 0
+						&& args != null
+						&& args[0] != null
+						&& args[0].compareTo("") != 0) {
+					if (proxy.userIsBlocked(args[0])) {
+						mockServerBuffer[0].put("-ERR/r/n".getBytes());
+						
+						setToWrite(clientSocket, mockServerBuffer);
+						
+						toSuscribe = clientSocket;
+						suscriptionMode = SelectionKey.OP_WRITE;
+					} else {
+						if(originServerSocket != null) {
+							try {
+								originServerSocket.close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						if ((client = proxy.getUser(args[0])) == null) {
+							try {
+								toSuscribe = originServerSocket = (new Socket(
+										proxy.getDefaultOriginServer(),
+										proxy.getDefaultOriginServerPort()))
+										.getChannel();
+							} catch (UnknownHostException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						} else {
+							try {
+								toSuscribe = originServerSocket = (new Socket(
+										client.getServerAddress(),
+										client.getServerPort()))
+										.getChannel();
+							} catch (UnknownHostException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+						this.lastCommand = POPHeadCommands.USER;
+						this.verifyServerStatus = true;
+						suscriptionMode = SelectionKey.OP_CONNECT;
+					}
+				} else if (cmd.compareToIgnoreCase(POPHeadCommands.QUIT
+						.toString()) == 0) {
+					// TODO:
+					mockServerBuffer[0].put("+OK/r/n".getBytes());
+					
+					this.lastCommand = POPHeadCommands.QUIT;
+					setToWrite(channelToRead, mockServerBuffer);
+					toSuscribe = channelToRead;
+					suscriptionMode = SelectionKey.OP_WRITE;
+					this.terminateConnection = true;
+				} else {
+					mockServerBuffer[0].put("-ERR/r/n".getBytes());
+					
+					setToWrite(channelToRead, mockServerBuffer);
+					toSuscribe = channelToRead;
+					suscriptionMode = SelectionKey.OP_WRITE;
+				}
+					
 				break;
 			case USER:
 				try {
 					channelToRead.read(bufferToRead);
-
-					if(this.verifyServerStatus) {
-						if(this.bufferToRead[0].toString().trim()
-								.compareToIgnoreCase("+OK") == 0) {
-							this.verifyServerStatus = false;
-							setToWrite(toSuscribe = clientSocket, bufferToRead);
-						}
-					} else {
-						if(this.bufferToWrite[0].toString().trim().compareToIgnoreCase("PASS") == 0) {
-							this.verifyServerStatus = true;
-							this.lastCommand = POPHeadCommands.PASS;
-						}
-						setToWrite(toSuscribe = originServerSocket, bufferToRead);
-						
-					}
-					
-					suscriptionMode = SelectionKey.OP_WRITE;
-					
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+
+				if(this.verifyServerStatus) {
+					if(this.bufferToRead[0].toString().trim()
+							.compareToIgnoreCase("+OK") == 0) {
+						this.verifyServerStatus = false;
+						setToWrite(toSuscribe = clientSocket, bufferToRead);
+					}
+				} else {
+					if(this.bufferToWrite[0].toString().trim().compareToIgnoreCase("PASS") == 0) {
+						this.verifyServerStatus = true;
+						this.lastCommand = POPHeadCommands.PASS;
+					}
+					setToWrite(toSuscribe = originServerSocket, bufferToRead);
+					
+				}
+				
+				suscriptionMode = SelectionKey.OP_WRITE;
+					
 
 				break;
 			case PASS:
 				try {
 					channelToRead.read(bufferToRead);
-
-					if(this.verifyServerStatus) {
-						if(this.bufferToRead[0].toString().trim()
-								.compareToIgnoreCase("+OK") == 0) {
-							this.verifyServerStatus = false;
-							this.state = SessionState.TRANSACTION_STATE;
-						} else {
-							this.verifyServerStatus = true;
-						}
-						this.lastCommand = POPHeadCommands.NONE;
-						setToWrite(toSuscribe = clientSocket, bufferToRead);
-					} else {
-						if(this.bufferToWrite[0].toString().trim().compareToIgnoreCase("PASS") == 0) {
-							this.verifyServerStatus = true;
-							this.lastCommand = POPHeadCommands.PASS;
-						}
-						setToWrite(toSuscribe = originServerSocket, bufferToRead);
-						
-					}
-					
-					suscriptionMode = SelectionKey.OP_WRITE;
-					
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+
+				if(this.verifyServerStatus) {
+					if(this.bufferToRead[0].toString().trim()
+							.compareToIgnoreCase("+OK") == 0) {
+						this.verifyServerStatus = false;
+						this.state = SessionState.TRANSACTION_STATE;
+					} else {
+						this.verifyServerStatus = true;
+					}
+					this.lastCommand = POPHeadCommands.NONE;
+					setToWrite(toSuscribe = clientSocket, bufferToRead);
+				} else {
+					if(this.bufferToWrite[0].toString().trim().compareToIgnoreCase("PASS") == 0) {
+						this.verifyServerStatus = true;
+						this.lastCommand = POPHeadCommands.PASS;
+					}
+					setToWrite(toSuscribe = originServerSocket, bufferToRead);
+					
+				}
+				
+				suscriptionMode = SelectionKey.OP_WRITE;
+					
 				break;
 			default:
 				break;
