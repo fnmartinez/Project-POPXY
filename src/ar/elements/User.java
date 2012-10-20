@@ -1,88 +1,28 @@
 package ar.elements;
 
-import java.util.ArrayList;
+import java.net.InetAddress;
 import java.util.Calendar;
-import java.util.List;
-
-import org.joda.time.Interval;
 
 public class User {
-
-	// Configuraciones genrales
-	private static int globalLoginMax = -1;
-	private static List<Interval> globalLoginInterval = new ArrayList<Interval>();
-	private static String defaultServer;
-	private static int defaultPort;
-	// TODO variables globales para eliminacion de mails
-
+	
+	// Configuraciones Generales
+	private static UserConfiguration globalConfig;
+	private Stats globalStats;
+	
+	// Configuraciones propias de un usuario
 	private String user;
-	private String serverAddress;
-	private int port;
-	private int loginMax;
 	private int loginCant;
 	private Calendar lastConnection;
-	private Interval loginInterval;
+	private UserConfiguration userConfig;
+	private Stats stats;
 
-	public User(String user, String serverAddress, int port) {
+
+	public User(String user) {
 		this.user = user;
-		this.serverAddress = serverAddress;
-		this.port = port;
-		this.loginMax = -1;
 		this.loginCant = 0;
-		// TODO crear un intervalo que dure el dia
-	}
-
-	public int getServerPort() {
-
-		return this.port;
-	}
-
-	public String getServerAddress() {
-		return this.serverAddress;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + port;
-		result = prime * result
-				+ ((serverAddress == null) ? 0 : serverAddress.hashCode());
-		result = prime * result + ((user == null) ? 0 : user.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof User)) {
-			return false;
-		}
-		User other = (User) obj;
-
-		if (user == null) {
-			if (other.user != null) {
-				return false;
-			}
-		} else if (!user.equals(other.user)) {
-			return false;
-		}
-		return true;
-	}
-
-	public void login() {
-		Calendar now = Calendar.getInstance();
-		if (lastConnection == null
-				|| lastConnection.DAY_OF_YEAR != now.DAY_OF_YEAR) {
-			lastConnection = now;
-			loginCant = 0;
-		}
-		loginCant++;
+		this.lastConnection = Calendar.getInstance();  
+		this.userConfig = new UserConfiguration();
+		this.stats = new Stats();
 	}
 
 	public String getUser() {
@@ -91,79 +31,134 @@ public class User {
 
 	public void setUser(String user) {
 		this.user = user;
+	
 	}
 
-	public int getPort() {
-		return port;
+	public static UserConfiguration getGlobalConfiguration(){
+		return globalConfig;
+	}
+	
+	public static void setGlobalLoginMax(int loginMax) {
+		globalConfig.setLoginMax(loginMax);
+	}
+	
+	public void setLoginMax(int loginMax){
+		userConfig.setLoginMax(loginMax);
+	}
+	
+	public static void setGlobalRotate(Boolean rotate){
+		globalConfig.setRotate(rotate);
+	}
+	
+	public void setRotate(Boolean rotate){
+		userConfig.setRotate(rotate);
+	}
+	
+	public static void setGlobalLeet(Boolean leet){
+		globalConfig.setLeet(leet);
+	}
+	
+	public void setLeet(Boolean leet){
+		userConfig.setLeet(leet);
+	}
+	
+	public void setServerAddress(String serverAddress){
+		userConfig.setServerAddress(serverAddress);
 	}
 
-	public void setPort(int port) {
-		this.port = port;
+	public static void setGlobalServerAddress(String serverAddress){
+		globalConfig.setServerAddress(serverAddress);
+	}
+	
+	public String getServerAddress(){
+		String server = userConfig.getServerAddress();
+		if(server != null){
+			return server;
+		}else{
+			return globalConfig.getServerAddress();
+		}
+	}
+	
+	public void setServerPort(int port){
+		userConfig.setPort(port);
+	}
+	
+	public static void setGlobalServerPort(int port){
+		globalConfig.setPort(port);
+	}
+	
+	public int getServerPort(){
+		int p = userConfig.getPort();
+		if(p != -1){
+			return p;
+		}else{
+			return globalConfig.getPort();
+		}
 	}
 
-	public int getLoginMax() {
-		return loginMax;
+	public static int getGlobalServerPort(){
+		return globalConfig.getPort();
+	}
+	
+	public Boolean getLeet(){
+		Boolean l = userConfig.getLeet();
+		if(l != null){
+			return l;
+		}else{
+			return globalConfig.getLeet();
+		}
 	}
 
-	public void setLoginMax(int loginMax) {
-		this.loginMax = loginMax;
+	
+	public Boolean getRotate(){
+		Boolean r = userConfig.getRotate();
+		if(r != null){
+			return r;
+		}else{
+			return globalConfig.getRotate();
+		}
 	}
-
-	public int getLoginCant() {
-		return loginCant;
+	
+	public void login() {
+		Calendar now = Calendar.getInstance();
+		if (lastConnection == null
+				|| lastConnection.DAY_OF_YEAR != now.DAY_OF_YEAR) {
+			lastConnection = now;
+			loginCant = 0;
+		}
+		loginCant++;
+		globalStats.incrementLoginCant();
+		stats.incrementLoginCant();
 	}
-
-	public void setLoginCant(int loginCant) {
-		this.loginCant = loginCant;
-	}
-
-	public Calendar getLastConnection() {
-		return lastConnection;
-	}
-
-	public void setLastConnection(Calendar lastConnection) {
-		this.lastConnection = lastConnection;
-	}
-
-	public Interval getLoginInterval() {
-		return loginInterval;
-	}
-
-	public void setLoginInterval(Interval loginInterval) {
-		this.loginInterval = loginInterval;
-	}
-
-	public void setServerAddress(String serverAddress) {
-		this.serverAddress = serverAddress;
-	}
-
+	
 	public boolean haveLoginsLeft() {
-		return haveGlobalLoginsLeft() && haveLocalLoginsLeft();
+		
+		if(userConfig.getLoginMax() == -1){
+			return haveGlobalLoginsLeft();
+		}else{
+			return loginCant < userConfig.getLoginMax();
+		}
 	}
 	
 	public boolean haveGlobalLoginsLeft(){
-		if(globalLoginMax == -1){
+		if(globalConfig.getLoginMax() == -1){
 			return true;
 		}else{
-			return loginCant < globalLoginMax;
+			return loginCant < globalConfig.getLoginMax();
 		}
 	}
 	
-	public boolean haveLocalLoginsLeft(){
-		if(loginMax == -1){
-			return true;
-		}else{
-			return loginCant < loginMax;
-		}
+	public static void initGlobalConfiguration(){
+		resetGlobalConfiguration();
 	}
-
+	
+	public static void resetGlobalConfiguration(){
+		globalConfig.resetGlobalConfiguration();
+	}
+	
 	public boolean isInInterval() {
-
+		//TODO
 		return true;
-	}
-
-	public static void setGlobalLoginMax(int globalLoginMax) {
-		User.globalLoginMax = globalLoginMax;
 	}
 
 	public boolean isBlocked() {
@@ -171,21 +166,12 @@ public class User {
 		return false;
 	}
 
-	public static void setDefaultServer(String string) {
-		User.defaultServer = string;
-		
-	}
-
-	public static void setDefaultServerPort(int port) {
-		User.defaultPort = port;
-		
-	}
-
-	public void deleteLoginMax() {
-		this.loginMax = -1;
+	public void deleteLoginMax(){
+		userConfig.setLoginMax(-1);
 	}
 
 	public static void deleteGlobalLoginMax() {
-		User.globalLoginMax = -1;
+		globalConfig.setLoginMax(-1);
 	}
+
 }

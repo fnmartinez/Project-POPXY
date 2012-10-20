@@ -14,9 +14,7 @@ public class TransactionFilter {
 	}
 
 	public boolean applyDeleteFilters(ByteBuffer[] buff, User user) {
-//		if(!user.hasDeleteConfiguration()){
-//			return true;
-//		}
+		//TODO
 		return true;
 	}
 

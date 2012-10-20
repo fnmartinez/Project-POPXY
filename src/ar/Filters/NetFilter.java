@@ -4,17 +4,16 @@ import java.nio.channels.Channel;
 
 import ar.POPXY;
 
-public class NetFilter{
+public class NetFilter {
 
 	private POPXY proxy;
-	
-	public NetFilter(){
+
+	public NetFilter() {
 		this.proxy = POPXY.getInstance();
 	}
 	
-	public boolean filter(Channel ch) {
-		
-		return false;
+	public boolean filter(String ip){
+		return proxy.isOnTheBlackList(ip);
 	}
-	
+
 }

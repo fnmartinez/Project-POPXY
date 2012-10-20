@@ -123,7 +123,12 @@ public class POPXY {
 	}
 	
 	public User getUser(String userName) {
-		return users.get(userName);
+		User user = users.get(userName);
+		if(user == null){
+			user = new User(userName);
+			users.put(userName, user);
+		}
+		return user;
 	}
 
 	public boolean userIsBlocked(String username) {
@@ -208,7 +213,6 @@ public class POPXY {
 	}
 	
 	public boolean isOnTheBlackList(String ip) {
-
 		for(IpAndMask net: this.blackIps){
 			if(net.matchNet(ip)){
 				return true;

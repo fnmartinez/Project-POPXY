@@ -232,8 +232,8 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					user.setServerAddress(serverAndPort[0]);
-					if(serverAndPort.length == 2) user.setPort(port);
+					user.setGlobalServerAddress(serverAndPort[0]);
+					if(serverAndPort.length == 2) user.setServerPort(port);
 					this.answer(ConfigurationProtocol.getOkMsg());
 					
 				} else if(command == ConfigurationCommands.DELETE){
@@ -244,8 +244,8 @@ public class AdminSession implements Session {
 		} else { //CONFIG GLOBAL
 			//Es una configuracion GLOBAL
 			if(command == ConfigurationCommands.SET){
-				User.setDefaultServer(serverAndPort[0]);
-				if(serverAndPort.length == 2) User.setDefaultServerPort(port);
+				User.setGlobalServerAddress(serverAndPort[0]);
+				if(serverAndPort.length == 2) User.setGlobalServerPort(port);
 				this.answer(ConfigurationProtocol.getOkMsg());
 			
 			} else{
