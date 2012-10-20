@@ -11,14 +11,11 @@ public class UserConfiguration {
 
 	private String serverAddress;
 	private int port;
-	private DeletionConfigurations deletionConfigurations;
+	private DeletionConfiguration deletionConfiguration;
 	private int loginMax;
 	private Boolean rotate;
 	private Boolean leet;
-
-	// TODO TIEMPO
-	// In minutes of day, maximum 60*24=1440
-	private List<Range<Integer>> scheduleList = new ArrayList<Range<Integer>>();
+	private TimeConfiguration intervals;
 
 	public UserConfiguration() {
 		resetUserConfiguration();
@@ -27,10 +24,11 @@ public class UserConfiguration {
 	public void resetUserConfiguration() {
 		this.serverAddress = null;
 		this.port = -1;
-		this.deletionConfigurations = new DeletionConfigurations();
+		this.deletionConfiguration = new DeletionConfiguration();
 		this.loginMax = -1;
 		this.rotate = null;
 		this.leet = null;
+		this.intervals = new TimeConfiguration();
 	}
 
 	public void resetGlobalConfiguration() {
@@ -38,11 +36,12 @@ public class UserConfiguration {
 				.getDefaultOriginServer());
 		User.setGlobalServerPort(POPXY.getInstance()
 				.getDefaultOriginServerPort());
-		User.getGlobalConfiguration().getDeletionConfigurations()
+		User.getGlobalConfiguration().getDeletionConfiguration()
 				.resetGlobalConfiguration();
 		User.setGlobalLoginMax(-1);
 		User.setGlobalRotate(false);
 		User.setGlobalLeet(false);
+		User.getGlobalConfiguration().getTimeConfiguration().resetGlobalTimeConfiguration();
 	}
 
 	public int getLoginMax() {
@@ -85,16 +84,28 @@ public class UserConfiguration {
 		this.serverAddress = serverAddress;
 	}
 
-	public DeletionConfigurations getDeletionConfigurations() {
-		return deletionConfigurations;
+	public DeletionConfiguration getDeletionConfiguration() {
+		return deletionConfiguration;
+	}
+	
+	public TimeConfiguration getTimeConfiguration(){
+		return intervals;
+	}
+	
+	public boolean hasTimeConfiguration(){
+		return intervals.hasInterval();
+	}
+	
+	public void addInterval(IntervalTime interval){
+		this.intervals.addInterval(interval);
+	}
+	
+	public boolean isInIntervalSet(){
+		return this.intervals.isInIntervalSet();
 	}
 
-	public void addScheduleRestriction(Range<Integer> r) {
-		this.scheduleList.add(r);
+	public void removeInterval(IntervalTime intervalTime) {
+		intervals.removeInterval(intervalTime);		
 	}
-
-	public List<Range<Integer>> getScheduleList() {
-		return scheduleList;
-	}
-
+	
 }

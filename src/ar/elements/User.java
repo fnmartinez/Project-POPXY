@@ -157,8 +157,11 @@ public class User {
 	}
 	
 	public boolean isInInterval() {
-		//TODO
-		return true;
+		if(userConfig.hasTimeConfiguration()){
+			return userConfig.isInIntervalSet();
+		}else{
+			return globalConfig.isInIntervalSet();
+		}		
 	}
 
 	public boolean isBlocked() {
@@ -173,5 +176,21 @@ public class User {
 	public static void deleteGlobalLoginMax() {
 		globalConfig.setLoginMax(-1);
 	}
-
+	
+	public void addInterval(int minFrom, int minTo){
+		userConfig.addInterval(new IntervalTime(minFrom, minTo));
+	}
+	
+	public static void addGlobalInterval(int minFrom, int minTo){
+		globalConfig.addInterval(new IntervalTime(minFrom, minTo));
+	}
+	
+	public void removeInterval(int minFrom, int minTo){
+		userConfig.removeInterval(new IntervalTime(minFrom, minTo));
+	}
+	
+	public static void removeGlobalInterval(int minFrom, int minTo){
+		globalConfig.removeInterval(new IntervalTime(minFrom, minTo));
+	}
+	
 }
