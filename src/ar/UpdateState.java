@@ -8,4 +8,9 @@ public class UpdateState implements State {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public boolean isEndState() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
