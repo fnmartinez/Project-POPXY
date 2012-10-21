@@ -30,7 +30,7 @@ public class AuthState implements State {
 			cmd = cmd.trim();
 			
 			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
-			String[] args = session.getClientBuffer()[1].toString().trim().split("\\s");
+			String[] args = (new String(session.getClientBuffer()[1].array())).split("\\s");
 			
 			ByteBuffer[] bufferToUse = null;
 			
@@ -46,7 +46,7 @@ public class AuthState implements State {
 					bufferToUse[1].clear();
 					
 					bufferToUse[0].put("-ERR".getBytes());
-					bufferToUse[1].put(" You cannot login right now./r/n".getBytes());
+					bufferToUse[1].put(" You cannot login right now.\r\n".getBytes());
 					
 					bufferToUse[0].flip();
 					bufferToUse[1].flip();
@@ -92,7 +92,7 @@ public class AuthState implements State {
 				bufferToUse[1].clear();
 				
 				bufferToUse[0].put("+OK ".getBytes());
-				bufferToUse[1].put("Farewell./r/n".getBytes());
+				bufferToUse[1].put("Farewell.\r\n".getBytes());
 				
 				bufferToUse[0].flip();
 				bufferToUse[1].flip();
@@ -107,7 +107,7 @@ public class AuthState implements State {
 				bufferToUse[1].clear();
 				
 				bufferToUse[0].put("-ERR".getBytes());
-				bufferToUse[1].put(" Invalid opcode./r/n".getBytes());
+				bufferToUse[1].put(" Invalid opcode.\r\n".getBytes());
 				
 				bufferToUse[0].flip();
 				bufferToUse[1].flip();
@@ -151,7 +151,7 @@ public class AuthState implements State {
 					bufferToUse[0].clear();
 					bufferToUse[1].clear();
 					bufferToUse[0].put("USER".getBytes());
-					bufferToUse[1].put((session.getClient().getUser() + "/r/n").getBytes());
+					bufferToUse[1].put((session.getClient().getUser() + "\r\n").getBytes());
 					bufferToUse[0].flip();
 					bufferToUse[1].flip();
 				}
@@ -233,7 +233,7 @@ public class AuthState implements State {
 				bufferToUse[1].clear();
 				
 				bufferToUse[0].put("-ERR".getBytes());
-				bufferToUse[1].put(" Invalid opcode./r/n".getBytes());
+				bufferToUse[1].put(" Invalid opcode.\r\n".getBytes());
 				
 				bufferToUse[0].flip();
 				bufferToUse[1].flip();
@@ -258,7 +258,7 @@ public class AuthState implements State {
 			bufferToUse[1].clear();
 			
 			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command./r/n".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
 			
 			bufferToUse[0].flip();
 			bufferToUse[1].flip();

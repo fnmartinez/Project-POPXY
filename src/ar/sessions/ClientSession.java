@@ -98,7 +98,7 @@ public class ClientSession implements Session {
 			try {
 				clearBuffer(mockServerBuffer);
 
-				mockServerBuffer[0].put("+OK/r/n".getBytes());
+				mockServerBuffer[0].put("+OK\r\n".getBytes());
 
 				flipBuffer(mockServerBuffer);
 

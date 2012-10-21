@@ -6,8 +6,8 @@ import java.util.Calendar;
 public class User {
 	
 	// Configuraciones Generales
-	private static UserConfiguration globalConfig;
-	private static Stats globalStats;
+	private static UserConfiguration globalConfig = new UserConfiguration();
+	private static Stats globalStats = new Stats();
 	
 	// Configuraciones propias de un usuario
 	private String user;

@@ -151,7 +151,7 @@ public class TransactionState implements State {
 			bufferToUse[1].clear();
 			
 			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command./r/n".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
 			
 			bufferToUse[0].flip();
 			bufferToUse[1].flip();

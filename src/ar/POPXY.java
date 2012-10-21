@@ -41,6 +41,9 @@ public class POPXY {
 	public static void main(String[] args) 
 		throws Exception{
 		
+		//Seteo las configuraciones globales del proxy
+		User.initGlobalConfiguration();
+		
 		//Tomar conf;
 		POPXY proxy = POPXY.getInstance();
 		Selector selector = Selector.open();
