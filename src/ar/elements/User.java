@@ -7,7 +7,7 @@ public class User {
 	
 	// Configuraciones Generales
 	private static UserConfiguration globalConfig;
-	private Stats globalStats;
+	private static Stats globalStats;
 	
 	// Configuraciones propias de un usuario
 	private String user;
@@ -191,6 +191,14 @@ public class User {
 	
 	public static void removeGlobalInterval(int minFrom, int minTo){
 		globalConfig.removeInterval(new IntervalTime(minFrom, minTo));
+	}
+	
+	public static Stats getGlobalStats(){
+		return globalStats;
+	}
+	
+	public void addTransferedBytes(long transferedBytes){
+		stats.addTransferedBytes(transferedBytes);
 	}
 	
 }
