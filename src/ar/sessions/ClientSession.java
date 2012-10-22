@@ -14,6 +14,7 @@ import ar.POPXY;
 import ar.Response;
 import ar.State;
 import ar.elements.User;
+import ar.sessions.utils.BufferUtils;
 
 public class ClientSession implements Session {
 
@@ -90,9 +91,13 @@ public class ClientSession implements Session {
 		}
 
 	}
+	
+	private void logWrite(String msg) {
+		String ctw = channelToWrite == originServerSocket ? "S":"C"; 
+		System.out.println("P->"+ctw+" : "+msg);	
+	}
 
 	public void handleWrite() {
-
 		//TODO: try to put this in the automaton
 		if (firstContact) {
 			try {
@@ -102,6 +107,7 @@ public class ClientSession implements Session {
 
 				flipBuffer(mockServerBuffer);
 
+				logWrite(BufferUtils.byteBufferToString(mockServerBuffer));
 				clientSocket.write(mockServerBuffer);
 			} catch (IOException e) {
 				// TODO: handle exception
@@ -111,6 +117,7 @@ public class ClientSession implements Session {
 		} else {
 			if(useSecondServerBuffer){
 				try {
+					logWrite(BufferUtils.byteBufferToString(secondServerBuffer));
 					channelToWrite.write(secondServerBuffer);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -118,6 +125,7 @@ public class ClientSession implements Session {
 				}
 			} else {
 				try {
+					logWrite(BufferUtils.byteBufferToString(bufferToRead));
 					channelToWrite.write(bufferToRead);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -135,6 +143,11 @@ public class ClientSession implements Session {
 		}
 	}
 
+	private void logRead(String msg) {
+		String ctw = channelToRead == originServerSocket ? "S":"C"; 
+		System.out.println(ctw+"->P : "+msg);	
+	}
+	
 	public void handleRead() {
 		String cmd;
 		String[] args;
@@ -148,6 +161,7 @@ public class ClientSession implements Session {
 				e.printStackTrace();
 			}
 			secondServerBuffer.flip();
+			logRead(BufferUtils.byteBufferToString(secondServerBuffer));
 		} else {
 			clearBuffer(bufferToWrite);
 			try {
@@ -157,6 +171,7 @@ public class ClientSession implements Session {
 				e.printStackTrace();
 			}
 			flipBuffer(bufferToWrite);
+			logRead(BufferUtils.byteBufferToString(bufferToWrite));
 		}
 
 		evaluateState();
@@ -185,7 +200,7 @@ public class ClientSession implements Session {
 		case SelectionKey.OP_WRITE:
 			this.bufferToRead = r.getBuffers();
 			this.channelToWrite = (SocketChannel)r.getChannel();
-			break;
+			break;			
 		default:
 			this.bufferToRead = this.bufferToWrite = null;
 			break;

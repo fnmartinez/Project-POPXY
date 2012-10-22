@@ -14,6 +14,7 @@ import java.nio.charset.CharsetEncoder;
 import ar.POPXY;
 import ar.elements.User;
 import ar.protocols.ConfigurationProtocol;
+import ar.sessions.utils.BufferUtils;
 import ar.sessions.utils.ConfigurationCommands;
 
 public class AdminSession implements Session {
@@ -30,9 +31,6 @@ public class AdminSession implements Session {
 	private static final int ORIGIN_CHANNEL = 2;
 	private static final int STATS_CHANNEL = 3;
 
-	public static Charset charset = Charset.forName("UTF-8");
-	public static CharsetEncoder encoder = charset.newEncoder();
-	public static CharsetDecoder decoder = charset.newDecoder();
 	
     private int state = NO_ESTABLISHED_CONNECTION;
 	private SocketChannel adminChannel;
@@ -107,7 +105,7 @@ public class AdminSession implements Session {
         	commandBuf.flip();
         	parametersBuf.flip();
 
-        	String commandString = byteBufferToString(commandBuf);
+        	String commandString = BufferUtils.byteBufferToString(commandBuf);
         	ConfigurationCommands command =  ConfigurationProtocol.getCommand(commandString);
         	if(command == null){
         		this.answer(ConfigurationProtocol.getInvalidCommandMsg());
@@ -128,7 +126,7 @@ public class AdminSession implements Session {
         		return;
         	}
         	
-        	String subCommandAndParameters = byteBufferToString(parametersBuf);
+        	String subCommandAndParameters = BufferUtils.byteBufferToString(parametersBuf);
         	
         	ConfigurationCommands subCommand = ConfigurationProtocol.getSubCommand(subCommandAndParameters);
         	if(subCommand == null){
@@ -387,16 +385,5 @@ public class AdminSession implements Session {
 	private void removeFilter(ConfigurationCommands command, ConfigurationCommands subCommand, String[] parameters) {
 		//TODO		
 	}
-	
-	public static String byteBufferToString(ByteBuffer buffer){
-		  String data = "";
-		  try{
-		    data = decoder.decode(buffer).toString();
-		  }catch (Exception e){
-		    e.printStackTrace();
-		    return "";
-		  }
-		  return data;
-		}
 
 }

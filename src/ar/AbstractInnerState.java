@@ -6,7 +6,7 @@ import ar.sessions.ClientSession;
 
 public abstract class AbstractInnerState implements State{
 	
-	private FlowDirection flowDirection = FlowDirection.READ_CLIENT; 
+	private FlowDirection flowDirection = FlowDirection.WRITE_CLIENT; 
 
 	public Response eval(ClientSession session) {
 		
