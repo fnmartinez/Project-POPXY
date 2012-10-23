@@ -115,24 +115,32 @@ public class AuthState implements State {
 				response.setOperation(SelectionKey.OP_WRITE);
 				response.setState(new QuitState());
 			} else {
-				bufferToUse = session.getFirstServerBuffer();
-				bufferToUse[0].clear();
-				bufferToUse[1].clear();
-				
-				bufferToUse[0].put("-ERR".getBytes());
-				bufferToUse[1].put(" Invalid opcode.\r\n".getBytes());
-				
-				bufferToUse[0].flip();
-				bufferToUse[1].flip();
-				
-				response.setBuffers(bufferToUse);
-				response.setChannel(session.getClientSocket());
-				response.setOperation(SelectionKey.OP_WRITE);
-				response.setState(this);
+				response = invalidCommand(session);
 			}
 			return response;
 		}
 
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			bufferToUse[0].clear();
+			bufferToUse[1].clear();
+			
+			bufferToUse[0].put("-ERR".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			
+			bufferToUse[0].flip();
+			bufferToUse[1].flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
+			this.setFlowToWriteClient();
+			return response;
+		}
+	
+		
 		public boolean isEndState() {
 			return false;
 		}
@@ -248,25 +256,32 @@ public class AuthState implements State {
 
 				break;
 			default:
-				ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-				bufferToUse[0].clear();
-				bufferToUse[1].clear();
-				
-				bufferToUse[0].put("-ERR".getBytes());
-				bufferToUse[1].put(" Invalid opcode.\r\n".getBytes());
-				
-				bufferToUse[0].flip();
-				bufferToUse[1].flip();
-				
-				response.setBuffers(bufferToUse);
-				response.setChannel(session.getClientSocket());
-				response.setOperation(SelectionKey.OP_WRITE);
-				response.setState(new NoneState());
+				response = invalidCommand(session);
 				break;
 			}
 			return response;
 		}
 		
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			bufferToUse[0].clear();
+			bufferToUse[1].clear();
+			
+			bufferToUse[0].put("-ERR".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			
+			bufferToUse[0].flip();
+			bufferToUse[1].flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(new NoneState());
+			this.setFlowToWriteClient();
+			return response;
+		}
+
 		private Response invalidArgumentResponse(ClientSession session) {
 			Response response = new Response();
 			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
