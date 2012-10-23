@@ -18,7 +18,6 @@ public class TransactionState implements State {
 	
 	private class NoneState extends AbstractInnerState {
 		
-		private boolean fromError = false;
 
 		@Override
 		Response afterReadingFromClient(ClientSession session) {
@@ -26,12 +25,11 @@ public class TransactionState implements State {
 			Response response = new Response();
 			
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
-			
-			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
-			String[] args = ((BufferUtils.byteBufferToString(session.getClientBuffer()[1])).trim()).split("\\s");
+
+			byte firstCaracter = session.getClientBuffer()[1].get(0);
+			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' '));
 			
 			AbstractInnerState tmpState;
-			ByteBuffer[] bufferToUse = null;
 
 			switch(cmd) {
 			case STAT:

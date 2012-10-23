@@ -32,8 +32,8 @@ public class AuthState implements State {
 			
 			String cmd = BufferUtils.byteBufferToString(session.getClientBuffer()[0]);
 			cmd = cmd.trim();
-			
-			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
+			byte firstCaracter = session.getClientBuffer()[1].get(0);
+			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' ')); 
 			String[] args = (BufferUtils.byteBufferToString(session.getClientBuffer()[1]).trim()).split("\\s");
 			
 			ByteBuffer[] bufferToUse = null;
@@ -227,10 +227,9 @@ public class AuthState implements State {
 			Response response = new Response();
 			
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
-			
-			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
-			String[] args = ((BufferUtils.byteBufferToString(session.getClientBuffer()[1])).trim()).split("\\s");
-			
+
+			byte firstCaracter = session.getClientBuffer()[1].get(0);
+			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' '));			
 			AbstractInnerState tmpState;
 			
 			switch(cmd){

@@ -134,12 +134,13 @@ public class ClientSession implements Session {
 			}
 		}
 
-		evaluateState();
-		try {
-			toSuscribe.register(selector, suscriptionMode, this);
-		} catch (ClosedChannelException e) {
-			// TODO: Should close client gracefully.
-			e.printStackTrace();
+		if(evaluateState()){
+			try {
+				toSuscribe.register(selector, suscriptionMode, this);
+			} catch (ClosedChannelException e) {
+				// TODO: Should close client gracefully.
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -185,7 +186,11 @@ public class ClientSession implements Session {
 
 	}
 	
-	private void evaluateState() {
+	private boolean evaluateState() {
+		if(state == null){
+			handleEndConection();
+			return false;
+		}
 		Response r = state.eval(this);
 		
 		this.toSuscribe = (SocketChannel) r.getChannel();
@@ -205,6 +210,19 @@ public class ClientSession implements Session {
 			this.bufferToRead = this.bufferToWrite = null;
 			break;
 		}
+		
+		return true;
+	}
+
+	private void handleEndConection() {
+		System.out.println("Se cerro la conexion del cliente!!!");
+		try {
+			this.clientSocket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	private void clearBuffer(Buffer[] b) {
