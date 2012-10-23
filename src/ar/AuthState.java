@@ -1,11 +1,15 @@
 package ar;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
+
 import ar.sessions.ClientSession;
+import ar.sessions.utils.BufferUtils;
 import ar.sessions.utils.POPHeadCommands;
 
 public class AuthState implements State {
@@ -26,11 +30,11 @@ public class AuthState implements State {
 			
 			Response response = new Response();
 			
-			String cmd = new String(session.getClientBuffer()[0].array());
+			String cmd = BufferUtils.byteBufferToString(session.getClientBuffer()[0]);
 			cmd = cmd.trim();
 			
 			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
-			String[] args = (new String(session.getClientBuffer()[1].array())).split("\\s");
+			String[] args = (BufferUtils.byteBufferToString(session.getClientBuffer()[1]).trim()).split("\\s");
 			
 			ByteBuffer[] bufferToUse = null;
 			
@@ -66,10 +70,18 @@ public class AuthState implements State {
 					}
 					session.setClient(POPXY.getInstance().getUser(args[0]));
 					try {
-						session.setOriginServerSocket((new Socket(
-								session.getClient().getServerAddress(),
-								session.getClient().getServerPort()))
-								.getChannel());
+						
+						String host = session.getClient().getServerAddress();
+						int port = session.getClient().getServerPort();
+
+						SocketChannel socketChannel = SocketChannel.open();
+						socketChannel.configureBlocking(false);
+						socketChannel.connect(new InetSocketAddress(host, port));
+						while(! socketChannel.finishConnect() ){
+						    System.out.println(".");    
+						}
+						session.setOriginServerSocket(socketChannel);
+						
 					} catch (UnknownHostException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -79,7 +91,8 @@ public class AuthState implements State {
 					}
 					this.setFlowToWriteServer();
 					response.setChannel(session.getOriginServerSocket());
-					response.setOperation(SelectionKey.OP_CONNECT);
+					response.setBuffers(session.getFirstServerBuffer());
+					response.setOperation(SelectionKey.OP_READ);
 					response.setState(new UserState());
 					((AbstractInnerState)response.getState()).setFlowToReadServer();
 				}
@@ -102,24 +115,32 @@ public class AuthState implements State {
 				response.setOperation(SelectionKey.OP_WRITE);
 				response.setState(new QuitState());
 			} else {
-				bufferToUse = session.getFirstServerBuffer();
-				bufferToUse[0].clear();
-				bufferToUse[1].clear();
-				
-				bufferToUse[0].put("-ERR".getBytes());
-				bufferToUse[1].put(" Invalid opcode.\r\n".getBytes());
-				
-				bufferToUse[0].flip();
-				bufferToUse[1].flip();
-				
-				response.setBuffers(bufferToUse);
-				response.setChannel(session.getClientSocket());
-				response.setOperation(SelectionKey.OP_WRITE);
-				response.setState(this);
+				response = invalidCommand(session);
 			}
 			return response;
 		}
 
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			bufferToUse[0].clear();
+			bufferToUse[1].clear();
+			
+			bufferToUse[0].put("-ERR".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			
+			bufferToUse[0].flip();
+			bufferToUse[1].flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
+			this.setFlowToWriteClient();
+			return response;
+		}
+	
+		
 		public boolean isEndState() {
 			return false;
 		}
@@ -136,34 +157,42 @@ public class AuthState implements State {
 			boolean errorRecieved = false;
 			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
 			
-			
+			String cmd = BufferUtils.byteBufferToString(session.getFirstServerBuffer()[0]);
+			cmd = cmd.trim();
 			// If I get any '-ERR', dispite being the first or second iteration, I should send it to 
 			// the user. Else, if it's the first time, I should send the command 'USER <username>/r/n'
 			// to the server, using the ClientBuffer.
-			if(session.getFirstServerBuffer()[0].toString().trim().equalsIgnoreCase("+OK")) {
+			if(cmd.equalsIgnoreCase("+OK")) {
 				
 				// If it's the first time, it means I might need to send the user name to the server.
 				// Hence, I'll write with the ClientBuffer.
 				if(this.usernameSend) {
 					bufferToUse = session.getFirstServerBuffer();
+					this.setFlowToWriteClient();
+					response.setOperation(SelectionKey.OP_WRITE);
+
 				} else {
+
+					this.setFlowToWriteServer();
 					bufferToUse = session.getClientBuffer();
 					bufferToUse[0].clear();
 					bufferToUse[1].clear();
 					bufferToUse[0].put("USER".getBytes());
-					bufferToUse[1].put((session.getClient().getUser() + "\r\n").getBytes());
+					bufferToUse[1].put((" "+session.getClient().getUser() + "\r\n").getBytes());
 					bufferToUse[0].flip();
 					bufferToUse[1].flip();
+					response.setOperation(SelectionKey.OP_WRITE);
 				}
 			} else {
+				this.setFlowToWriteClient();
 				errorRecieved = true;
 				bufferToUse = session.getFirstServerBuffer();
+				response.setOperation(SelectionKey.OP_WRITE);
 			}
 			
 			
 			response.setBuffers(bufferToUse);
 			response.setChannel(((usernameSend)?session.getClientSocket():session.getOriginServerSocket()));
-			response.setOperation(SelectionKey.OP_WRITE);
 			
 			State state = null;
 			
@@ -184,7 +213,6 @@ public class AuthState implements State {
 				state = null;
 			}
 			response.setState(state);
-			this.setFlowToWriteServer();
 			
 			if(!usernameSend) {
 				usernameSend = true;
@@ -198,10 +226,10 @@ public class AuthState implements State {
 			
 			Response response = new Response();
 			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(session.getClientBuffer()[0].toString().trim());
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
 			
 			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
-			String[] args = session.getClientBuffer()[1].toString().trim().split("\\s");
+			String[] args = ((BufferUtils.byteBufferToString(session.getClientBuffer()[1])).trim()).split("\\s");
 			
 			AbstractInnerState tmpState;
 			
@@ -228,25 +256,32 @@ public class AuthState implements State {
 
 				break;
 			default:
-				ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-				bufferToUse[0].clear();
-				bufferToUse[1].clear();
-				
-				bufferToUse[0].put("-ERR".getBytes());
-				bufferToUse[1].put(" Invalid opcode.\r\n".getBytes());
-				
-				bufferToUse[0].flip();
-				bufferToUse[1].flip();
-				
-				response.setBuffers(bufferToUse);
-				response.setChannel(session.getClientSocket());
-				response.setOperation(SelectionKey.OP_WRITE);
-				response.setState(new NoneState());
+				response = invalidCommand(session);
 				break;
 			}
 			return response;
 		}
 		
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			bufferToUse[0].clear();
+			bufferToUse[1].clear();
+			
+			bufferToUse[0].put("-ERR".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			
+			bufferToUse[0].flip();
+			bufferToUse[1].flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(new NoneState());
+			this.setFlowToWriteClient();
+			return response;
+		}
+
 		private Response invalidArgumentResponse(ClientSession session) {
 			Response response = new Response();
 			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
@@ -283,7 +318,7 @@ public class AuthState implements State {
 			response = super.afterReadingFromServer(session);
 			
 
-			if(session.getFirstServerBuffer()[0].toString().trim().equalsIgnoreCase("+OK")) {
+			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()[0]).trim().equalsIgnoreCase("+OK")) {
 				this.isFinalState = true;
 			} else {
 				response.setState(new NoneState());

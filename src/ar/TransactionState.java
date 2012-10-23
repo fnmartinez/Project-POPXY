@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
 import ar.sessions.ClientSession;
+import ar.sessions.utils.BufferUtils;
 import ar.sessions.utils.POPHeadCommands;
 
 public class TransactionState implements State {
@@ -24,10 +25,10 @@ public class TransactionState implements State {
 			
 			Response response = new Response();
 			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(session.getClientBuffer()[0].toString().trim());
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
 			
 			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && session.getClientBuffer()[1].get(0) == ' '); 
-			String[] args = session.getClientBuffer()[1].toString().trim().split("\\s");
+			String[] args = ((BufferUtils.byteBufferToString(session.getClientBuffer()[1])).trim()).split("\\s");
 			
 			AbstractInnerState tmpState;
 			ByteBuffer[] bufferToUse = null;
