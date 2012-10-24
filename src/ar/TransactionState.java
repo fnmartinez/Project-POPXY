@@ -187,41 +187,111 @@ public class TransactionState implements State {
 	private class StatState extends AbstractInnerState{
 		
 		@Override
-		Response afterReadingFromServer(ClientSession session) {
-			Response response = super.afterReadingFromServer(session);
-			
-			response.setState(new NoneState());
+		Response afterWritingToClient(ClientSession session) {
+			Response response = super.afterWritingToClient(session);
+			AbstractInnerState tmpState = new NoneState();
+			tmpState.setFlowToReadClient();
+			response.setState(tmpState);
 			return response;
 		}
 
 	}
 
 	private class ListState extends AbstractMultilinerInnerState{
-
+		@Override
+		Response afterWritingToClient(ClientSession session){
+			Response response = super.afterWritingToClient(session);
+			if(response.isEndOfChainResponse()){
+				AbstractInnerState tmpState = new NoneState();
+				tmpState.setFlowToReadClient();
+				response.setState(tmpState);
+			}
+			return response;
+		}
 	}
 	
 	private class RetrState extends AbstractMultilinerInnerState{
-
+		@Override
+		Response afterWritingToClient(ClientSession session){
+			Response response = super.afterWritingToClient(session);
+			if(response.isEndOfChainResponse()){
+				AbstractInnerState tmpState = new NoneState();
+				tmpState.setFlowToReadClient();
+				response.setState(tmpState);
+			}
+			return response;
+		}
 		
 	}
 	
 	private class DeleState extends AbstractInnerState{
 
+		@Override
+		Response afterWritingToClient(ClientSession session) {
+			Response response = super.afterWritingToClient(session);
+			AbstractInnerState tmpState = new NoneState();
+			tmpState.setFlowToReadClient();
+			response.setState(tmpState);
+			return response;
+		}
+	
 	}
 	
 	private class NoopState extends AbstractInnerState{
+		
+		@Override
+		Response afterWritingToClient(ClientSession session) {
+			Response response = new Response();
+			response = super.afterWritingToClient(session);
+			AbstractInnerState tmpState = new NoneState();
+			tmpState.setFlowToReadClient();
+			response.setState(tmpState);
+			return response;
+		}
 
 	}
 	
 	private class UidlState extends AbstractMultilinerInnerState{
 
+		@Override
+		Response afterWritingToClient(ClientSession session){
+			Response response = super.afterWritingToClient(session);
+			if(response.isEndOfChainResponse()){
+				AbstractInnerState tmpState = new NoneState();
+				tmpState.setFlowToReadClient();
+				response.setState(tmpState);
+			}
+			return response;
+		}
+		
 	}
 	
 	private class TopState extends AbstractMultilinerInnerState{
+		
+		@Override
+		Response afterWritingToClient(ClientSession session){
+			Response response = super.afterWritingToClient(session);
+			if(response.isEndOfChainResponse()){
+				AbstractInnerState tmpState = new NoneState();
+				tmpState.setFlowToReadClient();
+				response.setState(tmpState);
+			}
+			return response;
+		}
 
 	}
 	
 	private class RsetState extends AbstractInnerState{
+		
+		@Override
+		Response afterWritingToClient(ClientSession session) {
+			Response response = new Response();
+			response = super.afterWritingToClient(session);
+			AbstractInnerState tmpState = new NoneState();
+			tmpState.setFlowToReadClient();
+			response.setState(tmpState);
+			return response;
+		}
 
 	}
 	
