@@ -296,11 +296,21 @@ public class ConfigurationProtocol {
 			}
 		}
 		
-		parameters[0] = fromTime;
-		parameters[1] = toTime;
+		parameters[0] = timeToMinutes(fromTime);
+		parameters[1] = timeToMinutes(toTime);
 		
 		return parameters;
 		
+	}
+
+
+	private static String timeToMinutes(String time) {
+		Integer hour = Integer.parseInt(time.substring(0, 2));
+		Integer min = Integer.parseInt(time.substring(2, 4));
+		
+		min = min + (hour * 60);
+		
+		return min.toString();
 	}
 
 
@@ -337,9 +347,30 @@ public class ConfigurationProtocol {
 		return EXT_MSG;
 	}
 	
-	private static boolean isValidDate(String fromTime) {
-		// TODO Auto-generated method stub
-		return false;
+	private static boolean isValidDate(String time) {
+		if(time.length() != 4)
+			return false;
+		
+		Integer hour, min;
+
+		try{
+			 hour = Integer.parseInt(time.substring(0, 2));
+			 min = Integer.parseInt(time.substring(2, 4));
+		} catch (Exception e){
+			return false;
+		}
+		
+		if(hour == null || min == null){
+			return false;
+		}
+		
+		if(min < 0 || min > 59)
+			return false;
+		
+		if(hour < 0 || hour > 23)
+			return false;		
+		
+		return true;
 	}
 
 	

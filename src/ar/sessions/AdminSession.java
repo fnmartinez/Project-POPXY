@@ -230,12 +230,12 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					user.setGlobalServerAddress(serverAndPort[0]);
+					user.setServerAddress(serverAndPort[0]);
 					if(serverAndPort.length == 2) user.setServerPort(port);
 					this.answer(ConfigurationProtocol.getOkMsg());
 					
 				} else if(command == ConfigurationCommands.DELETE){
-					//user.deleteOriginServer();
+					user.setServerAddress(User.getGlobalServerAddress());
 					this.answer(ConfigurationProtocol.getOkMsg());
 				}
 			}
@@ -269,10 +269,10 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					//user.setLoginInterval(parameters[0], parameters[1]);
+					user.addInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 					this.answer(ConfigurationProtocol.getOkMsg());
 				} else	if(command == ConfigurationCommands.DELETE){
-					//user.deleteLoginInterval(parameters[0], parameters[1]);
+					user.removeInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 					this.answer(ConfigurationProtocol.getOkMsg());
 				}	
 			}
@@ -281,11 +281,11 @@ public class AdminSession implements Session {
 		
 			//Es una configuracion global
 			if(command == ConfigurationCommands.SET){
-				//User.addLoginTimeInterval(parameters[0], parameters[1]);
+				User.addGlobalInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 				this.answer(ConfigurationProtocol.getOkMsg());
 
 			} else if(command == ConfigurationCommands.DELETE){
-				//user.deleteLoginTimeInterval(parameters[0], parameters[1]);
+				User.removeGlobalInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 				this.answer(ConfigurationProtocol.getOkMsg());
 			}
 			
@@ -298,18 +298,42 @@ public class AdminSession implements Session {
 	private void setApp(ConfigurationCommands command, String[] parameters) {
 		
 		POPXY popxy = POPXY.getInstance();
+		User user = null;
 		
-		if(parameters[0] == "l33t"){
-			popxy.activateL33t();	
-		} else if(parameters[0] == "rotate"){			
-			popxy.activateRotate();		
-		} else if(parameters[0] == "anonymous"){
-			popxy.activateAnonimous();	
+		//Si me pasa como parametro un usuario(no es global):
+		if(parameters.length > 1){
+			for(int i = 1; i < parameters.length; i++ ){
+				user = popxy.getUser(parameters[i]);
+				//Si el usuario no existe
+				if(user == null){
+					answer(ConfigurationProtocol.getInvalidUserMsg());
+					break;
+				}
+				
+				if(command == ConfigurationCommands.SET){
+					user.setApp(parameters[0], true);
+					this.answer(ConfigurationProtocol.getOkMsg());
+				} else	if(command == ConfigurationCommands.DELETE){
+					user.setApp(parameters[0], false);
+					this.answer(ConfigurationProtocol.getOkMsg());
+				}	
+			}
+			
 		} else {
-			popxy.activateApp(parameters[0]);
+		
+			//Es una configuracion global
+			if(command == ConfigurationCommands.SET){
+				User.setGlobalApp(parameters[0], true);
+				this.answer(ConfigurationProtocol.getOkMsg());
+
+			} else if(command == ConfigurationCommands.DELETE){
+				User.setGlobalApp(parameters[0], false);
+				this.answer(ConfigurationProtocol.getOkMsg());
+			}
+			
 		}
-		this.answer(ConfigurationProtocol.getOkMsg());
-		return;
+		
+		return;	
 	}
 	
 	

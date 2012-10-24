@@ -18,8 +18,8 @@ public enum POPHeadCommands {
 	NONE,
 	UKWN;
 	
-	private static Map<String, POPHeadCommands> reverseStringSearchMap;
-	private static boolean firstCall = false;
+	private static Map<String, POPHeadCommands> reverseStringSearchMap = new HashMap<String, POPHeadCommands>();
+	private static boolean firstCall = true;
 	
 	
 	public static POPHeadCommands getLiteralByString(String str) {

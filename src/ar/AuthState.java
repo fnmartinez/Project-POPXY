@@ -32,8 +32,10 @@ public class AuthState implements State {
 			
 			String cmd = BufferUtils.byteBufferToString(session.getClientBuffer()[0]);
 			cmd = cmd.trim();
-			byte firstCaracter = session.getClientBuffer()[1].get(0);
-			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' ')); 
+			
+			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
+			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n");
+
 			String[] args = (BufferUtils.byteBufferToString(session.getClientBuffer()[1]).trim()).split("\\s");
 			
 			ByteBuffer[] bufferToUse = null;
@@ -305,11 +307,100 @@ public class AuthState implements State {
 			
 			return response;
 		}
+	
 	}
 	
 	private class PassState extends AbstractInnerState implements EndState {
 		
 		private boolean isFinalState = false;
+
+		@Override
+		Response afterReadingFromClient(ClientSession session) {
+			
+			Response response = new Response();
+			
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
+
+			byte firstCaracter = session.getClientBuffer()[1].get(0);
+			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' '));			
+			AbstractInnerState tmpState;
+			
+			switch(cmd){
+			case PASS:
+				if(validArgument){
+					response = super.afterReadingFromClient(session);
+					tmpState = new PassState();
+					tmpState.setFlowToWriteServer();
+					response.setState(tmpState);
+				} else {
+					response = invalidArgumentResponse(session);
+				}
+				break;
+			case QUIT:
+				if(validArgument){
+					response = super.afterReadingFromClient(session);
+					tmpState = new QuitState();
+					tmpState.setFlowToWriteServer();
+					response.setState(tmpState);
+				} else {
+					response = invalidArgumentResponse(session);
+				}
+
+				break;
+			default:
+				response = invalidCommand(session);
+				break;
+			}
+			return response;
+		}
+		
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			bufferToUse[0].clear();
+			bufferToUse[1].clear();
+			
+			bufferToUse[0].put("-ERR".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			
+			bufferToUse[0].flip();
+			bufferToUse[1].flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(new NoneState());
+			this.setFlowToWriteClient();
+			return response;
+		}
+
+		private Response invalidArgumentResponse(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			for(ByteBuffer bf: bufferToUse) {
+				bf.clear();
+			}
+			bufferToUse = session.getFirstServerBuffer();
+			bufferToUse[0].clear();
+			bufferToUse[1].clear();
+			
+			bufferToUse[0].put("-ERR".getBytes());
+			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			
+			bufferToUse[0].flip();
+			bufferToUse[1].flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
+			this.setFlowToWriteClient();
+			
+			return response;
+		}
+	
+		
+		
 		@Override
 		Response afterReadingFromServer(ClientSession session) {
 			Response response = new Response();
