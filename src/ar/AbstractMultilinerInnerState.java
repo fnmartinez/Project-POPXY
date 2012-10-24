@@ -5,6 +5,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 
 import ar.sessions.ClientSession;
+import ar.sessions.utils.BufferUtils;
 
 public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 
@@ -17,19 +18,26 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		
 		if(!waitingLineFeedEnd){
 			response = super.afterReadingFromServer(session);
-			if(session.getFirstServerBuffer()[0].toString().trim().compareToIgnoreCase("-ERR") == 0) {
+			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()).contains("-ERR")) {
 				waitingLineFeedEnd = false;
 			} else {
 				waitingLineFeedEnd = true;
+				response.setBuffers(session.getFirstServerBuffer());
+				this.setFlowToWriteClient();
+				if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()).endsWith("\r\n.\r\n")){
+					this.waitingLineFeedEnd = false;
+				}
 			}
 			
 		} else {
 			ByteBuffer mlsb = session.getSecondServerBuffer();
-			response = new Response();
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
 			response.setMultilineBuffer(mlsb);
 			response.setMultilineResponse(true);
 			this.setFlowToWriteClient();
-			if(mlsb.toString().endsWith("/r/n./r/n")){
+			if(BufferUtils.byteBufferToString(mlsb).endsWith("/r/n./r/n")){
 				this.waitingLineFeedEnd = false;
 			}
 		}
@@ -49,6 +57,8 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		response = new Response();
 		response.setMultilineBuffer(session.getSecondServerBuffer());
 		response.setMultilineResponse(true);
+		response.setState(this);
+		response.setEndOfChainResponse(false);
 		response.setChannel(session.getOriginServerSocket());
 		response.setOperation(SelectionKey.OP_READ);
 		this.setFlowToReadServer();
