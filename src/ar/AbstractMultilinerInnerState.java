@@ -37,7 +37,7 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 			response.setMultilineBuffer(mlsb);
 			response.setMultilineResponse(true);
 			this.setFlowToWriteClient();
-			if(BufferUtils.byteBufferToString(mlsb).endsWith("/r/n./r/n")){
+			if(BufferUtils.byteBufferToString(mlsb).contains("\r\n.\r\n")){
 				this.waitingLineFeedEnd = false;
 			}
 		}

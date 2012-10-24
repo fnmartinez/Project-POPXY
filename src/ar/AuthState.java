@@ -34,7 +34,7 @@ public class AuthState implements State {
 			cmd = cmd.trim();
 			
 			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n");
+			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n")  || firstCaracter.startsWith("\r");
 
 			String[] args = (BufferUtils.byteBufferToString(session.getClientBuffer()[1]).trim()).split("\\s");
 			

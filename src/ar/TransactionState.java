@@ -27,7 +27,7 @@ public class TransactionState implements State {
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
 
 			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n");
+			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n") || firstCaracter.startsWith("\r");
 	
 			AbstractInnerState tmpState;
 
