@@ -40,12 +40,8 @@ public class AuthState implements State {
 			
 			ByteBuffer[] bufferToUse = null;
 			
-			if (cmd.compareToIgnoreCase(POPHeadCommands.USER
-					.toString()) == 0
-					&& validArgument
-					&& args != null
-					&& args[0] != null
-					&& args[0].compareTo("") != 0) {
+			if (cmd.compareToIgnoreCase(POPHeadCommands.USER.toString()) == 0 && validArgument
+					&& args != null	&& args[0] != null	&& args[0].compareTo("") != 0) {
 				if (POPXY.getInstance().userIsBlocked(args[0])) {
 					bufferToUse = session.getFirstServerBuffer();
 					bufferToUse[0].clear();
@@ -329,7 +325,7 @@ public class AuthState implements State {
 			case PASS:
 				if(validArgument){
 					response = super.afterReadingFromClient(session);
-					tmpState = new PassState();
+					tmpState = this;
 					tmpState.setFlowToWriteServer();
 					response.setState(tmpState);
 				} else {
@@ -410,6 +406,7 @@ public class AuthState implements State {
 
 			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()[0]).trim().equalsIgnoreCase("+OK")) {
 				this.isFinalState = true;
+				session.getClient().login();
 			} else {
 				response.setState(new NoneState());
 			}

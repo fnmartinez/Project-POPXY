@@ -217,8 +217,8 @@ public class ClientSession implements Session {
 	private void handleEndConection() {
 		System.out.println("Se cerro la conexion del cliente!!!");
 		try {
-			this.clientSocket.close();
-			this.originServerSocket.close();
+			if(this.clientSocket != null) this.clientSocket.close();
+			if(this.originServerSocket != null) this.originServerSocket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

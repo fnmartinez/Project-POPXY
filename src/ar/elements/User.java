@@ -171,8 +171,11 @@ public class User {
 		}		
 	}
 
-	public boolean isBlocked() {
-		// TODO Auto-generated method stub
+	public boolean isBlocked() {		
+		if( !this.haveLoginsLeft())
+			return true;
+		if(this.isInInterval())
+			return true;
 		return false;
 	}
 

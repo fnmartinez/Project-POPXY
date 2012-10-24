@@ -380,7 +380,7 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					user.setLoginMax(Integer.getInteger(parameters[0]));
+					user.setLoginMax(Integer.parseInt(parameters[0]));
 					this.answer(ConfigurationProtocol.getOkMsg());
 				} else if(command == ConfigurationCommands.DELETE){
 					user.deleteLoginMax();

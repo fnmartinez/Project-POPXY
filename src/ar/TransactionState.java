@@ -180,7 +180,7 @@ public class TransactionState implements State {
 
 		public State getNextState() {
 			// TODO Auto-generated method stub
-			return new UpdateState();
+			return null;
 		}
 	}
 
