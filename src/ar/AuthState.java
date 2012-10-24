@@ -316,9 +316,8 @@ public class AuthState implements State {
 			Response response = new Response();
 			
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
-
-			byte firstCaracter = session.getClientBuffer()[1].get(0);
-			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' '));			
+			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
+			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n");
 			AbstractInnerState tmpState;
 			
 			switch(cmd){
