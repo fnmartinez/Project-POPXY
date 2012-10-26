@@ -201,4 +201,8 @@ public class User {
 		stats.addTransferedBytes(transferedBytes);
 	}
 	
+	public static void addGlobalTransferedBytes(long transferedBytes){
+		globalStats.addTransferedBytes(transferedBytes);
+	}
+	
 }
