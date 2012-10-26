@@ -8,4 +8,5 @@ public interface State {
 	
 	public boolean isEndState();
 
+
 }

@@ -169,19 +169,36 @@ public class TransactionState implements State {
 			return false;
 		}
 		
+		public String toString(){
+			return "None";
+		}
+		
 	}
 	
 	private class QuitState extends AbstractInnerState implements EndState{
 		
+		private boolean isFinalState = true;
+		
+//		@Override
+//		Response afterWritingToServer(ClientSession session) {
+//			this.isFinalState = true;
+//			return super.afterWritingToServer(session);
+//		}
+		
 		@Override
 		public boolean isEndState() {
-			return true;
+			return this.isFinalState;
 		}
 
 		public State getNextState() {
-			// TODO Auto-generated method stub
 			return null;
 		}
+		public String toString(){
+			return "Quit";
+		}
+		
+
+
 	}
 
 	private class StatState extends AbstractInnerState{
@@ -194,7 +211,9 @@ public class TransactionState implements State {
 			response.setState(tmpState);
 			return response;
 		}
-
+		public String toString(){
+			return "Stat";
+		}
 	}
 
 	private class ListState extends AbstractMultilinerInnerState{
@@ -207,6 +226,9 @@ public class TransactionState implements State {
 				response.setState(tmpState);
 			}
 			return response;
+		}
+		public String toString(){
+			return "List";
 		}
 	}
 	
@@ -221,6 +243,9 @@ public class TransactionState implements State {
 			}
 			return response;
 		}
+		public String toString(){
+			return "Retr";
+		}
 		
 	}
 	
@@ -233,6 +258,9 @@ public class TransactionState implements State {
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
+		}
+		public String toString(){
+			return "Dele";
 		}
 	
 	}
@@ -247,6 +275,9 @@ public class TransactionState implements State {
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
+		}
+		public String toString(){
+			return "Noop";
 		}
 
 	}
@@ -263,7 +294,9 @@ public class TransactionState implements State {
 			}
 			return response;
 		}
-		
+		public String toString(){
+			return "Uidl";
+		}
 	}
 	
 	private class TopState extends AbstractMultilinerInnerState{
@@ -278,6 +311,9 @@ public class TransactionState implements State {
 			}
 			return response;
 		}
+		public String toString(){
+			return "Top";
+		}
 
 	}
 	
@@ -291,6 +327,10 @@ public class TransactionState implements State {
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
+		}
+		
+		public String toString(){
+			return "Rset";
 		}
 
 	}
@@ -310,6 +350,10 @@ public class TransactionState implements State {
 
 	public boolean isEndState() {
 		return false;
+	}
+	
+	public String toString(){
+		return "TRANS("+this.currentState+")";
 	}
 
 

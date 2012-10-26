@@ -142,6 +142,10 @@ public class AuthState implements State {
 		public boolean isEndState() {
 			return false;
 		}
+		
+		public String toString(){
+			return "None";
+		}
 	}
 
 	private class UserState extends AbstractInnerState{
@@ -202,7 +206,7 @@ public class AuthState implements State {
 				state = new NoneState();
 			} else if (this.usernameSend && !errorRecieved){
 				// The username is valid
-				state = new PassState();
+				state = new UserState();
 			} else if (!this.usernameSend && !errorRecieved) {
 				// I must send the user name the next time
 				state = this;
@@ -226,8 +230,8 @@ public class AuthState implements State {
 			
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
 
-			byte firstCaracter = session.getClientBuffer()[1].get(0);
-			boolean validArgument = (session.getClientBuffer()[1].hasRemaining() && (firstCaracter == '\n' || firstCaracter == ' '));			
+			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
+			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n") || firstCaracter.startsWith("\r");
 			AbstractInnerState tmpState;
 			
 			switch(cmd){
@@ -254,6 +258,7 @@ public class AuthState implements State {
 				break;
 			default:
 				response = invalidCommand(session);
+				response.setState(this);
 				break;
 			}
 			return response;
@@ -302,6 +307,10 @@ public class AuthState implements State {
 			this.setFlowToWriteClient();
 			
 			return response;
+		}
+		
+		public String toString(){
+			return "User";
 		}
 	
 	}
@@ -309,92 +318,6 @@ public class AuthState implements State {
 	private class PassState extends AbstractInnerState implements EndState {
 		
 		private boolean isFinalState = false;
-
-		@Override
-		Response afterReadingFromClient(ClientSession session) {
-			
-			Response response = new Response();
-			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
-			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n");
-			AbstractInnerState tmpState;
-			
-			switch(cmd){
-			case PASS:
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = this;
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-				break;
-			case QUIT:
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new QuitState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-
-				break;
-			default:
-				response = invalidCommand(session);
-				break;
-			}
-			return response;
-		}
-		
-		private Response invalidCommand(ClientSession session) {
-			Response response = new Response();
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-			bufferToUse[0].clear();
-			bufferToUse[1].clear();
-			
-			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
-			
-			bufferToUse[0].flip();
-			bufferToUse[1].flip();
-			
-			response.setBuffers(bufferToUse);
-			response.setChannel(session.getClientSocket());
-			response.setOperation(SelectionKey.OP_WRITE);
-			response.setState(new NoneState());
-			this.setFlowToWriteClient();
-			return response;
-		}
-
-		private Response invalidArgumentResponse(ClientSession session) {
-			Response response = new Response();
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-			for(ByteBuffer bf: bufferToUse) {
-				bf.clear();
-			}
-			bufferToUse = session.getFirstServerBuffer();
-			bufferToUse[0].clear();
-			bufferToUse[1].clear();
-			
-			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
-			
-			bufferToUse[0].flip();
-			bufferToUse[1].flip();
-			
-			response.setBuffers(bufferToUse);
-			response.setChannel(session.getClientSocket());
-			response.setOperation(SelectionKey.OP_WRITE);
-			response.setState(this);
-			this.setFlowToWriteClient();
-			
-			return response;
-		}
-	
-		
 		
 		@Override
 		Response afterReadingFromServer(ClientSession session) {
@@ -422,6 +345,10 @@ public class AuthState implements State {
 		public State getNextState() {
 			return new TransactionState();
 		}
+		
+		public String toString(){
+			return "Pass";
+		}
 	}
 	
 	private class QuitState extends AbstractInnerState implements EndState {
@@ -434,6 +361,9 @@ public class AuthState implements State {
 			return null;
 		}
 		
+		public String toString(){
+			return "Quit";
+		}
 	}
 	
 	public Response eval(ClientSession session) {
@@ -451,6 +381,10 @@ public class AuthState implements State {
 
 	public boolean isEndState() {
 		return false;
+	}
+	
+	public String toString(){
+		return "Auth("+this.currentState+")";
 	}
 
 }

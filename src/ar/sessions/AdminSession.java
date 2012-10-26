@@ -126,6 +126,13 @@ public class AdminSession implements Session {
         		return;
         	}
         	
+        	if(command == ConfigurationCommands.RESET){
+        		User.resetGlobalConfiguration();
+        		this.answer(ConfigurationProtocol.getOkMsg());
+        		this.key.interestOps(SelectionKey.OP_WRITE);
+        		return;
+        	}
+        	
         	String subCommandAndParameters = BufferUtils.byteBufferToString(parametersBuf);
         	
         	ConfigurationCommands subCommand = ConfigurationProtocol.getSubCommand(subCommandAndParameters);
@@ -191,11 +198,11 @@ public class AdminSession implements Session {
 		if(command == ConfigurationCommands.SET){
 			POPXY p = POPXY.getInstance();
 			//El primer parametro es el puerto: SET PORT xxxxx
-			Integer port = Integer.getInteger(parameters[0]);
+			Integer port = Integer.parseInt(parameters[0]);
 			switch(channel){
 			case WELLCOME_CHANNEL: 	p.setWellcomePort(port);break;
 			case CONGIF_CHANNEL:	p.setAdminPort(port);break;
-			case ORIGIN_CHANNEL: 	p.setOriginPort(port);break;
+			case ORIGIN_CHANNEL: 	User.setGlobalServerPort(port);break;
 			case STATS_CHANNEL: 	p.setStatsPort(port);break;
 			default: 				System.out.println("ERROR!!!");
 			}

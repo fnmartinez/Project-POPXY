@@ -94,7 +94,7 @@ public class ClientSession implements Session {
 	
 	private void logWrite(String msg) {
 		String ctw = channelToWrite == originServerSocket ? "S":"C"; 
-		System.out.println("P->"+ctw+" : "+msg);	
+		System.out.println("["+this.state+"] P->"+ctw+" : "+msg);	
 	}
 
 	public void handleWrite() {
@@ -146,7 +146,7 @@ public class ClientSession implements Session {
 
 	private void logRead(String msg) {
 		String ctw = channelToRead == originServerSocket ? "S":"C"; 
-		System.out.println(ctw+"->P : "+msg);	
+		System.out.println("["+this.state+"] "+ctw+"->P : "+msg);	
 	}
 	
 	public void handleRead() {
@@ -217,8 +217,12 @@ public class ClientSession implements Session {
 	private void handleEndConection() {
 		System.out.println("Se cerro la conexion del cliente!!!");
 		try {
-			if(this.clientSocket != null) this.clientSocket.close();
-			if(this.originServerSocket != null) this.originServerSocket.close();
+			if(this.clientSocket != null){
+				this.clientSocket.close();
+			}
+			if(this.originServerSocket != null){
+				this.originServerSocket.close();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

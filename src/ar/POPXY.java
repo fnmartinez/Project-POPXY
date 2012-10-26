@@ -171,21 +171,6 @@ public class POPXY {
 		
 	}
 
-	public void activateL33t() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void activateRotate() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void activateAnonimous() {
-		// TODO Auto-generated method stub
-		
-	}
-
 	public  int getAdminPort() {
 		return adminPort;
 	}

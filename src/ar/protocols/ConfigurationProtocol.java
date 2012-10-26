@@ -1,6 +1,7 @@
 package ar.protocols;
 
 import ar.POPXY;
+import ar.elements.User;
 import ar.sessions.utils.ConfigurationCommands;
 import ar.sessions.utils.IpAndMask;
 
@@ -16,7 +17,7 @@ public class ConfigurationProtocol {
 	private static final String INV_USR_MSG = ERR_MSG + "Usuario inexistente\r\n";
 	private static final String EXT_MSG = OK_MSG + "Conexion cerrada exitosamente\r\n";
 
-	private static final String[] commands = { "EXT", "SET", "DEL", "STA"};
+	private static final String[] commands = { "EXT", "SET", "DEL", "STA", "RST"};
 	private static final String[] subCommands = {"TIMELOGIN", "CANTLOGIN", "BLACKIP", "RMFILTERDATE", "RMFILTERSENDER",
 		"RMFILTERHEADER",	"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",	"ORIGINSERVER", "ORIGINSERVERPORT",
 		"CONFIGLISTENINGPORT", "WELLCOMELISTENINGPORT", "STALISTENINGPORT",	"APP"};
@@ -50,7 +51,7 @@ public class ConfigurationProtocol {
 		
 		for(int i=0; i < subCommands.length; i++){
 			if(subCommand.equals(subCommands[i])){
-				return ConfigurationCommands.values()[i+4];
+				return ConfigurationCommands.values()[i+5];
 			}	
 		}
 		return null;
@@ -393,7 +394,7 @@ public class ConfigurationProtocol {
 
 	public static String getStatusMsg(POPXY popxy) {
 		String ret = OK_MSG + "\n";
-		ret = ret + " originserver \t " + popxy.getDefaultOriginServer()+":"+popxy.getDefaultOriginServerPort()+"\n";
+		ret = ret + " originserver \t " + User.getGlobalServerAddress()+":"+User.getGlobalServerPort()+"\n";
 		ret = ret + " configListeningPort \t " + popxy.getAdminPort()+"\n";
 		ret = ret + " wellcomeListeningPort \t " + popxy.getWelcomeSocketPort()+"\n";
 		ret = ret + " statsListeningPort \t " + popxy.getStatsPort()+"\n";
