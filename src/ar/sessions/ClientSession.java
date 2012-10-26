@@ -94,7 +94,10 @@ public class ClientSession implements Session {
 	
 	private void logWrite(String msg) {
 		String ctw = channelToWrite == originServerSocket ? "S":"C"; 
-		System.out.println("["+this.state+"] P->"+ctw+" : "+msg);	
+		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
+			System.out.println("changos!");
+		}
+		POPXY.getLogger().info("["+this.state+"] P->"+ctw+" : "+msg);
 	}
 
 	public void handleWrite() {
@@ -145,8 +148,8 @@ public class ClientSession implements Session {
 	}
 
 	private void logRead(String msg) {
-		String ctw = channelToRead == originServerSocket ? "S":"C"; 
-		System.out.println("["+this.state+"] "+ctw+"->P : "+msg);	
+		String ctw = channelToRead == originServerSocket ? "S":"C";
+		POPXY.getLogger().info("["+this.state+"] "+ctw+"->P : "+msg);
 	}
 	
 	public void handleRead() {
