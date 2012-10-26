@@ -3,11 +3,14 @@ package ar.elements;
 import java.net.InetAddress;
 import java.util.Calendar;
 
+import ar.POPXY;
+import ar.protocols.ConfigurationProtocol;
+
 public class User {
 	
 	// Configuraciones Generales
-	private static UserConfiguration globalConfig;
-	private static Stats globalStats;
+	private static UserConfiguration globalConfig = new UserConfiguration();
+	private static Stats globalStats = new Stats();
 	
 	// Configuraciones propias de un usuario
 	private String user;
@@ -100,6 +103,10 @@ public class User {
 		return globalConfig.getPort();
 	}
 	
+	public static String getGlobalServerAddress(){
+		return globalConfig.getServerAddress();
+	}
+	
 	public Boolean getLeet(){
 		Boolean l = userConfig.getLeet();
 		if(l != null){
@@ -164,8 +171,11 @@ public class User {
 		}		
 	}
 
-	public boolean isBlocked() {
-		// TODO Auto-generated method stub
+	public boolean isBlocked() {		
+		if( !this.haveLoginsLeft())
+			return true;
+		if(this.isInInterval())
+			return true;
 		return false;
 	}
 
@@ -199,6 +209,32 @@ public class User {
 	
 	public void addTransferedBytes(long transferedBytes){
 		stats.addTransferedBytes(transferedBytes);
+	}
+
+	public void setApp(String app, boolean bool) {		
+		if(app == "l33t"){
+			this.setLeet(bool);	
+		} else if(app == "rotate"){			
+			this.setRotate(bool);		
+		} else if(app == "anonymous"){
+			//this.setAnonymous(bool);	
+		} else {
+			//this.setCustomApp(app, bool);
+		}
+		return;
+	}
+	
+	public static void setGlobalApp(String app, boolean bool) {		
+		if(app == "l33t"){
+			User.setGlobalLeet(bool);	
+		} else if(app == "rotate"){			
+			User.setGlobalRotate(bool);		
+		} else if(app == "anonymous"){
+			//User.setGlobalAnonymous(bool);	
+		} else {
+			//User.setGlobalCustomApp(app, bool);
+		}
+		return;
 	}
 	
 	public static void addGlobalTransferedBytes(long transferedBytes){

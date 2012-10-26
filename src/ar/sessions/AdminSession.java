@@ -14,6 +14,7 @@ import java.nio.charset.CharsetEncoder;
 import ar.POPXY;
 import ar.elements.User;
 import ar.protocols.ConfigurationProtocol;
+import ar.sessions.utils.BufferUtils;
 import ar.sessions.utils.ConfigurationCommands;
 
 public class AdminSession implements Session {
@@ -30,9 +31,6 @@ public class AdminSession implements Session {
 	private static final int ORIGIN_CHANNEL = 2;
 	private static final int STATS_CHANNEL = 3;
 
-	public static Charset charset = Charset.forName("UTF-8");
-	public static CharsetEncoder encoder = charset.newEncoder();
-	public static CharsetDecoder decoder = charset.newDecoder();
 	
     private int state = NO_ESTABLISHED_CONNECTION;
 	private SocketChannel adminChannel;
@@ -107,7 +105,7 @@ public class AdminSession implements Session {
         	commandBuf.flip();
         	parametersBuf.flip();
 
-        	String commandString = byteBufferToString(commandBuf);
+        	String commandString = BufferUtils.byteBufferToString(commandBuf);
         	ConfigurationCommands command =  ConfigurationProtocol.getCommand(commandString);
         	if(command == null){
         		this.answer(ConfigurationProtocol.getInvalidCommandMsg());
@@ -128,7 +126,14 @@ public class AdminSession implements Session {
         		return;
         	}
         	
-        	String subCommandAndParameters = byteBufferToString(parametersBuf);
+        	if(command == ConfigurationCommands.RESET){
+        		User.resetGlobalConfiguration();
+        		this.answer(ConfigurationProtocol.getOkMsg());
+        		this.key.interestOps(SelectionKey.OP_WRITE);
+        		return;
+        	}
+        	
+        	String subCommandAndParameters = BufferUtils.byteBufferToString(parametersBuf);
         	
         	ConfigurationCommands subCommand = ConfigurationProtocol.getSubCommand(subCommandAndParameters);
         	if(subCommand == null){
@@ -193,11 +198,11 @@ public class AdminSession implements Session {
 		if(command == ConfigurationCommands.SET){
 			POPXY p = POPXY.getInstance();
 			//El primer parametro es el puerto: SET PORT xxxxx
-			Integer port = Integer.getInteger(parameters[0]);
+			Integer port = Integer.parseInt(parameters[0]);
 			switch(channel){
 			case WELLCOME_CHANNEL: 	p.setWellcomePort(port);break;
 			case CONGIF_CHANNEL:	p.setAdminPort(port);break;
-			case ORIGIN_CHANNEL: 	p.setOriginPort(port);break;
+			case ORIGIN_CHANNEL: 	User.setGlobalServerPort(port);break;
 			case STATS_CHANNEL: 	p.setStatsPort(port);break;
 			default: 				System.out.println("ERROR!!!");
 			}
@@ -232,12 +237,12 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					user.setGlobalServerAddress(serverAndPort[0]);
+					user.setServerAddress(serverAndPort[0]);
 					if(serverAndPort.length == 2) user.setServerPort(port);
 					this.answer(ConfigurationProtocol.getOkMsg());
 					
 				} else if(command == ConfigurationCommands.DELETE){
-					//user.deleteOriginServer();
+					user.setServerAddress(User.getGlobalServerAddress());
 					this.answer(ConfigurationProtocol.getOkMsg());
 				}
 			}
@@ -271,10 +276,10 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					//user.setLoginInterval(parameters[0], parameters[1]);
+					user.addInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 					this.answer(ConfigurationProtocol.getOkMsg());
 				} else	if(command == ConfigurationCommands.DELETE){
-					//user.deleteLoginInterval(parameters[0], parameters[1]);
+					user.removeInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 					this.answer(ConfigurationProtocol.getOkMsg());
 				}	
 			}
@@ -283,11 +288,11 @@ public class AdminSession implements Session {
 		
 			//Es una configuracion global
 			if(command == ConfigurationCommands.SET){
-				//User.addLoginTimeInterval(parameters[0], parameters[1]);
+				User.addGlobalInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 				this.answer(ConfigurationProtocol.getOkMsg());
 
 			} else if(command == ConfigurationCommands.DELETE){
-				//user.deleteLoginTimeInterval(parameters[0], parameters[1]);
+				User.removeGlobalInterval(Integer.parseInt(parameters[0]), Integer.parseInt(parameters[1]));
 				this.answer(ConfigurationProtocol.getOkMsg());
 			}
 			
@@ -300,18 +305,42 @@ public class AdminSession implements Session {
 	private void setApp(ConfigurationCommands command, String[] parameters) {
 		
 		POPXY popxy = POPXY.getInstance();
+		User user = null;
 		
-		if(parameters[0] == "l33t"){
-			popxy.activateL33t();	
-		} else if(parameters[0] == "rotate"){			
-			popxy.activateRotate();		
-		} else if(parameters[0] == "anonymous"){
-			popxy.activateAnonimous();	
+		//Si me pasa como parametro un usuario(no es global):
+		if(parameters.length > 1){
+			for(int i = 1; i < parameters.length; i++ ){
+				user = popxy.getUser(parameters[i]);
+				//Si el usuario no existe
+				if(user == null){
+					answer(ConfigurationProtocol.getInvalidUserMsg());
+					break;
+				}
+				
+				if(command == ConfigurationCommands.SET){
+					user.setApp(parameters[0], true);
+					this.answer(ConfigurationProtocol.getOkMsg());
+				} else	if(command == ConfigurationCommands.DELETE){
+					user.setApp(parameters[0], false);
+					this.answer(ConfigurationProtocol.getOkMsg());
+				}	
+			}
+			
 		} else {
-			popxy.activateApp(parameters[0]);
+		
+			//Es una configuracion global
+			if(command == ConfigurationCommands.SET){
+				User.setGlobalApp(parameters[0], true);
+				this.answer(ConfigurationProtocol.getOkMsg());
+
+			} else if(command == ConfigurationCommands.DELETE){
+				User.setGlobalApp(parameters[0], false);
+				this.answer(ConfigurationProtocol.getOkMsg());
+			}
+			
 		}
-		this.answer(ConfigurationProtocol.getOkMsg());
-		return;
+		
+		return;	
 	}
 	
 	
@@ -358,7 +387,7 @@ public class AdminSession implements Session {
 				}
 				
 				if(command == ConfigurationCommands.SET){
-					user.setLoginMax(Integer.getInteger(parameters[0]));
+					user.setLoginMax(Integer.parseInt(parameters[0]));
 					this.answer(ConfigurationProtocol.getOkMsg());
 				} else if(command == ConfigurationCommands.DELETE){
 					user.deleteLoginMax();
@@ -387,16 +416,5 @@ public class AdminSession implements Session {
 	private void removeFilter(ConfigurationCommands command, ConfigurationCommands subCommand, String[] parameters) {
 		//TODO		
 	}
-	
-	public static String byteBufferToString(ByteBuffer buffer){
-		  String data = "";
-		  try{
-		    data = decoder.decode(buffer).toString();
-		  }catch (Exception e){
-		    e.printStackTrace();
-		    return "";
-		  }
-		  return data;
-		}
 
 }

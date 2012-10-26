@@ -41,6 +41,9 @@ public class POPXY {
 	public static void main(String[] args) 
 		throws Exception{
 		
+		//Seteo las configuraciones globales del proxy
+		User.initGlobalConfiguration();
+		
 		//Tomar conf;
 		POPXY proxy = POPXY.getInstance();
 		Selector selector = Selector.open();
@@ -164,21 +167,6 @@ public class POPXY {
 	}
 
 	public void setStatsPort(Integer port) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void activateL33t() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void activateRotate() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void activateAnonimous() {
 		// TODO Auto-generated method stub
 		
 	}

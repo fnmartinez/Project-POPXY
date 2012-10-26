@@ -1,5 +1,8 @@
 package ar.sessions.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum POPHeadCommands {
 	USER,
 	PASS,
@@ -13,5 +16,21 @@ public enum POPHeadCommands {
 	TOP,
 	UIDL,
 	NONE,
-	UKWN
+	UKWN;
+	
+	private static Map<String, POPHeadCommands> reverseStringSearchMap = new HashMap<String, POPHeadCommands>();
+	private static boolean firstCall = true;
+	
+	
+	public static POPHeadCommands getLiteralByString(String str) {
+		if(firstCall) {
+			for(POPHeadCommands phc: POPHeadCommands.values()){
+				reverseStringSearchMap.put(phc.toString(), phc);
+			}
+		}
+		POPHeadCommands ret = reverseStringSearchMap.get(str.toUpperCase());
+		if(ret != null)
+			return ret;
+		return UKWN;
+	}
 }

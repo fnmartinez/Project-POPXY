@@ -1,6 +1,7 @@
 package ar.protocols;
 
 import ar.POPXY;
+import ar.elements.User;
 import ar.sessions.utils.ConfigurationCommands;
 import ar.sessions.utils.IpAndMask;
 
@@ -16,7 +17,7 @@ public class ConfigurationProtocol {
 	private static final String INV_USR_MSG = ERR_MSG + "Usuario inexistente\r\n";
 	private static final String EXT_MSG = OK_MSG + "Conexion cerrada exitosamente\r\n";
 
-	private static final String[] commands = { "EXT", "SET", "DEL", "STA"};
+	private static final String[] commands = { "EXT", "SET", "DEL", "STA", "RST"};
 	private static final String[] subCommands = {"TIMELOGIN", "CANTLOGIN", "BLACKIP", "RMFILTERDATE", "RMFILTERSENDER",
 		"RMFILTERHEADER",	"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",	"ORIGINSERVER", "ORIGINSERVERPORT",
 		"CONFIGLISTENINGPORT", "WELLCOMELISTENINGPORT", "STALISTENINGPORT",	"APP"};
@@ -50,7 +51,7 @@ public class ConfigurationProtocol {
 		
 		for(int i=0; i < subCommands.length; i++){
 			if(subCommand.equals(subCommands[i])){
-				return ConfigurationCommands.values()[i+4];
+				return ConfigurationCommands.values()[i+5];
 			}	
 		}
 		return null;
@@ -296,11 +297,21 @@ public class ConfigurationProtocol {
 			}
 		}
 		
-		parameters[0] = fromTime;
-		parameters[1] = toTime;
+		parameters[0] = timeToMinutes(fromTime);
+		parameters[1] = timeToMinutes(toTime);
 		
 		return parameters;
 		
+	}
+
+
+	private static String timeToMinutes(String time) {
+		Integer hour = Integer.parseInt(time.substring(0, 2));
+		Integer min = Integer.parseInt(time.substring(2, 4));
+		
+		min = min + (hour * 60);
+		
+		return min.toString();
 	}
 
 
@@ -337,9 +348,30 @@ public class ConfigurationProtocol {
 		return EXT_MSG;
 	}
 	
-	private static boolean isValidDate(String fromTime) {
-		// TODO Auto-generated method stub
-		return false;
+	private static boolean isValidDate(String time) {
+		if(time.length() != 4)
+			return false;
+		
+		Integer hour, min;
+
+		try{
+			 hour = Integer.parseInt(time.substring(0, 2));
+			 min = Integer.parseInt(time.substring(2, 4));
+		} catch (Exception e){
+			return false;
+		}
+		
+		if(hour == null || min == null){
+			return false;
+		}
+		
+		if(min < 0 || min > 59)
+			return false;
+		
+		if(hour < 0 || hour > 23)
+			return false;		
+		
+		return true;
 	}
 
 	
@@ -362,7 +394,7 @@ public class ConfigurationProtocol {
 
 	public static String getStatusMsg(POPXY popxy) {
 		String ret = OK_MSG + "\n";
-		ret = ret + " originserver \t " + popxy.getDefaultOriginServer()+":"+popxy.getDefaultOriginServerPort()+"\n";
+		ret = ret + " originserver \t " + User.getGlobalServerAddress()+":"+User.getGlobalServerPort()+"\n";
 		ret = ret + " configListeningPort \t " + popxy.getAdminPort()+"\n";
 		ret = ret + " wellcomeListeningPort \t " + popxy.getWelcomeSocketPort()+"\n";
 		ret = ret + " statsListeningPort \t " + popxy.getStatsPort()+"\n";
