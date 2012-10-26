@@ -64,4 +64,8 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		this.setFlowToReadServer();
 		return response;
 	}
+	
+	boolean isWaitingLineFeedEnd() {
+		return this.waitingLineFeedEnd;
+	}
 }

@@ -236,7 +236,7 @@ public class TransactionState implements State {
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(response.isEndOfChainResponse()){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
