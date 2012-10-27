@@ -34,51 +34,12 @@ public class MailParser {
 		return writer;
 	}
 
-	// Antes de poner la linea en el file, agrego los bytes en las estadisticas
-	// globales y por usuario
-	private void writeLine(String line) throws IOException {
-		writer.write(line);
-
-		// TODO ver si va aqui o si va en cuando bajo el mail del server al
-		// archivo
-		User.addGlobalTransferedBytes((long) line.length());
-		user.addTransferedBytes((long) line.length());
-	}
-
-	private void writeLines(String text) throws IOException{
-		StringBuilder builder = new StringBuilder();
-		int i = 0, count = 0;
-		// builder.append(message.charAt(0));
-		while (i < text.length()) {
-			if (text.charAt(i) != '\n') {
-				builder.append(text.charAt(i));
-			}
-
-			if (count == 76 || text.charAt(i) == '\n') {
-				count = 0;
-				// builder.append('\n');
-				// System.out.println(builder.toString());
-				writeLine(builder.toString());
-				builder = new StringBuilder();
-			} else {
-				count++;
-			}
-			i++;
-
-		}
-
-	}
-
-	// TODO AGREGAR FECHA Y DESTINATARIO ANONIMO
 	private void parseHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
 		do {
-			writeLine(line);
-			// For each header, first get the name
-			// and then get the content that might be
-			// in different lines and append them in
-			// a string
+			// Primero guardo el nombre del header y desp apendeo los
+			// extraValues
 			if (headerName == null) {
 				int separator = line.indexOf(":");
 				if (separator == -1)
@@ -87,12 +48,24 @@ public class MailParser {
 				if (line.length() > separator)
 					// antes de apendear sacar espacios
 					headerValue += line.substring(separator + 2).trim();
-			} else
+			} else {
 				headerValue += line.trim();
+			}
+			if (headerName.equals("From") && user.getAnonymous()) {
+				writeLine("From: Anonymous <unknown@unknown.com>");
+			} else {
+				writeLine(line);
+			}
 		} while ((line = reader.readLine()).length() != 0
 				&& (line.startsWith(" ") || line.startsWith("\t"))
 				&& (!line.contains("Content-Type")));
 
+		if (headerName.equals("Date")) {
+			// TODO hacer fecha
+		}
+		if (headerName.equals("From")) {
+			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
+		}
 		mail.addHeaderValue(headerName, headerValue);
 
 		// Body's start
@@ -125,18 +98,55 @@ public class MailParser {
 			putContent(line, boundary, pointSpace);
 		else {
 			// Multipart content
-			writeLine("");
 			line = reader.readLine();
-			do
+			do{
+				writeLine(line);
 				parseContents(boundary);
+			}
 			while (!(line = reader.readLine()).equals("."));
 		}
 		writeLine(".");
+		System.out.println("LLEGUEEE AL FINALLLLL");
+	}
+
+	// Antes de poner la linea en el file, agrego los bytes en las estadisticas
+	// globales y por usuario
+	private void writeLine(String line) throws IOException {
+		writer.write(line + "\n");
+
+		// TODO ver si va aqui o si va en cuando bajo el mail del server al
+		// archivo
+		User.addGlobalTransferedBytes((long) line.length());
+		user.addTransferedBytes((long) line.length());
+	}
+
+	private void writeLines(String text) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		int i = 0, count = 0;
+		// builder.append(message.charAt(0));
+		while (i < text.length()) {
+			if (text.charAt(i) != '\n') {
+				builder.append(text.charAt(i));
+			}
+
+			if (count == 76 || text.charAt(i) == '\n') {
+				count = 0;
+				// builder.append('\n');
+				// System.out.println(builder.toString());
+				writeLine(builder.toString());
+				builder = new StringBuilder();
+			} else {
+				count++;
+			}
+			i++;
+
+		}
+
 	}
 
 	private void parseContents(String boundary) throws IOException {
+		
 		String line = reader.readLine();
-
 		if (line.contains("--" + boundary)) {
 			writeLine("--" + boundary);
 			line = reader.readLine();
@@ -145,14 +155,16 @@ public class MailParser {
 			writeLine(line);
 			if (line.toUpperCase().contains("MULTIPART")) {
 				String subBoundary = getBoundary(line);
-				writeLine("");
 				line = reader.readLine();
+				writeLine("");
 				parseContents(subBoundary);
 			} else {
 				line = putContent(line, boundary, false);
 				if (line.equals("--" + boundary + "--")) {
 					writeLine(line);
 					return;
+				} else if (line.contains("--" + boundary)) {
+					writeLine(line);
 				}
 				parseContents(boundary);
 			}
@@ -216,13 +228,14 @@ public class MailParser {
 		}
 		// ahora line apunta a el "" antes del body y el "" ya esta guardado en
 		// el file
-		if (user.getLeet()) {
+		if (user.getLeet()
+				&& contentTypeHeader.toUpperCase().contains("TEXT/PLAIN")) {
 			if (encoding == null) {
 				while (!isEndLine(line = reader.readLine(), boundary)) {
 					writeLine(textTransformer.l33t(line));
 				}
 				return line;
-			} else if (contentTypeHeader.toUpperCase().contains("TEXT/PLAIN")) {
+			} else {
 
 				while (!isEndLine(line = reader.readLine(), boundary)) {
 					// need to get the entire image to rotate it
@@ -231,16 +244,14 @@ public class MailParser {
 
 				if (encoding.toLowerCase().equals("quoted-printable")) {
 					// transform and print text according to its encoding
-//					text = decodeQuotedPrintable(text);
-//					text = textTransformer.l33t(text);
-//					writeLines(encodeQuotedPrintable(text));
+					// text = decodeQuotedPrintable(text);
+					// text = textTransformer.l33t(text);
+					// writeLines(encodeQuotedPrintable(text));
 				} else if (encoding.toLowerCase().equals("8bit")) {
 					writeLines(textTransformer.l33t(text));
 				}
 				return line;
 
-			} else {
-				return putLines(boundary);
 			}
 		} else {
 			return putLines(boundary);
@@ -275,8 +286,6 @@ public class MailParser {
 				text += line + "\n";
 			}
 
-			
-			
 			return line;
 		} else {
 			return putLines(boundary);

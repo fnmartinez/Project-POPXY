@@ -9,13 +9,25 @@ public class TextTransformer {
 			case 'a':
 				msg[i] = '4';
 				break;
+			case 'A':
+				msg[i] = '4';
+				break;
 			case 'e':
+				msg[i] = '3';
+				break;
+			case 'E':
 				msg[i] = '3';
 				break;
 			case 'i':
 				msg[i] = '1';
 				break;
+			case 'I':
+				msg[i] = '1';
+				break;
 			case 'o':
+				msg[i] = '0';
+				break;
+			case 'O':
 				msg[i] = '0';
 				break;
 			case '[':
