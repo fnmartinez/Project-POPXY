@@ -2,6 +2,9 @@ package ar.elements;
 
 import java.net.InetAddress;
 import java.util.Calendar;
+import java.util.Set;
+
+import org.joda.time.DateTime;
 
 import ar.POPXY;
 import ar.protocols.ConfigurationProtocol;
@@ -172,7 +175,7 @@ public class User {
 	public boolean isBlocked() {
 		if (!this.haveLoginsLeft())
 			return true;
-		if(!this.isInInterval())
+		if (!this.isInInterval())
 			return true;
 		return false;
 	}
@@ -253,6 +256,95 @@ public class User {
 			return l;
 		} else {
 			return globalConfig.getAnonymous();
+		}
+	}
+
+	public boolean hasTransformations() {
+		return getLeet() || getRotate() || getAnonymous();
+	}
+
+	public boolean hasDeletionRestriction() {
+		if (userConfig.hasDeletionRestriction()) {
+			return true;
+		} else {
+			return globalConfig.hasDeletionRestriction();
+		}
+	}
+
+	public boolean passDeletionFilters(Mail mail) {
+		if (passDateRestriction(mail) && passSendersRestriction(mail)
+				&& passHeaderRestriction(mail) && passContentTypeRestriction(mail)
+				&& passSizeRestriction(mail) && passStructureRestriction(mail)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	private boolean passStructureRestriction(Mail mail) {
+		if(userConfig.getDeletionConfiguration().hasStructureRestriction()){
+			return userConfig.getDeletionConfiguration().passStructuresRestriction(mail);
+		}else{
+			if(globalConfig.getDeletionConfiguration().hasStructureRestriction()){
+				return globalConfig.getDeletionConfiguration().passStructuresRestriction(mail);
+			}
+			return true;
+		}
+		
+	}
+
+	private boolean passSizeRestriction(Mail mail) {
+		if(userConfig.getDeletionConfiguration().hasSizeRestriction()){
+			return userConfig.getDeletionConfiguration().passSizeRestriction(mail);
+		}else{
+			if(globalConfig.getDeletionConfiguration().hasSizeRestriction()){
+				return globalConfig.getDeletionConfiguration().passSizeRestriction(mail);
+			}
+			return true;
+		}
+	}
+
+	private boolean passContentTypeRestriction(Mail mail) {
+		if(userConfig.getDeletionConfiguration().hasContentTypeRestriction()){
+			return userConfig.getDeletionConfiguration().passContentTypesRestriction(mail);
+		}else{
+			if(globalConfig.getDeletionConfiguration().hasContentTypeRestriction()){
+				return globalConfig.getDeletionConfiguration().passContentTypesRestriction(mail);
+			}
+			return true;
+		}
+	}
+
+	private boolean passHeaderRestriction(Mail mail) {
+		if(userConfig.getDeletionConfiguration().hasHeaderRestriction()){
+			return userConfig.getDeletionConfiguration().passHeadersRestriction(mail);
+		}else{
+			if(globalConfig.getDeletionConfiguration().hasHeaderRestriction()){
+				return globalConfig.getDeletionConfiguration().passHeadersRestriction(mail);
+			}
+			return true;
+		}
+	}
+	//TODO
+	private boolean passDateRestriction(Mail mail) {
+//		if(userConfig.getDeletionConfiguration().hasDateRestriction()){
+//			return userConfig.getDeletionConfiguration().passDateRestriction(mail);
+//		}else{
+//			if(globalConfig.getDeletionConfiguration().hasDateRestriction()){
+//				return globalConfig.getDeletionConfiguration().passDateRestriction(mail);
+//			}
+			return true;
+//		}
+	}
+
+	private boolean passSendersRestriction(Mail mail) {
+		if(userConfig.getDeletionConfiguration().hasSenderRestriction()){
+			return userConfig.getDeletionConfiguration().passSendersRestriction(mail);
+		}else{
+			if(globalConfig.getDeletionConfiguration().hasSenderRestriction()){
+				return globalConfig.getDeletionConfiguration().passSendersRestriction(mail);
+			}
+			return true;
 		}
 	}
 

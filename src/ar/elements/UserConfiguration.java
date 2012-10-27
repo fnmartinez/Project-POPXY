@@ -119,4 +119,7 @@ public class UserConfiguration {
 		return this.anonymous;
 	}
 	
+	public boolean hasDeletionRestriction(){
+		return deletionConfiguration.hasDeletionRestriction();
+	}
 }
