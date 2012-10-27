@@ -191,9 +191,10 @@ public class ClientSession implements Session {
 		}
 		Response r = state.eval(this);
 		
+		//Me suscribo a escritura de los dos canales, para desuscribirme de escritura en caso de q no aplique.
 		try {
-			this.clientSocket.register(selector, 0);
-			if(this.originServerSocket!= null) this.originServerSocket.register(selector, 0);
+			this.clientSocket.register(selector, SelectionKey.OP_READ);
+			if(this.originServerSocket!= null) this.originServerSocket.register(selector, SelectionKey.OP_READ);
 		} catch (ClosedChannelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

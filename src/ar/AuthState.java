@@ -79,7 +79,6 @@ public class AuthState implements State {
 						    System.out.println(".");    
 						}
 						session.setOriginServerSocket(socketChannel);
-						
 					} catch (UnknownHostException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
