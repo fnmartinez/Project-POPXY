@@ -93,7 +93,6 @@ public class POPXY {
 			
 			while(keys.hasNext()) {
 				SelectionKey key = keys.next();
-				keys.remove();
 				
 				if(key.isAcceptable()) {
 					if(((ServerSocketChannel)key.channel()).socket().getLocalPort() == adminPort){
@@ -106,7 +105,6 @@ public class POPXY {
 						throw new UnexpectedException("ouch!");
 					}
 				}
-				
 				if(key.isConnectable()) {
 					//TODO:
 					Session s = (Session)key.attachment();
@@ -124,6 +122,9 @@ public class POPXY {
 					Session s = (Session)key.attachment();
 					s.handleWrite();
 				}
+
+				
+				keys.remove();
 				
 			}
 		}
