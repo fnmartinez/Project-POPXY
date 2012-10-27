@@ -15,6 +15,7 @@ public class UserConfiguration {
 	private int loginMax;
 	private Boolean rotate;
 	private Boolean leet;
+	private Boolean anonymous;
 	private TimeConfiguration intervals;
 
 	public UserConfiguration() {
@@ -28,6 +29,7 @@ public class UserConfiguration {
 		this.loginMax = -1;
 		this.rotate = null;
 		this.leet = null;
+		this.anonymous = null;
 		this.intervals = new TimeConfiguration();
 	}
 
@@ -41,6 +43,7 @@ public class UserConfiguration {
 		User.setGlobalLoginMax(-1);
 		User.setGlobalRotate(false);
 		User.setGlobalLeet(false);
+		User.setGlobalAnonymous(false);
 		User.getGlobalConfiguration().getTimeConfiguration().resetGlobalTimeConfiguration();
 	}
 
@@ -106,6 +109,14 @@ public class UserConfiguration {
 
 	public void removeInterval(IntervalTime intervalTime) {
 		intervals.removeInterval(intervalTime);		
+	}
+
+	public void setAnonymous(boolean anonymous) {
+		this.anonymous = anonymous;
+	}
+
+	public Boolean getAnonymous() {
+		return this.anonymous;
 	}
 	
 }

@@ -17,7 +17,7 @@ public class Mail {
 	private Set<String> extensions;
 	private int size;
 	private DateTime date;
-	private String sender;
+	private String from;
 	
 	public Mail(){
 		this.headers = new HashMap<String, List<String>>();
@@ -41,6 +41,10 @@ public class Mail {
 	
 	public void addExtension(String extension){
 		this.extensions.add(extension);
+	}
+	
+	public void setFrom(String from){
+		this.from = from;
 	}
 	
 }
