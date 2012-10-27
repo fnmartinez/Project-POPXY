@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import ar.elements.User;
 import ar.sessions.AdminSession;
@@ -32,6 +34,8 @@ public class POPXY {
 	private static int originPort = defaultOriginPort;
 	private static int statsPort = defaultStatsPort;  
 	
+	private static Logger logger = Logger.getLogger(POPXY.class.getName());
+	
 	private static POPXY instance = null;
 	
 	
@@ -46,6 +50,13 @@ public class POPXY {
 		
 		//Tomar conf;
 		POPXY proxy = POPXY.getInstance();
+		try {
+			PropertyConfigurator.configure("resources/log4j.properties");
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Error loading logger");
+			//return;
+		}
 		Selector selector = Selector.open();
 		ServerSocketChannel welcomeSocket = ServerSocketChannel.open();
 		ServerSocketChannel adminSocket = ServerSocketChannel.open();
@@ -94,7 +105,6 @@ public class POPXY {
 						throw new UnexpectedException("ouch!");
 					}
 				}
-				
 				if(key.isConnectable()) {
 					//TODO:
 					Session s = (Session)key.attachment();
@@ -112,8 +122,10 @@ public class POPXY {
 					Session s = (Session)key.attachment();
 					s.handleWrite();
 				}
+
 				
 				keys.remove();
+				
 			}
 		}
 	}
@@ -219,4 +231,9 @@ public class POPXY {
 		IpAndMask newOne = new IpAndMask(ip, mask);
 		blackIps.remove(newOne);
 	}
+	
+	public static Logger getLogger() {
+		return logger;
+	}
+	
 }

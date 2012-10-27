@@ -10,6 +10,7 @@ public abstract class AbstractInnerState implements State{
 
 	public Response eval(ClientSession session) {
 		
+		/* Look up for the last action done */
 		switch(flowDirection){
 		case READ_CLIENT: 	return afterReadingFromClient(session);	
 		case READ_SERVER:	return afterReadingFromServer(session);

@@ -18,19 +18,15 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		
 		if(!waitingLineFeedEnd){
 			response = super.afterReadingFromServer(session);
-			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()).contains("-ERR")) {
+			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()).startsWith("-ERR") 
+			|| BufferUtils.byteBufferToString(session.getFirstServerBuffer()).endsWith("\r\n.\r\n")) {
 				waitingLineFeedEnd = false;
 			} else {
 				waitingLineFeedEnd = true;
-				response.setBuffers(session.getFirstServerBuffer());
-				this.setFlowToWriteClient();
-				if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()).endsWith("\r\n.\r\n")){
-					this.waitingLineFeedEnd = false;
-				}
 			}
 			
 		} else {
-			ByteBuffer mlsb = session.getSecondServerBuffer();
+			ByteBuffer mlsb = session.getSecondServerBuffer();			
 			response.setChannel(session.getClientSocket());
 			response.setOperation(SelectionKey.OP_WRITE);
 			response.setState(this);
@@ -63,5 +59,9 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		response.setOperation(SelectionKey.OP_READ);
 		this.setFlowToReadServer();
 		return response;
+	}
+	
+	boolean isWaitingLineFeedEnd() {
+		return this.waitingLineFeedEnd;
 	}
 }

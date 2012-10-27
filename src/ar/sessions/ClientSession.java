@@ -29,9 +29,6 @@ public class ClientSession implements Session {
 	private SocketChannel originServerSocket;
 	private Selector selector;
 
-
-	private POPXY proxy;
-
 	private ByteBuffer[] clientBuffer = {
 			ByteBuffer.allocate(CLIENT_BUFFER_COMMAND_SIZE),
 			ByteBuffer.allocate(CLIENT_BUFFER_ARGUMENT_SIZE) };
@@ -53,8 +50,6 @@ public class ClientSession implements Session {
 
 	private State state;
 
-	private String username;
-
 	private ByteBuffer[] bufferToWrite;
 	private ByteBuffer[] bufferToRead;
 	private SocketChannel channelToWrite;
@@ -63,16 +58,16 @@ public class ClientSession implements Session {
 	private boolean useSecondServerBuffer;
 	private SocketChannel toSuscribe;
 	private int suscriptionMode;
+	private SelectionKey key;
 
 	public ClientSession(SelectionKey key) throws IOException {
 		this.selector = key.selector();
-		this.proxy = POPXY.getInstance();
 		this.clientSocket = ((ServerSocketChannel) key.channel()).accept();
 		this.state = new AuthState();
 		this.channelToWrite = clientSocket;
 		this.firstContact = true;
 		this.useSecondServerBuffer = false;
-		
+		this.key = key;
 		clientSocket.configureBlocking(false);
 		clientSocket.register(selector, SelectionKey.OP_WRITE, this);
 	}
@@ -94,7 +89,10 @@ public class ClientSession implements Session {
 	
 	private void logWrite(String msg) {
 		String ctw = channelToWrite == originServerSocket ? "S":"C"; 
-		System.out.println("["+this.state+"] P->"+ctw+" : "+msg);	
+		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
+			System.out.println("changos!");
+		}
+		POPXY.getLogger().info("["+this.state+"] P->"+ctw+" : "+msg);
 	}
 
 	public void handleWrite() {
@@ -145,14 +143,14 @@ public class ClientSession implements Session {
 	}
 
 	private void logRead(String msg) {
-		String ctw = channelToRead == originServerSocket ? "S":"C"; 
-		System.out.println("["+this.state+"] "+ctw+"->P : "+msg);	
+		String ctw = channelToRead == originServerSocket ? "S":"C";
+		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
+			System.out.println("changos!");
+		}
+		POPXY.getLogger().info("["+this.state+"] "+ctw+"->P : "+msg);
 	}
 	
 	public void handleRead() {
-		String cmd;
-		String[] args;
-
 		if(useSecondServerBuffer) {
 			secondServerBuffer.clear();
 			try {
@@ -192,6 +190,16 @@ public class ClientSession implements Session {
 			return false;
 		}
 		Response r = state.eval(this);
+		
+		//Me suscribo a escritura de los dos canales, para desuscribirme de escritura en caso de q no aplique.
+		try {
+			this.clientSocket.register(selector, SelectionKey.OP_READ);
+			if(this.originServerSocket!= null) this.originServerSocket.register(selector, SelectionKey.OP_READ);
+		} catch (ClosedChannelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		
 		this.toSuscribe = (SocketChannel) r.getChannel();
 		this.suscriptionMode = r.getOperation();
