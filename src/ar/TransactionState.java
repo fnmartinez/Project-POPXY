@@ -177,13 +177,18 @@ public class TransactionState implements State {
 	
 	private class QuitState extends AbstractInnerState implements EndState{
 		
-		private boolean isFinalState = true;
+		private boolean isFinalState = false;
 		
-//		@Override
-//		Response afterWritingToServer(ClientSession session) {
-//			this.isFinalState = true;
-//			return super.afterWritingToServer(session);
-//		}
+		@Override
+		Response afterWritingToClient(ClientSession session) {
+			Response response = new Response();
+			
+			response = super.afterWritingToClient(session);
+			this.isFinalState = true;
+			response.setState(this);
+			return response;
+		
+		}
 		
 		@Override
 		public boolean isEndState() {
@@ -220,7 +225,7 @@ public class TransactionState implements State {
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(response.isEndOfChainResponse()){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -287,7 +292,7 @@ public class TransactionState implements State {
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(response.isEndOfChainResponse()){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -304,7 +309,7 @@ public class TransactionState implements State {
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(response.isEndOfChainResponse()){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);

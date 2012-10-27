@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.Pipe;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -54,12 +56,13 @@ public class ClientSession implements Session {
 	private ByteBuffer[] bufferToRead;
 	private SocketChannel channelToWrite;
 	private SocketChannel channelToRead;
+	private FileChannel file1;
+	private FileChannel file2;
 	private boolean firstContact;
 	private boolean useSecondServerBuffer;
 	private SocketChannel toSuscribe;
 	private int suscriptionMode;
-	private SelectionKey key;
-
+	
 	public ClientSession(SelectionKey key) throws IOException {
 		this.selector = key.selector();
 		this.clientSocket = ((ServerSocketChannel) key.channel()).accept();
@@ -67,13 +70,11 @@ public class ClientSession implements Session {
 		this.channelToWrite = clientSocket;
 		this.firstContact = true;
 		this.useSecondServerBuffer = false;
-		this.key = key;
 		clientSocket.configureBlocking(false);
 		clientSocket.register(selector, SelectionKey.OP_WRITE, this);
 	}
 
 	public void handleConnection() {
-		// TODO Auto-generated method stub
 
 		this.bufferToRead = firstServerBuffer;
 		this.channelToRead = originServerSocket;
@@ -132,14 +133,16 @@ public class ClientSession implements Session {
 			}
 		}
 
-		if(evaluateState()){
+		evaluateState();
 			try {
-				toSuscribe.register(selector, suscriptionMode, this);
+				if(toSuscribe != null){
+					toSuscribe.register(selector, suscriptionMode, this);
+				}
 			} catch (ClosedChannelException e) {
 				// TODO: Should close client gracefully.
 				e.printStackTrace();
 			}
-		}
+		
 	}
 
 	private void logRead(String msg) {
@@ -173,28 +176,32 @@ public class ClientSession implements Session {
 			logRead(BufferUtils.byteBufferToString(bufferToWrite));
 		}
 
-		if(evaluateState()){
+		evaluateState();
 			try {
-				toSuscribe.register(selector, suscriptionMode, this);
+				if(toSuscribe != null){
+					toSuscribe.register(selector, suscriptionMode, this);
+				}
 			} catch (ClosedChannelException e) {
 				// TODO: Should close client gracefully.
 				e.printStackTrace();
 			}
-		}
+		
 		
 	}
 	
-	private boolean evaluateState() {
+	private void evaluateState() {
+		Response r = state.eval(this);
+		this.state = r.getState();
 		if(state == null){
 			handleEndConection();
-			return false;
+			toSuscribe = null;
+			return;
 		}
-		Response r = state.eval(this);
 		
 		//Me suscribo a escritura de los dos canales, para desuscribirme de escritura en caso de q no aplique.
 		try {
-			this.clientSocket.register(selector, SelectionKey.OP_READ);
-			if(this.originServerSocket!= null) this.originServerSocket.register(selector, SelectionKey.OP_READ);
+			this.clientSocket.register(selector, 0);
+			if(this.originServerSocket!= null) this.originServerSocket.register(selector, 0);
 		} catch (ClosedChannelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -204,7 +211,6 @@ public class ClientSession implements Session {
 		this.toSuscribe = (SocketChannel) r.getChannel();
 		this.suscriptionMode = r.getOperation();
 		this.useSecondServerBuffer = r.isMultilineResponse();
-		this.state = r.getState();
 		switch(suscriptionMode) {
 		case SelectionKey.OP_READ:
 			this.bufferToWrite = r.getBuffers();
@@ -213,13 +219,13 @@ public class ClientSession implements Session {
 		case SelectionKey.OP_WRITE:
 			this.bufferToRead = r.getBuffers();
 			this.channelToWrite = (SocketChannel)r.getChannel();
-			break;			
+			break;
 		default:
 			this.bufferToRead = this.bufferToWrite = null;
 			break;
 		}
 		
-		return true;
+		return;
 	}
 
 	private void handleEndConection() {

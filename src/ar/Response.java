@@ -11,7 +11,6 @@ public class Response {
 	private int operation;
 	private State state;
 	private boolean multilineResponse = false;
-	private boolean endOfChainResponse = true;
 	
 	public ByteBuffer[] getBuffers() {
 		return buffers;
@@ -48,12 +47,6 @@ public class Response {
 	}
 	public ByteBuffer getMultilineBuffer() {
 		return this.multilineBuffer;
-	}
-	public void setEndOfChainResponse(boolean b) {
-		this.endOfChainResponse  = b;
-	}
-	public boolean isEndOfChainResponse(){
-		return this.endOfChainResponse;
 	}
 	
 }

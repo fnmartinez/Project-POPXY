@@ -174,7 +174,7 @@ public class User {
 	public boolean isBlocked() {		
 		if( !this.haveLoginsLeft())
 			return true;
-		if(this.isInInterval())
+		if(!this.isInInterval())
 			return true;
 		return false;
 	}

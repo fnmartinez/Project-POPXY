@@ -96,33 +96,28 @@ public class POPXY {
 				
 				if(key.isAcceptable()) {
 					if(((ServerSocketChannel)key.channel()).socket().getLocalPort() == adminPort){
-						//TODO: Create admin session
 						new AdminSession(key);
 					} else if (((ServerSocketChannel)key.channel()).socket().getLocalPort() == welcomeSocketPort) {
-						//TODO: create client session
 						new ClientSession(key);
 					} else {
 						throw new UnexpectedException("ouch!");
 					}
 				}
 				if(key.isConnectable()) {
-					//TODO:
 					Session s = (Session)key.attachment();
 					s.handleConnection();
 				}
 				
 				if(key.isReadable()) {
-					//TODO:
 					Session s = (Session)key.attachment();
 					s.handleRead();
 				}
 				
+				
 				if(key.isWritable()) {
-					//TODO:
 					Session s = (Session)key.attachment();
 					s.handleWrite();
 				}
-
 				
 				keys.remove();
 				
@@ -147,7 +142,7 @@ public class POPXY {
 	}
 
 	public boolean userIsBlocked(String username) {
-		User user = users.get(username);
+		User user = this.getUser(username);
 		if(user == null){
 			return false;
 		}else{

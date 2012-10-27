@@ -1,7 +1,6 @@
 package ar;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 
 import ar.sessions.ClientSession;
@@ -54,7 +53,6 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		response.setMultilineBuffer(session.getSecondServerBuffer());
 		response.setMultilineResponse(true);
 		response.setState(this);
-		response.setEndOfChainResponse(false);
 		response.setChannel(session.getOriginServerSocket());
 		response.setOperation(SelectionKey.OP_READ);
 		this.setFlowToReadServer();

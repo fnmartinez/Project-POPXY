@@ -2,7 +2,6 @@ package ar;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -75,13 +74,17 @@ public class AuthState implements State {
 						SocketChannel socketChannel = SocketChannel.open();
 						socketChannel.configureBlocking(false);
 						socketChannel.connect(new InetSocketAddress(host, port));
+						POPXY.getLogger().info("Conecting to "+ host);
 						while(! socketChannel.finishConnect() ){
 						    System.out.println(".");    
 						}
+						POPXY.getLogger().info("Connected to server "+ host);
 						session.setOriginServerSocket(socketChannel);
+						
 					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
+//						response.setState(null);
+//						return response;
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -352,8 +355,22 @@ public class AuthState implements State {
 	
 	private class QuitState extends AbstractInnerState implements EndState {
 
+		boolean isFinalState = false;
+		
+		@Override
+		Response afterWritingToClient(ClientSession session) {
+			Response response = new Response();
+			
+			response = super.afterWritingToClient(session);
+			this.isFinalState = true;
+			response.setState(this);
+			return response;
+		
+		}
+		
+		
 		public boolean isEndState() {
-			return true;
+			return this.isFinalState;
 		}
 
 		public State getNextState() {
