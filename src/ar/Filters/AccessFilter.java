@@ -5,25 +5,16 @@ import ar.elements.User;
 
 public class AccessFilter {
 
-	private POPXY proxy;
-	
-	public AccessFilter() {
-		this.proxy = POPXY.getInstance();
-	}
-
-	public boolean applyFilters(String userName) {
-		User user = proxy.getUser(userName);
-		if(user == null){
-			return true;
-		}
+	public static boolean applyFilters(String userName) {
+		User user = POPXY.getInstance().getUser(userName);
 		return loginTimesFilter(user) && loginIntervalFilter(user);
 	}
 
-	private boolean loginIntervalFilter(User user) {
+	private static boolean loginIntervalFilter(User user) {
 		return user.isInInterval();
 	}
 
-	private boolean loginTimesFilter(User user) {
+	private static boolean loginTimesFilter(User user) {
 		return user.haveLoginsLeft();
 	}
 

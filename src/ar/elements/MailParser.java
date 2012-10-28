@@ -28,12 +28,11 @@ public class MailParser {
 	}
 
 	public BufferedWriter parseMessage() throws IOException {
-
 		String line = reader.readLine();
 		parseHeaders(line);
 		return writer;
 	}
-
+	//TODO
 	private void parseHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
@@ -67,7 +66,7 @@ public class MailParser {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
 		}
 		mail.addHeaderValue(headerName, headerValue);
-
+		
 		// Body's start
 		if (line.length() == 0) {
 			writeLine("");
@@ -113,11 +112,6 @@ public class MailParser {
 	// globales y por usuario
 	private void writeLine(String line) throws IOException {
 		writer.write(line + "\n");
-
-		// TODO ver si va aqui o si va en cuando bajo el mail del server al
-		// archivo
-		User.addGlobalTransferedBytes((long) line.length());
-		user.addTransferedBytes((long) line.length());
 	}
 
 	private void writeLines(String text) throws IOException {
@@ -208,6 +202,7 @@ public class MailParser {
 		return ret;
 	}
 
+	//TODO
 	private String putContentText(String contentTypeHeader, String boundary,
 			boolean pointSpace) throws IOException {
 
@@ -257,7 +252,7 @@ public class MailParser {
 			return putLines(boundary);
 		}
 	}
-
+	//TODO
 	private String putContentImage(String contentTypeHeader, String boundary)
 			throws IOException {
 
@@ -267,7 +262,7 @@ public class MailParser {
 		String extension = contentTypeHeader.substring(
 				contentTypeHeader.indexOf('/') + 1,
 				contentTypeHeader.indexOf(';'));
-		mail.addExtension(extension);
+		mail.addStructure(extension);
 		// si pointSpace == true, quiere decir que el reader esta apuntando a la
 		// linea vacia antes del inicio del cuerpo
 		while ((line = reader.readLine()).length() != 0) {
@@ -299,7 +294,7 @@ public class MailParser {
 		String extension = contentTypeHeader.substring(
 				contentTypeHeader.indexOf('/') + 1,
 				contentTypeHeader.indexOf(';'));
-		mail.addExtension(extension);
+		mail.addStructure(extension);
 
 		while ((line = reader.readLine()).length() != 0) {
 			writeLine(line);

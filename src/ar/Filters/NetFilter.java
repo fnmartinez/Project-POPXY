@@ -6,14 +6,8 @@ import ar.POPXY;
 
 public class NetFilter {
 
-	private POPXY proxy;
-
-	public NetFilter() {
-		this.proxy = POPXY.getInstance();
-	}
-	
-	public boolean filter(String ip){
-		return proxy.isOnTheBlackList(ip);
+	public static boolean applyFilters(String ip){
+		return POPXY.getInstance().isOnTheBlackList(ip);
 	}
 
 }
