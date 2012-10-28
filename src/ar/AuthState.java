@@ -72,7 +72,6 @@ public class AuthState implements State {
 						int port = session.getClient().getServerPort();
 
 						SocketChannel socketChannel = SocketChannel.open();
-						socketChannel.configureBlocking(false);
 						socketChannel.connect(new InetSocketAddress(host, port));
 						POPXY.getLogger().info("Conecting to "+ host);
 						while(! socketChannel.finishConnect() ){

@@ -5,10 +5,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
-import java.nio.channels.Pipe;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import ar.AuthState;
@@ -18,7 +16,7 @@ import ar.State;
 import ar.elements.User;
 import ar.sessions.utils.BufferUtils;
 
-public class ClientSession implements Session {
+public class ClientSession implements Runnable {
 
 	private final static int CLIENT_BUFFER_COMMAND_SIZE = 4;
 	private final static int CLIENT_BUFFER_ARGUMENT_SIZE = 100;
@@ -62,16 +60,18 @@ public class ClientSession implements Session {
 	private boolean useSecondServerBuffer;
 	private SocketChannel toSuscribe;
 	private int suscriptionMode;
+	private boolean conectionEstablished;
 	
 	public ClientSession(SelectionKey key) throws IOException {
-		this.selector = key.selector();
-		this.clientSocket = ((ServerSocketChannel) key.channel()).accept();
+	}
+
+	public ClientSession(SocketChannel s) {
+		this.clientSocket = s;
 		this.state = new AuthState();
 		this.channelToWrite = clientSocket;
 		this.firstContact = true;
 		this.useSecondServerBuffer = false;
-		clientSocket.configureBlocking(false);
-		clientSocket.register(selector, SelectionKey.OP_WRITE, this);
+		this.conectionEstablished = true;
 	}
 
 	public void handleConnection() {
@@ -79,12 +79,13 @@ public class ClientSession implements Session {
 		this.bufferToRead = firstServerBuffer;
 		this.channelToRead = originServerSocket;
 
-		try {
-			channelToRead.register(selector, SelectionKey.OP_READ, this);
-		} catch (ClosedChannelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.read();
+//		try {
+//			channelToRead.register(selector, SelectionKey.OP_READ, this);
+//		} catch (ClosedChannelException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 	}
 	
@@ -96,7 +97,7 @@ public class ClientSession implements Session {
 		POPXY.getLogger().info("["+this.state+"] P->"+ctw+" : "+msg);
 	}
 
-	public void handleWrite() {
+	private void write() {
 		//TODO: try to put this in the automaton
 		if (firstContact) {
 			try {
@@ -134,14 +135,14 @@ public class ClientSession implements Session {
 		}
 
 		evaluateState();
-			try {
-				if(toSuscribe != null){
-					toSuscribe.register(selector, suscriptionMode, this);
-				}
-			} catch (ClosedChannelException e) {
-				// TODO: Should close client gracefully.
-				e.printStackTrace();
-			}
+//		try {
+//			if(toSuscribe != null){
+//				toSuscribe.register(selector, suscriptionMode, this);
+//			}
+//		} catch (ClosedChannelException e) {
+//			// TODO: Should close client gracefully.
+//			e.printStackTrace();
+//		}
 		
 	}
 
@@ -153,7 +154,7 @@ public class ClientSession implements Session {
 		POPXY.getLogger().info("["+this.state+"] "+ctw+"->P : "+msg);
 	}
 	
-	public void handleRead() {
+	private void read() {
 		if(useSecondServerBuffer) {
 			secondServerBuffer.clear();
 			try {
@@ -177,15 +178,14 @@ public class ClientSession implements Session {
 		}
 
 		evaluateState();
-			try {
-				if(toSuscribe != null){
-					toSuscribe.register(selector, suscriptionMode, this);
-				}
-			} catch (ClosedChannelException e) {
-				// TODO: Should close client gracefully.
-				e.printStackTrace();
-			}
-		
+//		try {
+//			if(toSuscribe != null){
+//				toSuscribe.register(selector, suscriptionMode, this);
+//			}
+//		} catch (ClosedChannelException e) {
+//			// TODO: Should close client gracefully.
+//			e.printStackTrace();
+//		}
 		
 	}
 	
@@ -199,13 +199,13 @@ public class ClientSession implements Session {
 		}
 		
 		//Me suscribo a escritura de los dos canales, para desuscribirme de escritura en caso de q no aplique.
-		try {
-			this.clientSocket.register(selector, 0);
-			if(this.originServerSocket!= null) this.originServerSocket.register(selector, 0);
-		} catch (ClosedChannelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			this.clientSocket.register(selector, 0);
+//			if(this.originServerSocket!= null) this.originServerSocket.register(selector, 0);
+//		} catch (ClosedChannelException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		
 		this.toSuscribe = (SocketChannel) r.getChannel();
@@ -241,6 +241,7 @@ public class ClientSession implements Session {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		this.conectionEstablished = false;
 		
 	}
 
@@ -311,6 +312,25 @@ public class ClientSession implements Session {
 
 	public void setClient(User client) {
 		this.client = client;
+	}
+
+	public void run() {
+		// TODO Auto-generated method stub
+		this.write();
+	
+		while(this.conectionEstablished){
+			switch(suscriptionMode) {
+			case SelectionKey.OP_READ:
+				this.read();
+				break;
+			case SelectionKey.OP_WRITE:
+				this.write();
+				break;
+			default:
+				break;
+			}
+		}
+		
 	}
 }
 
