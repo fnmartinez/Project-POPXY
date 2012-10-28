@@ -1,0 +1,11 @@
+MIME-Version: 1.0
+Received: by 10.66.219.228 with HTTP; Sun, 28 Oct 2012 16:11:15 -0700 (PDT)
+Date: Sun, 28 Oct 2012 20:11:15 -0300
+Delivered-To: victoria.mesa.alcorta@gmail.com
+Message-ID: <CAMatysBdwBYNTj9yzXZ9NA4J1mxcfd4ZeKMvkYUO-Jq32nw3Bg@mail.gmail.com>
+Subject: Texto Plano
+From: Anonymous <unknown@unknown.com>
+To: =?ISO-8859-1?Q?Mar=EDa_Victoria_Mesa_Alcorta?= <victoria.mesa.alcorta@gmail.com>
+
+Mail con texto plano
+.

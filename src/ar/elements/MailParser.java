@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import org.apache.commons.codec.binary.Base64;
+
 public class MailParser {
 
 	// De aqui voy a leer el mail, el mail antes paso por una app externa
@@ -32,6 +34,7 @@ public class MailParser {
 		return writer;
 	}
 
+	// TODO DATE
 	private void parseOnlyHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
@@ -74,7 +77,8 @@ public class MailParser {
 				System.out.println("Parser only headers: OK");
 				return;
 			} else {
-				System.out.println("Invalid mail: Needs \".\" at the end of the mail");
+				System.out
+						.println("Invalid mail: Needs \".\" at the end of the mail");
 				return;
 			}
 		} else {
@@ -82,7 +86,7 @@ public class MailParser {
 		}
 	}
 
-	// TODO
+	// TODO DATE
 	private void parseHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
@@ -170,8 +174,7 @@ public class MailParser {
 			if (text.charAt(i) != '\n') {
 				builder.append(text.charAt(i));
 			}
-
-			if (count == 76 || text.charAt(i) == '\n') {
+			if (count == 75 || text.charAt(i) == '\n') {
 				count = 0;
 				writeLine(builder.toString());
 				builder = new StringBuilder();
@@ -179,9 +182,7 @@ public class MailParser {
 				count++;
 			}
 			i++;
-
 		}
-
 	}
 
 	private void parseContents(String boundary) throws IOException {
@@ -248,7 +249,6 @@ public class MailParser {
 		return ret;
 	}
 
-	// TODO
 	private String putContentText(String contentTypeHeader, String boundary,
 			boolean pointSpace) throws IOException {
 
@@ -270,36 +270,17 @@ public class MailParser {
 		// ahora line apunta a el "" antes del body y el "" ya esta guardado en
 		// el file
 		if (user.getLeet()
-				&& contentTypeHeader.toUpperCase().contains("TEXT/PLAIN")) {
-			if (encoding == null) {
-				while (!isEndLine(line = reader.readLine(), boundary)) {
-					writeLine(textTransformer.l33t(line));
-				}
-				return line;
-			} else {
-
-				while (!isEndLine(line = reader.readLine(), boundary)) {
-					// need to get the entire image to rotate it
-					text += line + "\n";
-				}
-
-				if (encoding.toLowerCase().equals("quoted-printable")) {
-					// transform and print text according to its encoding
-					// text = decodeQuotedPrintable(text);
-					// text = textTransformer.l33t(text);
-					// writeLines(encodeQuotedPrintable(text));
-				} else if (encoding.toLowerCase().equals("8bit")) {
-					writeLines(textTransformer.l33t(text));
-				}
-				return line;
-
+				&& contentTypeHeader.toUpperCase().contains("TEXT/PLAIN")
+				&& encoding == null) {
+			while (!isEndLine(line = reader.readLine(), boundary)) {
+				writeLine(textTransformer.l33t(line));
 			}
+			return line;
 		} else {
 			return putLines(boundary);
 		}
 	}
 
-	// TODO
 	private String putContentImage(String contentTypeHeader, String boundary)
 			throws IOException {
 
@@ -319,15 +300,19 @@ public class MailParser {
 			}
 		}
 		writeLine("");
-		// ahora line apunta a el "" antes del body y el "" ya esta guardado en
-		// el file
-		if (user.getRotate()) {
+		// ahora line apunta a el "" antes del body y el "" guardado
+		if (user.getRotate() && encoding.toLowerCase().equals("base64")) {
 			// Transformar imagen codificada
 			while (!isEndLine(line = reader.readLine(), boundary)) {
-				// pongo en text toda la imagen codificada en base64
-				text += line + "\n";
+				text += line;
 			}
-
+			if (!text.isEmpty()) {
+				byte[] image = decodeBase64(text);
+				image = imageTransformer.rotateImage(image, extension);
+				text = encodeBase64(image);
+				text += '\n';
+				writeLines(text);
+			}
 			return line;
 		} else {
 			return putLines(boundary);
@@ -353,8 +338,8 @@ public class MailParser {
 		return putLines(boundary);
 	}
 
+	// Escribo linea por linea sin transformar nada
 	private String putLines(String boundary) throws IOException {
-
 		String line;
 		while (!isEndLine(line = reader.readLine(), boundary)) {
 			writeLine(line);
@@ -366,6 +351,16 @@ public class MailParser {
 	private boolean isEndLine(String line, String boundary) {
 		return (boundary == "") ? line.equals(".") : line.contains("--"
 				+ boundary);
+	}
+
+	private byte[] decodeBase64(String text) {
+		byte[] decodedText = Base64.decodeBase64(text);
+		return decodedText;
+	}
+
+	private String encodeBase64(byte[] encodedText) {
+		String text = Base64.encodeBase64String(encodedText);
+		return text;
 	}
 
 }
