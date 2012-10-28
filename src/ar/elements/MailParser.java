@@ -56,7 +56,7 @@ public class MailParser {
 				writeLine(line);
 			}
 		} while ((line = reader.readLine()).length() != 0
-				&& (line.startsWith(" ") || line.startsWith("\t"))
+				&& (line.startsWith(" ") || line.startsWith("\t") || line.startsWith("."))
 				&& (!line.contains("Content-Type")));
 
 		if (headerName.equals("Date")) {
@@ -65,7 +65,7 @@ public class MailParser {
 		if (headerName.equals("From")) {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
 		}
-		mail.addHeaderValue(headerName, headerValue);
+		mail.addHeader(headerName, headerValue);
 		
 		// Body's start
 		if (line.length() == 0) {

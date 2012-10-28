@@ -26,7 +26,7 @@ public class Mail {
 	}
 	
 	
-	public void addHeaderValue(String headerName, String headerValue) {
+	public void addHeader(String headerName, String headerValue) {
 		headers.put(headerName,headerValue);		
 	}
 	
