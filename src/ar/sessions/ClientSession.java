@@ -80,13 +80,6 @@ public class ClientSession implements Runnable {
 		this.channelToRead = originServerSocket;
 
 		this.read();
-//		try {
-//			channelToRead.register(selector, SelectionKey.OP_READ, this);
-//		} catch (ClosedChannelException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-
 	}
 	
 	private void logWrite(String msg) {
@@ -135,14 +128,6 @@ public class ClientSession implements Runnable {
 		}
 
 		evaluateState();
-//		try {
-//			if(toSuscribe != null){
-//				toSuscribe.register(selector, suscriptionMode, this);
-//			}
-//		} catch (ClosedChannelException e) {
-//			// TODO: Should close client gracefully.
-//			e.printStackTrace();
-//		}
 		
 	}
 
@@ -178,14 +163,6 @@ public class ClientSession implements Runnable {
 		}
 
 		evaluateState();
-//		try {
-//			if(toSuscribe != null){
-//				toSuscribe.register(selector, suscriptionMode, this);
-//			}
-//		} catch (ClosedChannelException e) {
-//			// TODO: Should close client gracefully.
-//			e.printStackTrace();
-//		}
 		
 	}
 	

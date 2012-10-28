@@ -26,8 +26,8 @@ public class TransactionState implements State {
 			
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
 
-			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n") || firstCaracter.startsWith("\r");
+			String args = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
+			boolean validArgument = args.startsWith(" ") || args.startsWith("\n") || args.startsWith("\r");
 	
 			AbstractInnerState tmpState;
 
@@ -48,7 +48,7 @@ public class TransactionState implements State {
 				
 				if(validArgument){
 					response = super.afterReadingFromClient(session);
-					tmpState = new ListState();
+					tmpState = new ListState(args);
 					tmpState.setFlowToWriteServer();
 					response.setState(tmpState);
 				} else {
@@ -60,7 +60,7 @@ public class TransactionState implements State {
 				
 				if(validArgument){
 					response = super.afterReadingFromClient(session);
-					tmpState = new RetrState();
+					tmpState = new RetrState(args);
 					tmpState.setFlowToWriteServer();
 					response.setState(tmpState);
 				} else {
@@ -72,7 +72,7 @@ public class TransactionState implements State {
 				
 				if(validArgument){
 					response = super.afterReadingFromClient(session);
-					tmpState = new DeleState();
+					tmpState = new DeleState(args);
 					tmpState.setFlowToWriteServer();
 					response.setState(tmpState);
 				} else {
@@ -106,14 +106,14 @@ public class TransactionState implements State {
 				break;
 			case TOP:
 				response = super.afterReadingFromClient(session);
-				tmpState = new TopState();
+				tmpState = new TopState(args);
 				tmpState.setFlowToWriteServer();
 				response.setState(tmpState);
 				break;
 			case UIDL:
 				if(validArgument){
 					response = super.afterReadingFromClient(session);
-					tmpState = new UidlState();
+					tmpState = new UidlState(args);
 					tmpState.setFlowToWriteServer();
 					response.setState(tmpState);
 				} else {
@@ -222,10 +222,17 @@ public class TransactionState implements State {
 	}
 
 	private class ListState extends AbstractMultilinerInnerState{
+		
+		private String args;
+		
+		public ListState(String args) {
+			this.args = args.trim();
+		}
+		
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd()){
+			if(!this.isWaitingLineFeedEnd() || !args.equalsIgnoreCase("")){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -238,10 +245,17 @@ public class TransactionState implements State {
 	}
 	
 	private class RetrState extends AbstractMultilinerInnerState{
+		
+		private String args;
+		
+		public RetrState(String args) {
+			this.args = args.trim();
+		}
+		
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd()){
+			if(!this.isWaitingLineFeedEnd() || args.equalsIgnoreCase("")){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -256,6 +270,12 @@ public class TransactionState implements State {
 	
 	private class DeleState extends AbstractInnerState{
 
+		private String args;
+		
+		public DeleState(String args) {
+			this.args = args.trim();
+		}
+		
 		@Override
 		Response afterWritingToClient(ClientSession session) {
 			Response response = super.afterWritingToClient(session);
@@ -289,10 +309,16 @@ public class TransactionState implements State {
 	
 	private class UidlState extends AbstractMultilinerInnerState{
 
+		private String args;
+		
+		public UidlState(String args) {
+			this.args = args.trim();
+		}
+		
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd()){
+			if(!this.isWaitingLineFeedEnd() || args.equalsIgnoreCase("")){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -306,10 +332,16 @@ public class TransactionState implements State {
 	
 	private class TopState extends AbstractMultilinerInnerState{
 		
+		private String args;
+		
+		public TopState(String args) {
+			this.args = args.trim();
+		}
+		
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd()){
+			if(!this.isWaitingLineFeedEnd() || args.equalsIgnoreCase("")){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
