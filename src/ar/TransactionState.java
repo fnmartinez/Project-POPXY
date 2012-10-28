@@ -231,8 +231,11 @@ public class TransactionState implements State {
 		
 		@Override
 		Response afterWritingToClient(ClientSession session){
+			if(args.length() > 0){
+				this.setWaitingLineFeedEnd(false);
+			}
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd() || !args.equalsIgnoreCase("")){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -254,8 +257,11 @@ public class TransactionState implements State {
 		
 		@Override
 		Response afterWritingToClient(ClientSession session){
+			if(args.length() > 0){
+				this.setWaitingLineFeedEnd(false);
+			}
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd() || args.equalsIgnoreCase("")){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -317,8 +323,11 @@ public class TransactionState implements State {
 		
 		@Override
 		Response afterWritingToClient(ClientSession session){
+			if(args.length() > 0){
+				this.setWaitingLineFeedEnd(false);
+			}
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd() || args.equalsIgnoreCase("")){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
@@ -340,8 +349,11 @@ public class TransactionState implements State {
 		
 		@Override
 		Response afterWritingToClient(ClientSession session){
+			if(args.length() > 0){
+				this.setWaitingLineFeedEnd(false);
+			}
 			Response response = super.afterWritingToClient(session);
-			if(!this.isWaitingLineFeedEnd() || args.equalsIgnoreCase("")){
+			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
