@@ -12,6 +12,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -38,10 +41,15 @@ public class POPXY {
 	
 	private static POPXY instance = null;
 	
+	private static ExecutorService threadPool = Executors.newFixedThreadPool(5);
+	
 	
 	private Map<String, User> users = new HashMap<String, User>();
 	private Set<IpAndMask> blackIps = new HashSet<IpAndMask>();
 	
+	private static Thread clientsThread;
+	private static Thread adminsThread;
+
 	public static void main(String[] args) 
 		throws Exception{
 		
@@ -57,20 +65,22 @@ public class POPXY {
 			System.out.println("Error loading logger");
 			//return;
 		}
-		Selector selector = Selector.open();
 		ServerSocketChannel welcomeSocket = ServerSocketChannel.open();
 		ServerSocketChannel adminSocket = ServerSocketChannel.open();
 		try{
 			
 			welcomeSocket.socket().bind(new InetSocketAddress(welcomeSocketPort));
-			welcomeSocket.configureBlocking(false);
+			welcomeSocket.configureBlocking(true);
 			
+			clientsThread = new ClientWelcomeSocket(threadPool, welcomeSocket);
+					
 			adminSocket.socket().bind(new InetSocketAddress(adminPort));
 			adminSocket.configureBlocking(false);
 			
-			welcomeSocket.register(selector, SelectionKey.OP_ACCEPT);
-			adminSocket.register(selector, SelectionKey.OP_ACCEPT);
+			adminsThread = new AdminWelcomeSocket(adminSocket);
 			
+			threadPool.execute(clientsThread);
+			threadPool.execute(adminsThread);
 		}
 		catch(NotYetBoundException nybe){
 			//TODO:
@@ -82,47 +92,10 @@ public class POPXY {
 			//TODO:
 		}
 		
-		while(true){
-			
-			if(selector.select() == 0) {
-				System.out.println("Error");
-				continue;
-			}
-			
-			Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
-			
-			while(keys.hasNext()) {
-				SelectionKey key = keys.next();
-				
-				if(key.isAcceptable()) {
-					if(((ServerSocketChannel)key.channel()).socket().getLocalPort() == adminPort){
-						new AdminSession(key);
-					} else if (((ServerSocketChannel)key.channel()).socket().getLocalPort() == welcomeSocketPort) {
-						new ClientSession(key);
-					} else {
-						throw new UnexpectedException("ouch!");
-					}
-				}
-				if(key.isConnectable()) {
-					Session s = (Session)key.attachment();
-					s.handleConnection();
-				}
-				
-				if(key.isReadable()) {
-					Session s = (Session)key.attachment();
-					s.handleRead();
-				}
-				
-				
-				if(key.isWritable()) {
-					Session s = (Session)key.attachment();
-					s.handleWrite();
-				}
-				
-				keys.remove();
-				
-			}
-		}
+		do {
+			clientsThread.join(60000);
+			adminsThread.join(60000);
+		}while(clientsThread.isAlive() || adminsThread.isAlive());
 	}
 
 	public static POPXY getInstance() {

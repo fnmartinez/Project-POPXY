@@ -28,6 +28,7 @@ public enum POPHeadCommands {
 				reverseStringSearchMap.put(phc.toString(), phc);
 			}
 		}
+		str = str.trim();
 		POPHeadCommands ret = reverseStringSearchMap.get(str.toUpperCase());
 		if(ret != null)
 			return ret;

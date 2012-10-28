@@ -62,4 +62,9 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 	boolean isWaitingLineFeedEnd() {
 		return this.waitingLineFeedEnd;
 	}
+	
+	void setWaitingLineFeedEnd(boolean bool){
+		this.waitingLineFeedEnd = bool;
+	}
+	
 }
