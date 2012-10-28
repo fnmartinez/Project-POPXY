@@ -175,15 +175,6 @@ public class ClientSession implements Runnable {
 			return;
 		}
 		
-		//Me suscribo a escritura de los dos canales, para desuscribirme de escritura en caso de q no aplique.
-//		try {
-//			this.clientSocket.register(selector, 0);
-//			if(this.originServerSocket!= null) this.originServerSocket.register(selector, 0);
-//		} catch (ClosedChannelException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
 		
 		this.toSuscribe = (SocketChannel) r.getChannel();
 		this.suscriptionMode = r.getOperation();
