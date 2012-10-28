@@ -16,7 +16,7 @@ public class testtt {
 		File to = new File("mails/mail.txt");
 		
 		user.setLeet(false);
-		user.setAnonymous(false);
+		user.setAnonymous(true);
 		user.setRotate(false);
 		BufferedWriter writer;
 		BufferedReader reader;
