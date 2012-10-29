@@ -1,12 +1,12 @@
 package ar.sessions;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 import ar.AuthState;
@@ -18,31 +18,19 @@ import ar.sessions.utils.BufferUtils;
 
 public class ClientSession implements Runnable {
 
-	private final static int CLIENT_BUFFER_COMMAND_SIZE = 4;
-	private final static int CLIENT_BUFFER_ARGUMENT_SIZE = 100;
-	private final static int FIRST_SERVER_BUFFER_COMM_SIZE = 4;
-	private final static int FIRST_SERVER_BUFFER_ARG_SIZE = 512 - FIRST_SERVER_BUFFER_COMM_SIZE;
+	private final static int CLIENT_BUFFER_SIZE = 104;
+	private final static int FIRST_SERVER_BUFFER_SIZE = 512;
 	private final static int SECOND_SERVER_BUFFER_SIZE = 4096;
-	private final static int MOCK_SERVER_BUFFER_COMM_SIZE = 10;
-	private final static int MOCK_SERVER_BUFFER_ARG_SIZE = 512 - MOCK_SERVER_BUFFER_COMM_SIZE;
+	private final static int MOCK_SERVER_BUFFER_SIZE = 512;
 	private SocketChannel clientSocket;
 	private SocketChannel originServerSocket;
-	private Selector selector;
 
-	private ByteBuffer[] clientBuffer = {
-			ByteBuffer.allocate(CLIENT_BUFFER_COMMAND_SIZE),
-			ByteBuffer.allocate(CLIENT_BUFFER_ARGUMENT_SIZE) };
+	private ByteBuffer clientBuffer = ByteBuffer.allocate(CLIENT_BUFFER_SIZE);
 
-	private ByteBuffer[] firstServerBuffer = {
-			ByteBuffer.allocate(FIRST_SERVER_BUFFER_COMM_SIZE),
-			ByteBuffer.allocate(FIRST_SERVER_BUFFER_ARG_SIZE) };
+	private ByteBuffer firstServerBuffer = ByteBuffer.allocate(FIRST_SERVER_BUFFER_SIZE);
+	private ByteBuffer secondServerBuffer = ByteBuffer.allocate(SECOND_SERVER_BUFFER_SIZE);
 
-	private ByteBuffer secondServerBuffer = ByteBuffer
-			.allocate(SECOND_SERVER_BUFFER_SIZE);
-
-	private ByteBuffer[] mockServerBuffer = {
-			ByteBuffer.allocate(MOCK_SERVER_BUFFER_COMM_SIZE),
-			ByteBuffer.allocate(MOCK_SERVER_BUFFER_ARG_SIZE) };
+	private ByteBuffer mockServerBuffer = ByteBuffer.allocate(MOCK_SERVER_BUFFER_SIZE);
 
 	private User client;
 
@@ -50,15 +38,16 @@ public class ClientSession implements Runnable {
 
 	private State state;
 
-	private ByteBuffer[] bufferToWrite;
-	private ByteBuffer[] bufferToRead;
-	private SocketChannel channelToWrite;
-	private SocketChannel channelToRead;
-	private FileChannel file1;
-	private FileChannel file2;
+	private ByteBuffer bufferToWrite;
+	private ByteBuffer bufferToRead;
+	private ByteChannel channelToWrite;
+	private ByteChannel channelToRead;
+	private RandomAccessFile file1;
+	private File filename1;
+	private RandomAccessFile file2;
+	private File filename2;
 	private boolean firstContact;
 	private boolean useSecondServerBuffer;
-	private SocketChannel toSuscribe;
 	private int suscriptionMode;
 	private boolean conectionEstablished;
 	
@@ -94,11 +83,9 @@ public class ClientSession implements Runnable {
 		//TODO: try to put this in the automaton
 		if (firstContact) {
 			try {
-				clearBuffer(mockServerBuffer);
-
-				mockServerBuffer[0].put("+OK\r\n".getBytes());
-
-				flipBuffer(mockServerBuffer);
+				this.mockServerBuffer.clear();
+				mockServerBuffer.put("+OK\r\n".getBytes());
+				this.mockServerBuffer.flip();
 
 				logWrite(BufferUtils.byteBufferToString(mockServerBuffer));
 				clientSocket.write(mockServerBuffer);
@@ -140,28 +127,29 @@ public class ClientSession implements Runnable {
 	}
 	
 	private void read() {
-		if(useSecondServerBuffer) {
-			secondServerBuffer.clear();
-			try {
-				channelToRead.read(secondServerBuffer);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		if(this.channelToRead != null){
+			if(useSecondServerBuffer) {
+				secondServerBuffer.clear();
+				try {
+					channelToRead.read(secondServerBuffer);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				secondServerBuffer.flip();
+				logRead(BufferUtils.byteBufferToString(secondServerBuffer));
+			} else {
+				bufferToWrite.clear();
+				try {
+					channelToRead.read(bufferToWrite);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				bufferToWrite.flip();
+				logRead(BufferUtils.byteBufferToString(bufferToWrite));
 			}
-			secondServerBuffer.flip();
-			logRead(BufferUtils.byteBufferToString(secondServerBuffer));
-		} else {
-			clearBuffer(bufferToWrite);
-			try {
-				channelToRead.read(bufferToWrite);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			flipBuffer(bufferToWrite);
-			logRead(BufferUtils.byteBufferToString(bufferToWrite));
 		}
-
 		evaluateState();
 		
 	}
@@ -171,22 +159,20 @@ public class ClientSession implements Runnable {
 		this.state = r.getState();
 		if(state == null){
 			handleEndConection();
-			toSuscribe = null;
 			return;
 		}
 		
 		
-		this.toSuscribe = (SocketChannel) r.getChannel();
 		this.suscriptionMode = r.getOperation();
 		this.useSecondServerBuffer = r.isMultilineResponse();
 		switch(suscriptionMode) {
 		case SelectionKey.OP_READ:
 			this.bufferToWrite = r.getBuffers();
-			this.channelToRead = (SocketChannel)r.getChannel();
+			this.channelToRead = r.getChannel();
 			break;
 		case SelectionKey.OP_WRITE:
 			this.bufferToRead = r.getBuffers();
-			this.channelToWrite = (SocketChannel)r.getChannel();
+			this.channelToWrite = r.getChannel();
 			break;
 		default:
 			this.bufferToRead = this.bufferToWrite = null;
@@ -213,17 +199,6 @@ public class ClientSession implements Runnable {
 		
 	}
 
-	private void clearBuffer(Buffer[] b) {
-		for (Buffer b2 : b) {
-			b2.clear();
-		}
-	}
-
-	private void flipBuffer(Buffer[] b) {
-		for (Buffer b2 : b) {
-			b2.flip();
-		}
-	}
 	
 	public SocketChannel getClientSocket() {
 		return clientSocket;
@@ -241,19 +216,19 @@ public class ClientSession implements Runnable {
 		this.originServerSocket = originServerSocket;
 	}
 
-	public ByteBuffer[] getClientBuffer() {
+	public ByteBuffer getClientBuffer() {
 		return clientBuffer;
 	}
 
-	public void setClientBuffer(ByteBuffer[] clientBuffer) {
+	public void setClientBuffer(ByteBuffer clientBuffer) {
 		this.clientBuffer = clientBuffer;
 	}
 
-	public ByteBuffer[] getFirstServerBuffer() {
+	public ByteBuffer getFirstServerBuffer() {
 		return firstServerBuffer;
 	}
 
-	public void setFirstServerBuffer(ByteBuffer[] firstServerBuffer) {
+	public void setFirstServerBuffer(ByteBuffer firstServerBuffer) {
 		this.firstServerBuffer = firstServerBuffer;
 	}
 
@@ -266,11 +241,11 @@ public class ClientSession implements Runnable {
 	}
 
 
-	public ByteBuffer[] getMockServerBuffer() {
+	public ByteBuffer getMockServerBuffer() {
 		return mockServerBuffer;
 	}
 
-	public void setMockServerBuffer(ByteBuffer[] mockServerBuffer) {
+	public void setMockServerBuffer(ByteBuffer mockServerBuffer) {
 		this.mockServerBuffer = mockServerBuffer;
 	}
 
@@ -299,6 +274,60 @@ public class ClientSession implements Runnable {
 			}
 		}
 		
+	}
+
+	public FileChannel getFile1Channel() {
+		return this.getFile1().getChannel();
+	}
+	
+	public RandomAccessFile getFile1(){
+		if(this.file1 == null){
+			try {
+				this.file1 = new RandomAccessFile( this.filename1 = File.createTempFile(this.client.getUser(), ".mail", null), "rws");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return this.file1;
+	}
+	
+	public RandomAccessFile getFile2(){
+		if(this.file2 == null){
+			try {
+				this.file2 = new RandomAccessFile( this.filename2 = File.createTempFile(this.client.getUser(), ".mail", null), "rws");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return this.file2;
+	}
+	
+	public FileChannel getFile2Channel() {
+		return this.getFile2().getChannel();
+	}
+	
+	public void removeFile1(){
+		if(this.file1 != null && this.filename1 != null ) {
+			this.filename1.delete();
+			this.file1 = null;
+		}
+	}
+	
+	public void removeFile2(){
+		if(this.file2 != null && this.filename2 != null) {
+			this.filename2.delete();
+			this.file2 = null;
+		}
+	}
+
+	public void setFile2(RandomAccessFile file) {
+		this.file2 = file;
+	}
+	
+	public void setFile1(RandomAccessFile file) {
+		this.file1 = file;
 	}
 }
 

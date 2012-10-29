@@ -4,21 +4,22 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 
 public class MailParser {
 
 	// De aqui voy a leer el mail, el mail antes paso por una app externa
-	private BufferedReader reader;
+	private RandomAccessFile reader;
 	// Aqui voy a guardar el mail transformado a medida q lo voy parseando
-	private BufferedWriter writer;
-	// Due–o del mail
+	private RandomAccessFile writer;
+	// Dueï¿½o del mail
 	private User user;
 	private Mail mail;
 
 	private TextTransformer textTransformer;
 	private ImageTransformer imageTransformer;
 
-	public MailParser(BufferedReader reader, BufferedWriter writer, User user) {
+	public MailParser(RandomAccessFile reader, RandomAccessFile writer, User user) {
 		this.reader = reader;
 		this.writer = writer;
 		this.user = user;
@@ -27,7 +28,7 @@ public class MailParser {
 		this.imageTransformer = new ImageTransformer();
 	}
 
-	public BufferedWriter parseMessage() throws IOException {
+	public RandomAccessFile parseMessage() throws IOException {
 		String line = reader.readLine();
 		parseHeaders(line);
 		return writer;
@@ -111,7 +112,7 @@ public class MailParser {
 	// Antes de poner la linea en el file, agrego los bytes en las estadisticas
 	// globales y por usuario
 	private void writeLine(String line) throws IOException {
-		writer.write(line + "\n");
+		writer.write((line + "\n").getBytes());
 	}
 
 	private void writeLines(String text) throws IOException {

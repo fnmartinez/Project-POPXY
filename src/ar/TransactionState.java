@@ -1,8 +1,15 @@
 package ar;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
+import ar.elements.MailParser;
 import ar.sessions.ClientSession;
 import ar.sessions.utils.BufferUtils;
 import ar.sessions.utils.POPHeadCommands;
@@ -24,116 +31,47 @@ public class TransactionState implements State {
 			
 			Response response = new Response();
 			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 5).trim());
 
-			String args = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = args.startsWith(" ") || args.startsWith("\n") || args.startsWith("\r");
+			String args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4);
 	
-			AbstractInnerState tmpState;
+			AbstractInnerState tmpState = null;
 
+			response = super.afterReadingFromClient(session);
 			switch(cmd) {
 			case STAT:
-				
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new StatState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-				
+				tmpState = new StatState();
 				break;
 			case LIST:
-				
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new ListState(args);
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-				
+				tmpState = new ListState(args);
 				break;
 			case RETR:
-				
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new RetrState(args);
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-
+				tmpState = new RetrState(args);
 				break;
 			case DELE:
-				
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new DeleState(args);
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-				
+				tmpState = new DeleState(args);
 				break;
 			case NOOP:
-				
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new NoopState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-				
+				tmpState = new NoopState();
 				break;
 			case RSET:
-				
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new RsetState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
-				
+				tmpState = new RsetState();
 				break;
 			case TOP:
-				response = super.afterReadingFromClient(session);
 				tmpState = new TopState(args);
-				tmpState.setFlowToWriteServer();
-				response.setState(tmpState);
 				break;
 			case UIDL:
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new UidlState(args);
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
+				tmpState = new UidlState(args);
 				break;
 			case QUIT:
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
-					tmpState = new QuitState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
+				tmpState = new QuitState();
 				break;
 			default:
 				response = super.afterReadingFromClient(session);
 				break;
 			}
+			tmpState.setFlowToWriteServer();
+			response.setState(tmpState);
 			
 			return response;
 		}
@@ -141,19 +79,14 @@ public class TransactionState implements State {
 		
 		private Response invalidArgumentResponse(ClientSession session) {
 			Response response = new Response();
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-			for(ByteBuffer bf: bufferToUse) {
-				bf.clear();
-			}
+			ByteBuffer bufferToUse = session.getFirstServerBuffer();
+
 			bufferToUse = session.getFirstServerBuffer();
-			bufferToUse[0].clear();
-			bufferToUse[1].clear();
+			bufferToUse.clear();
 			
-			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
 			
-			bufferToUse[0].flip();
-			bufferToUse[1].flip();
+			bufferToUse.flip();
 			
 			response.setBuffers(bufferToUse);
 			response.setChannel(session.getClientSocket());
@@ -250,11 +183,120 @@ public class TransactionState implements State {
 	private class RetrState extends AbstractMultilinerInnerState{
 		
 		private String args;
-		
+		private String tmpMailPart;
+		private boolean statusIssued;
 		public RetrState(String args) {
 			this.args = args.trim();
 		}
 		
+		@Override
+		public Response eval(ClientSession session) {
+			
+			/* Look up for the last action done */
+			switch(this.getFlowDirection()){	
+			case READ_FILE:	return afterReadingFromFile(session);
+			case WRITE_FILE:return afterWritingToFile(session);
+			default: return super.eval(session);
+			
+			}
+		}
+
+		private Response afterReadingFromFile(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer mlsb = session.getSecondServerBuffer();			
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
+			response.setMultilineBuffer(mlsb);
+			response.setMultilineResponse(true);
+			this.setFlowToWriteClient();
+			if(BufferUtils.byteBufferToString(mlsb).contains("\r\n.\r\n")){
+				this.setWaitingLineFeedEnd(false);
+			}
+			return response;
+		}
+
+		private Response afterWritingToFile(ClientSession session) {
+
+			if(this.isWaitingLineFeedEnd()){
+				Response response = this.afterWritingToClient(session);
+				return response;
+			}
+			
+			//Llamar aplicación
+			//Trasformer.tranform(file1, file2);
+
+			try {
+				session.getFile1().seek(0);
+				if(session.getClient().hasTransformations()){
+					MailParser parser = new MailParser(session.getFile1(), session.getFile2(), session.getClient());
+					parser.parseMessage();
+					session.getFile2().getFilePointer();
+					session.getFile2().seek(0);
+				} else {
+					session.setFile2(session.getFile1());
+				}
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			Response response = new Response();
+			response.setOperation(SelectionKey.OP_READ);
+			response.setState(this);
+			response.setChannel(session.getFile2Channel());
+			response.setMultilineBuffer(session.getSecondServerBuffer());
+			response.setMultilineResponse(true);
+			this.setFlowToReadFile();
+			this.setWaitingLineFeedEnd(true);
+			return response;
+		}
+
+		@Override
+		Response afterReadingFromServer(ClientSession session){
+			
+			Response response = null;
+
+			if(!this.isWaitingLineFeedEnd()){
+				response = super.afterReadingFromServer(session);
+				if(this.isWaitingLineFeedEnd()) {
+					String responseToClient = BufferUtils.byteBufferToString(response.getBuffers()).split("\\r\\n")[0];
+					tmpMailPart = BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()+2);
+					response.getBuffers().clear();
+					response.getBuffers().put((responseToClient+"\r\n").getBytes());
+					response.getBuffers().flip();
+					this.statusIssued = false;
+				}
+				this.setFlowToWriteClient();
+				return response;
+			} 
+			
+			response = new Response();
+
+			if(tmpMailPart != null) {
+				session.getSecondServerBuffer().clear();
+				session.getSecondServerBuffer().put(tmpMailPart.getBytes());
+				session.getSecondServerBuffer().flip();
+				tmpMailPart = null;
+			}
+			
+			response.setChannel(session.getFile1Channel());
+			
+			ByteBuffer mlsb = session.getSecondServerBuffer();			
+			
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
+			response.setMultilineBuffer(mlsb);
+			response.setMultilineResponse(true);
+			this.setFlowToWriteFile();
+			
+			if(BufferUtils.byteBufferToString(mlsb).contains("\r\n.\r\n")){
+				this.setWaitingLineFeedEnd(false);
+			}
+			
+			return response;
+		}
+		
+
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
@@ -263,6 +305,12 @@ public class TransactionState implements State {
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
 			}
+			
+			if(!this.statusIssued) {
+				this.statusIssued = true;
+				response.setChannel(null);
+			}
+			
 			return response;
 		}
 		public String toString(){

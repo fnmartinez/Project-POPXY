@@ -5,17 +5,17 @@ import java.nio.channels.ByteChannel;
 
 public class Response {
 	
-	private ByteBuffer[] buffers;
+	private ByteBuffer buffers;
 	private ByteBuffer multilineBuffer;
 	private ByteChannel channel;
 	private int operation;
 	private State state;
 	private boolean multilineResponse = false;
 	
-	public ByteBuffer[] getBuffers() {
+	public ByteBuffer getBuffers() {
 		return buffers;
 	}
-	public void setBuffers(ByteBuffer[] buffers) {
+	public void setBuffers(ByteBuffer buffers) {
 		this.buffers = buffers;
 	}
 	public ByteChannel getChannel() {

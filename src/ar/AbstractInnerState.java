@@ -36,6 +36,15 @@ public abstract class AbstractInnerState implements State{
 	public void setFlowToWriteServer(){
 		this.flowDirection = FlowDirection.WRITE_SERVER;
 	}
+	
+	public void setFlowToWriteFile() {
+		this.flowDirection = FlowDirection.WRITE_FILE;
+		
+	}
+	
+	public void setFlowToReadFile() {
+		this.flowDirection = FlowDirection.READ_FILE;
+	}
 
 	// Once the server was written, this function is called
 	// in order to set it to read from the server channel for
@@ -89,5 +98,7 @@ public abstract class AbstractInnerState implements State{
 	public boolean isEndState() {
 		return false;
 	}
-	
+	public FlowDirection getFlowDirection() {
+		return this.flowDirection;
+	}
 }

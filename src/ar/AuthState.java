@@ -29,107 +29,100 @@ public class AuthState implements State {
 			
 			Response response = new Response();
 			
-			String cmd = BufferUtils.byteBufferToString(session.getClientBuffer()[0]);
-			cmd = cmd.trim();
-			
-			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n")  || firstCaracter.startsWith("\r");
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 5).trim());
 
-			String[] args = (BufferUtils.byteBufferToString(session.getClientBuffer()[1]).trim()).split("\\s");
+			String[] args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4).trim().split("\\s");
+	
+			AbstractInnerState tmpState = null;
+
+			ByteBuffer bufferToUse = null;
 			
-			ByteBuffer[] bufferToUse = null;
-			
-			if (cmd.compareToIgnoreCase(POPHeadCommands.USER.toString()) == 0 && validArgument
-					&& args != null	&& args[0] != null	&& args[0].compareTo("") != 0) {
-				if (POPXY.getInstance().userIsBlocked(args[0])) {
-					bufferToUse = session.getFirstServerBuffer();
-					bufferToUse[0].clear();
-					bufferToUse[1].clear();
-					
-					bufferToUse[0].put("-ERR".getBytes());
-					bufferToUse[1].put(" You cannot login right now.\r\n".getBytes());
-					
-					bufferToUse[0].flip();
-					bufferToUse[1].flip();
-					
-					response.setBuffers(bufferToUse);
-					response.setChannel(session.getClientSocket());
-					response.setOperation(SelectionKey.OP_WRITE);
-					response.setState(new QuitState());
-				} else {
-					if(session.getOriginServerSocket() != null) {
+			switch(cmd) {
+			case USER:
+				if(args != null	&& args[0] != null	&& args[0].compareTo("") != 0) {
+					if (POPXY.getInstance().userIsBlocked(args[0])) {
+						bufferToUse = session.getFirstServerBuffer();
+						bufferToUse.clear();
+						
+						bufferToUse.put("-ERR You cannot login right now.\r\n".getBytes());
+						
+						bufferToUse.flip();
+						
+						response.setBuffers(bufferToUse);
+						response.setChannel(session.getClientSocket());
+						response.setOperation(SelectionKey.OP_WRITE);
+						response.setState(new QuitState());
+					} else {
+						if(session.getOriginServerSocket() != null) {
+							try {
+								session.getOriginServerSocket().close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						session.setClient(POPXY.getInstance().getUser(args[0]));
 						try {
-							session.getOriginServerSocket().close();
+							
+							String host = session.getClient().getServerAddress();
+							int port = session.getClient().getServerPort();
+
+							SocketChannel socketChannel = SocketChannel.open();
+							socketChannel.connect(new InetSocketAddress(host, port));
+							POPXY.getLogger().info("Conecting to "+ host);
+							while(! socketChannel.finishConnect() ){
+							    System.out.println(".");    
+							}
+							POPXY.getLogger().info("Connected to server "+ host);
+							session.setOriginServerSocket(socketChannel);
+							
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+//							response.setState(null);
+//							return response;
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						this.setFlowToWriteServer();
+						response.setChannel(session.getOriginServerSocket());
+						response.setBuffers(session.getFirstServerBuffer());
+						response.setOperation(SelectionKey.OP_READ);
+						response.setState(new UserState());
+						((AbstractInnerState)response.getState()).setFlowToReadServer();
 					}
-					session.setClient(POPXY.getInstance().getUser(args[0]));
-					try {
-						
-						String host = session.getClient().getServerAddress();
-						int port = session.getClient().getServerPort();
-
-						SocketChannel socketChannel = SocketChannel.open();
-						socketChannel.connect(new InetSocketAddress(host, port));
-						POPXY.getLogger().info("Conecting to "+ host);
-						while(! socketChannel.finishConnect() ){
-						    System.out.println(".");    
-						}
-						POPXY.getLogger().info("Connected to server "+ host);
-						session.setOriginServerSocket(socketChannel);
-						
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-//						response.setState(null);
-//						return response;
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					this.setFlowToWriteServer();
-					response.setChannel(session.getOriginServerSocket());
-					response.setBuffers(session.getFirstServerBuffer());
-					response.setOperation(SelectionKey.OP_READ);
-					response.setState(new UserState());
-					((AbstractInnerState)response.getState()).setFlowToReadServer();
 				}
-			} else if (cmd.compareToIgnoreCase(POPHeadCommands.QUIT
-					.toString()) == 0
-					&& validArgument) {
+				break;
+			case QUIT:
 				// TODO:
 				bufferToUse = session.getFirstServerBuffer();
-				bufferToUse[0].clear();
-				bufferToUse[1].clear();
+				bufferToUse.clear();
 				
-				bufferToUse[0].put("+OK ".getBytes());
-				bufferToUse[1].put("Farewell.\r\n".getBytes());
+				bufferToUse.put("+OK Farewell.\r\n".getBytes());
 				
-				bufferToUse[0].flip();
-				bufferToUse[1].flip();
+				bufferToUse.flip();
 				
 				response.setBuffers(bufferToUse);
 				response.setChannel(session.getClientSocket());
 				response.setOperation(SelectionKey.OP_WRITE);
 				response.setState(new QuitState());
-			} else {
+				break;
+			default:
 				response = invalidCommand(session);
+				break;
 			}
+
 			return response;
 		}
 
 		private Response invalidCommand(ClientSession session) {
 			Response response = new Response();
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-			bufferToUse[0].clear();
-			bufferToUse[1].clear();
+			ByteBuffer bufferToUse = session.getFirstServerBuffer();
+			bufferToUse.clear();
 			
-			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
 			
-			bufferToUse[0].flip();
-			bufferToUse[1].flip();
+			bufferToUse.flip();
 			
 			response.setBuffers(bufferToUse);
 			response.setChannel(session.getClientSocket());
@@ -158,9 +151,9 @@ public class AuthState implements State {
 			Response response = new Response();
 			
 			boolean errorRecieved = false;
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
+			ByteBuffer bufferToUse = session.getFirstServerBuffer();
 			
-			String cmd = BufferUtils.byteBufferToString(session.getFirstServerBuffer()[0]);
+			String cmd = BufferUtils.byteBufferToString(session.getFirstServerBuffer()).substring(0, 4);
 			cmd = cmd.trim();
 			// If I get any '-ERR', dispite being the first or second iteration, I should send it to 
 			// the user. Else, if it's the first time, I should send the command 'USER <username>/r/n'
@@ -178,12 +171,9 @@ public class AuthState implements State {
 
 					this.setFlowToWriteServer();
 					bufferToUse = session.getClientBuffer();
-					bufferToUse[0].clear();
-					bufferToUse[1].clear();
-					bufferToUse[0].put("USER".getBytes());
-					bufferToUse[1].put((" "+session.getClient().getUser() + "\r\n").getBytes());
-					bufferToUse[0].flip();
-					bufferToUse[1].flip();
+					bufferToUse.clear();
+					bufferToUse.put(("USER "+session.getClient().getUser() + "\r\n").getBytes());
+					bufferToUse.flip();
 					response.setOperation(SelectionKey.OP_WRITE);
 				}
 			} else {
@@ -229,53 +219,38 @@ public class AuthState implements State {
 			
 			Response response = new Response();
 			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()[0]));
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 4));
 
-			String firstCaracter = BufferUtils.byteBufferToString(session.getClientBuffer()[1]);
-			boolean validArgument = firstCaracter.startsWith(" ") || firstCaracter.startsWith("\n") || firstCaracter.startsWith("\r");
-			AbstractInnerState tmpState;
+			AbstractInnerState tmpState = null;
 			
+			response = super.afterReadingFromClient(session);
 			switch(cmd){
 			case PASS:
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
 					tmpState = new PassState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
 				break;
 			case QUIT:
-				if(validArgument){
-					response = super.afterReadingFromClient(session);
 					tmpState = new QuitState();
-					tmpState.setFlowToWriteServer();
-					response.setState(tmpState);
-				} else {
-					response = invalidArgumentResponse(session);
-				}
 
 				break;
 			default:
+				tmpState = this;
 				response = invalidCommand(session);
-				response.setState(this);
 				break;
 			}
+			tmpState.setFlowToWriteServer();
+			response.setState(tmpState);
+
 			return response;
 		}
 		
 		private Response invalidCommand(ClientSession session) {
 			Response response = new Response();
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-			bufferToUse[0].clear();
-			bufferToUse[1].clear();
+			ByteBuffer bufferToUse = session.getFirstServerBuffer();
+			bufferToUse.clear();
 			
-			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
 			
-			bufferToUse[0].flip();
-			bufferToUse[1].flip();
+			bufferToUse.flip();
 			
 			response.setBuffers(bufferToUse);
 			response.setChannel(session.getClientSocket());
@@ -287,19 +262,14 @@ public class AuthState implements State {
 
 		private Response invalidArgumentResponse(ClientSession session) {
 			Response response = new Response();
-			ByteBuffer[] bufferToUse = session.getFirstServerBuffer();
-			for(ByteBuffer bf: bufferToUse) {
-				bf.clear();
-			}
+			ByteBuffer bufferToUse = session.getFirstServerBuffer();
+
 			bufferToUse = session.getFirstServerBuffer();
-			bufferToUse[0].clear();
-			bufferToUse[1].clear();
+			bufferToUse.clear();
 			
-			bufferToUse[0].put("-ERR".getBytes());
-			bufferToUse[1].put(" Invalid command.\r\n".getBytes());
+			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
 			
-			bufferToUse[0].flip();
-			bufferToUse[1].flip();
+			bufferToUse.flip();
 			
 			response.setBuffers(bufferToUse);
 			response.setChannel(session.getClientSocket());
@@ -327,7 +297,7 @@ public class AuthState implements State {
 			response = super.afterReadingFromServer(session);
 			
 
-			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()[0]).trim().equalsIgnoreCase("+OK")) {
+			if(BufferUtils.byteBufferToString(session.getFirstServerBuffer()).startsWith("+OK")) {
 				this.isFinalState = true;
 				session.getClient().login();
 			} else {

@@ -226,11 +226,11 @@ public class User {
 	}
 
 	public static void setGlobalApp(String app, boolean bool) {
-		if (app == "l33t") {
+		if (app.equals("l33t")) {
 			User.setGlobalLeet(bool);
-		} else if (app == "rotate") {
+		} else if (app.equals("rotate")) {
 			User.setGlobalRotate(bool);
-		} else if (app == "anonymous") {
+		} else if (app.equals("anonymous")) {
 			// User.setGlobalAnonymous(bool);
 		} else {
 			// User.setGlobalCustomApp(app, bool);
