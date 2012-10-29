@@ -158,7 +158,7 @@ public class MailParser {
 				parseContents(boundary);
 			} while (!(line = reader.readLine()).equals("."));
 		}
-		writeLine(".");
+		writeLine(".\r\n");
 		System.out.println("Parser: OK");
 	}
 

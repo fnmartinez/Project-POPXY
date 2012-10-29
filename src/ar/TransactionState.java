@@ -235,6 +235,7 @@ public class TransactionState implements State {
 					session.getFile2().seek(0);
 				} else {
 					session.setFile2(session.getFile1());
+					session.getFile2().seek(0);
 				}
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -266,7 +267,7 @@ public class TransactionState implements State {
 					response.getBuffers().flip();
 					this.statusIssued = false;
 				}
-				this.setFlowToWriteClient();
+				this.setFlowToWriteFile();
 				return response;
 			} 
 			
@@ -300,16 +301,20 @@ public class TransactionState implements State {
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
+			response.setChannel(session.getFile2Channel());
 			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
+//				return response;
 			}
 			
 			if(!this.statusIssued) {
 				this.statusIssued = true;
 				response.setChannel(null);
 			}
+			
+//			this.setFlowToReadFile();
 			
 			return response;
 		}

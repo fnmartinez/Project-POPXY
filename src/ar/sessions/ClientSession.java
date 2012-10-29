@@ -72,7 +72,7 @@ public class ClientSession implements Runnable {
 	}
 	
 	private void logWrite(String msg) {
-		String ctw = channelToWrite == originServerSocket ? "S":"C"; 
+		String ctw = channelToWrite == originServerSocket ? "S":(channelToWrite == clientSocket ? "C" : "F"); 
 		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
 			System.out.println("changos!");
 		}
@@ -119,7 +119,7 @@ public class ClientSession implements Runnable {
 	}
 
 	private void logRead(String msg) {
-		String ctw = channelToRead == originServerSocket ? "S":"C";
+		String ctw = channelToRead == originServerSocket ? "S":(channelToRead == clientSocket ? "C" : "F");
 		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
 			System.out.println("changos!");
 		}
