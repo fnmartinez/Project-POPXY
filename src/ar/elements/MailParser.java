@@ -278,24 +278,42 @@ public class MailParser {
 				}
 				return line;
 			} else {
-				while (!isEndLine(line = reader.readLine(), boundary)) {
-					// Pongo el texto completo en text
-					text += line;
-				}
+				System.out.println("ENTREEEEEEE");
 				if ((encoding.toLowerCase().equals("base64"))) {
-//					byte[] txt = decodeBase64(text);
-//					System.out.println("Antes de transformar:" + txt.toString());
-//					String transformed = textTransformer.l33t(txt.toString());
-//					System.out.println("DESPUES de transformar:" + transformed);
-//					text = encodeBase64(transformed.getBytes());
-//					text += '\n';
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line;
+					}
+					text += '\n';
+					// byte[] txt = decodeBase64(text);
+					// System.out.println("Antes de transformar:" +
+					// txt.toString());
+					// String transformed =
+					// textTransformer.l33t(txt.toString());
+					// System.out.println("DESPUES de transformar:" +
+					// transformed);
+					// text = encodeBase64(transformed.getBytes());
 				} else if (encoding.toLowerCase().equals("8bit")) {
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line;
+					}
+					text += '\n';
 					text = textTransformer.l33t(text);
 				} else if (encoding.toLowerCase().equals("quoted-printable")) {
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line + '\n';
+					}
 					// transform and print text according to its encoding
-					 text = decodeQuotedPrintable(text);
-					 text = textTransformer.l33t(text);
-					 writeLines(encodeQuotedPrintable(text));
+					text = decodeQuotedPrintable(text);
+					text = textTransformer.l33t(text);
+				}else{
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line;
+					}
+					text += '\n';
 				}
 				writeLines(text);
 				return line;
@@ -330,11 +348,11 @@ public class MailParser {
 			while (!isEndLine(line = reader.readLine(), boundary)) {
 				text += line;
 			}
+			text += line;
 			if (!text.isEmpty()) {
 				byte[] image = decodeBase64(text);
 				image = imageTransformer.rotateImage(image, extension);
 				text = encodeBase64(image);
-				text += '\n';
 				writeLines(text);
 			}
 			return line;
