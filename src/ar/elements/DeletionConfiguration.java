@@ -2,6 +2,7 @@ package ar.elements;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -12,8 +13,8 @@ public class DeletionConfiguration {
 
 	private DateTime date;
 	private Set<String> senders;
-	private Map<String,String> headers;
-	private Set<String> contentTypes;
+	private Map<String,Set<String>> headers;
+	private Set<String> contents;
 	private int size;
 	private Set<String> structures;
 
@@ -24,17 +25,17 @@ public class DeletionConfiguration {
 	public void resetUserConfiguration() {
 		this.date = null;
 		this.senders = new HashSet<String>();
-		this.headers = new HashMap<String,String>();
-		this.contentTypes = new HashSet<String>();
+		this.headers = new HashMap<String,Set<String>>();
+		this.contents = new HashSet<String>();
 		this.size = -1;
 		this.structures = new HashSet<String>();
 	}
 
-	public Map<String, String> getHeaders() {
+	public Map<String, Set<String>> getHeaders() {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, String> headers) {
+	public void setHeaders(Map<String, Set<String>> headers) {
 		this.headers = headers;
 	}
 
@@ -51,21 +52,34 @@ public class DeletionConfiguration {
 	public void addSender(String sender) {
 		this.senders.add(sender);
 	}
-
-	public Set<String> getContentTypes() {
-		return contentTypes;
+	
+	public void removeSender(String string) {
+		this.senders.remove(string);		
 	}
 
-	public void addContentHeader(String contentHeader) {
-		this.contentTypes.add(contentHeader);
+	public Set<String> getContents() {
+		return contents;
 	}
+
+	public void addContentType(String contentType) {
+		this.contents.add(contentType);
+	}
+	
+	public void removeContentType(String contentType) {
+		this.contents.remove(contentType);
+	}
+
 
 	public Set<String> getStructure() {
 		return structures;
 	}
-
-	public void setStructure(Set<String> structure) {
-		this.structures = structure;
+	
+	public void addStructure(String structure) {
+		this.structures.add(structure);	
+	}
+	
+	public void removeStructure(String structure){
+		this.structures.remove(structure);
 	}
 
 	public boolean hasSizeRestriction() {
@@ -93,7 +107,7 @@ public class DeletionConfiguration {
 	}
 	
 	public boolean hasContentTypeRestriction(){
-		return !contentTypes.isEmpty();
+		return !contents.isEmpty();
 	}
 	
 	public boolean hasHeaderRestriction(){
@@ -106,7 +120,7 @@ public class DeletionConfiguration {
 	
 	public boolean hasDeletionRestriction() {
 		if (date == null && senders.isEmpty() && headers.isEmpty()
-				&& contentTypes.isEmpty() && size == -1 && structures.isEmpty()) {
+				&& contents.isEmpty() && size == -1 && structures.isEmpty()) {
 			return false;
 		} else {
 			return true;
@@ -130,7 +144,7 @@ public class DeletionConfiguration {
 	public boolean passContentTypesRestriction(Mail mail) {
 		Set<String> fromMail = mail.getContents();
 		for(String s: fromMail){
-			if(contentTypes.contains(s)){
+			if(contents.contains(s)){
 				return false;
 			}
 		}
@@ -138,12 +152,14 @@ public class DeletionConfiguration {
 	}
 	
 	public boolean passHeadersRestriction(Mail mail) {
-		
 		Map<String,String> fromMail = mail.getHeaders();
-		for(Entry<String,String> s: fromMail.entrySet()){
-			if(headers.containsKey(s.getKey())){
-				if(headers.get(s.getKey()).contains(s.getValue())){
-					return false;
+		for(Entry<String,Set<String>> entry: headers.entrySet()){
+			for(String s: entry.getValue()){
+				String value;
+				if((value = fromMail.get(entry.getKey())) != null){
+					if(value.contains(s)){
+						return false;
+					}
 				}
 			}
 		}
@@ -152,6 +168,25 @@ public class DeletionConfiguration {
 	
 	public boolean passSendersRestriction(Mail mail) {
 		return !senders.contains(mail.getFrom());
+	}
+
+	public void addHeader(String headerName, String headerValue) {
+		if(headers.containsKey(headerName)){
+			headers.get(headerName).add(headerValue);
+		}else{
+			Set<String> set = new HashSet<String>();
+			set.add(headerValue);
+			headers.put(headerName, set);
+		}
+	}
+
+	public void removeHeader(String headerName, String headerValue) {
+		if(headers.containsKey(headerName)){
+			headers.get(headerName).remove(headerValue);
+			if(headers.get(headerName).isEmpty()){
+				headers.remove(headerName);
+			}
+		}
 	}
 	
 }

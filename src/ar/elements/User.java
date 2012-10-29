@@ -347,5 +347,13 @@ public class User {
 			return true;
 		}
 	}
+	
+	public DeletionConfiguration getDeletionConfiguration(){
+		return userConfig.getDeletionConfiguration();
+	}
+	
+	public static DeletionConfiguration getGlobalDeletionConfiguration(){
+		return globalConfig.getDeletionConfiguration();
+	}
 
 }
