@@ -33,8 +33,6 @@ public class AuthState implements State {
 
 			String[] args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4).trim().split("\\s");
 	
-			AbstractInnerState tmpState = null;
-
 			ByteBuffer bufferToUse = null;
 			
 			switch(cmd) {
@@ -261,26 +259,6 @@ public class AuthState implements State {
 			response.setOperation(SelectionKey.OP_WRITE);
 			response.setState(new NoneState());
 			this.setFlowToWriteClient();
-			return response;
-		}
-
-		private Response invalidArgumentResponse(ClientSession session) {
-			Response response = new Response();
-			ByteBuffer bufferToUse = session.getFirstServerBuffer();
-
-			bufferToUse = session.getFirstServerBuffer();
-			bufferToUse.clear();
-			
-			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
-			
-			bufferToUse.flip();
-			
-			response.setBuffers(bufferToUse);
-			response.setChannel(session.getClientSocket());
-			response.setOperation(SelectionKey.OP_WRITE);
-			response.setState(this);
-			this.setFlowToWriteClient();
-			
 			return response;
 		}
 		

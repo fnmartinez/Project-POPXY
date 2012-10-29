@@ -1,10 +1,5 @@
 package ar;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -49,7 +44,7 @@ public class TransactionState implements State {
 				tmpState = new ListState(args);
 				break;
 			case RETR:
-				tmpState = new RetrState(args);
+				tmpState = new RetrState();
 				break;
 			case DELE:
 				tmpState = new DeleState(args);
@@ -61,7 +56,7 @@ public class TransactionState implements State {
 				tmpState = new RsetState();
 				break;
 			case TOP:
-				tmpState = new TopState(args);
+				tmpState = new TopState();
 				break;
 			case UIDL:
 				tmpState = new UidlState(args);
@@ -78,28 +73,6 @@ public class TransactionState implements State {
 			
 			return response;
 		}
-		
-		
-		private Response invalidArgumentResponse(ClientSession session) {
-			Response response = new Response();
-			ByteBuffer bufferToUse = session.getFirstServerBuffer();
-
-			bufferToUse = session.getFirstServerBuffer();
-			bufferToUse.clear();
-			
-			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
-			
-			bufferToUse.flip();
-			
-			response.setBuffers(bufferToUse);
-			response.setChannel(session.getClientSocket());
-			response.setOperation(SelectionKey.OP_WRITE);
-			response.setState(this);
-			this.setFlowToWriteClient();
-			
-			return response;
-		}
-
 
 		public boolean isEndState() {
 			return false;
@@ -185,12 +158,8 @@ public class TransactionState implements State {
 	
 	private class RetrState extends AbstractMultilinerInnerState{
 		
-		private String args;
 		private String tmpMailPart;
 		private boolean statusIssued;
-		public RetrState(String args) {
-			this.args = args.trim();
-		}
 		
 		@Override
 		public Response eval(ClientSession session) {
@@ -227,7 +196,7 @@ public class TransactionState implements State {
 			}
 			
 			//Llamar aplicación
-			//Trasformer.tranform(file1, file2);
+			//Trasformer.tranform(file1, session.getUser().getUsername(), ".mail");
 
 			try {
 				session.getFile1().seek(0);
@@ -393,12 +362,6 @@ public class TransactionState implements State {
 	}
 	
 	private class TopState extends AbstractMultilinerInnerState{
-		
-		private String args;
-		
-		public TopState(String args) {
-			this.args = args.trim();
-		}
 		
 		@Override
 		Response afterWritingToClient(ClientSession session){

@@ -2,7 +2,6 @@ package ar.elements;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -39,7 +38,7 @@ public class DeletionConfiguration {
 		this.headers = headers;
 	}
 
-	// Reescribir el mŽtodo en caso de que se quiera iniciar con una config
+	// Reescribir el mï¿½todo en caso de que se quiera iniciar con una config
 	// global d borrado default
 	public void resetGlobalConfiguration() {
 		resetUserConfiguration();
