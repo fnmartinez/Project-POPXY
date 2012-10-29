@@ -1,6 +1,9 @@
 package ar.elements;
 
 
+import java.util.HashSet;
+import java.util.Set;
+
 import ar.POPXY;
 
 public class UserConfiguration {
@@ -13,6 +16,7 @@ public class UserConfiguration {
 	private Boolean leet;
 	private Boolean anonymous;
 	private TimeConfiguration intervals;
+	private Set<String[]> externalApps;
 
 	public UserConfiguration() {
 		resetUserConfiguration();
@@ -27,6 +31,7 @@ public class UserConfiguration {
 		this.leet = null;
 		this.anonymous = null;
 		this.intervals = new TimeConfiguration();
+		this.externalApps = new HashSet<String[]>();
 	}
 
 	public void resetGlobalConfiguration() {
@@ -117,5 +122,21 @@ public class UserConfiguration {
 	
 	public boolean hasDeletionRestriction(){
 		return deletionConfiguration.hasDeletionRestriction();
+	}
+	
+	public void addExternalApp(String[] app){
+		this.externalApps.add(app);
+	}
+	
+	public void removeExternalApp(String[] app){
+		this.externalApps.remove(app);
+	}
+	
+	public Set<String[]> getExternalApps(){
+		return this.externalApps;
+	}
+	
+	public boolean hasExternalApps(){
+		return !this.externalApps.isEmpty();
 	}
 }

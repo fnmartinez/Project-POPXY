@@ -216,7 +216,7 @@ public class User {
 		} else if (app == "anonymous") {
 			 this.setAnonymous(bool);
 		} else {
-			// this.setCustomApp(app, bool);
+			this.setCustomApp(app, bool);
 		}
 		return;
 	}
@@ -227,9 +227,9 @@ public class User {
 		} else if (app.equals("rotate")) {
 			User.setGlobalRotate(bool);
 		} else if (app.equals("anonymous")) {
-			// User.setGlobalAnonymous(bool);
+			User.setGlobalAnonymous(bool);
 		} else {
-			// User.setGlobalCustomApp(app, bool);
+			User.setGlobalCustomApp(app, bool);
 		}
 		return;
 	}
@@ -269,102 +269,142 @@ public class User {
 
 	public boolean passDeletionFilters(Mail mail) {
 		if (passDateRestriction(mail) && passSendersRestriction(mail)
-				&& passHeaderRestriction(mail) && passContentTypeRestriction(mail)
-				&& passSizeRestriction(mail) && passStructureRestriction(mail)){
+				&& passHeaderRestriction(mail)
+				&& passContentTypeRestriction(mail)
+				&& passSizeRestriction(mail) && passStructureRestriction(mail)) {
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}
 
 	private boolean passStructureRestriction(Mail mail) {
-		if(userConfig.getDeletionConfiguration().hasStructureRestriction()){
-			return userConfig.getDeletionConfiguration().passStructuresRestriction(mail);
-		}else{
-			if(globalConfig.getDeletionConfiguration().hasStructureRestriction()){
-				return globalConfig.getDeletionConfiguration().passStructuresRestriction(mail);
+		if (userConfig.getDeletionConfiguration().hasStructureRestriction()) {
+			return userConfig.getDeletionConfiguration()
+					.passStructuresRestriction(mail);
+		} else {
+			if (globalConfig.getDeletionConfiguration()
+					.hasStructureRestriction()) {
+				return globalConfig.getDeletionConfiguration()
+						.passStructuresRestriction(mail);
 			}
 			return true;
 		}
-		
+
 	}
 
 	private boolean passSizeRestriction(Mail mail) {
-		if(userConfig.getDeletionConfiguration().hasSizeRestriction()){
-			return userConfig.getDeletionConfiguration().passSizeRestriction(mail);
-		}else{
-			if(globalConfig.getDeletionConfiguration().hasSizeRestriction()){
-				return globalConfig.getDeletionConfiguration().passSizeRestriction(mail);
+		if (userConfig.getDeletionConfiguration().hasSizeRestriction()) {
+			return userConfig.getDeletionConfiguration().passSizeRestriction(
+					mail);
+		} else {
+			if (globalConfig.getDeletionConfiguration().hasSizeRestriction()) {
+				return globalConfig.getDeletionConfiguration()
+						.passSizeRestriction(mail);
 			}
 			return true;
 		}
 	}
 
 	private boolean passContentTypeRestriction(Mail mail) {
-		if(userConfig.getDeletionConfiguration().hasContentTypeRestriction()){
-			return userConfig.getDeletionConfiguration().passContentTypesRestriction(mail);
-		}else{
-			if(globalConfig.getDeletionConfiguration().hasContentTypeRestriction()){
-				return globalConfig.getDeletionConfiguration().passContentTypesRestriction(mail);
+		if (userConfig.getDeletionConfiguration().hasContentTypeRestriction()) {
+			return userConfig.getDeletionConfiguration()
+					.passContentTypesRestriction(mail);
+		} else {
+			if (globalConfig.getDeletionConfiguration()
+					.hasContentTypeRestriction()) {
+				return globalConfig.getDeletionConfiguration()
+						.passContentTypesRestriction(mail);
 			}
 			return true;
 		}
 	}
 
 	private boolean passHeaderRestriction(Mail mail) {
-		if(userConfig.getDeletionConfiguration().hasHeaderRestriction()){
-			return userConfig.getDeletionConfiguration().passHeadersRestriction(mail);
-		}else{
-			if(globalConfig.getDeletionConfiguration().hasHeaderRestriction()){
-				return globalConfig.getDeletionConfiguration().passHeadersRestriction(mail);
+		if (userConfig.getDeletionConfiguration().hasHeaderRestriction()) {
+			return userConfig.getDeletionConfiguration()
+					.passHeadersRestriction(mail);
+		} else {
+			if (globalConfig.getDeletionConfiguration().hasHeaderRestriction()) {
+				return globalConfig.getDeletionConfiguration()
+						.passHeadersRestriction(mail);
 			}
 			return true;
 		}
 	}
-	//TODO
+
+	// TODO
 	private boolean passDateRestriction(Mail mail) {
-//		if(userConfig.getDeletionConfiguration().hasDateRestriction()){
-//			return userConfig.getDeletionConfiguration().passDateRestriction(mail);
-//		}else{
-//			if(globalConfig.getDeletionConfiguration().hasDateRestriction()){
-//				return globalConfig.getDeletionConfiguration().passDateRestriction(mail);
-//			}
-			return true;
-//		}
+		// if(userConfig.getDeletionConfiguration().hasDateRestriction()){
+		// return
+		// userConfig.getDeletionConfiguration().passDateRestriction(mail);
+		// }else{
+		// if(globalConfig.getDeletionConfiguration().hasDateRestriction()){
+		// return
+		// globalConfig.getDeletionConfiguration().passDateRestriction(mail);
+		// }
+		return true;
+		// }
 	}
 
 	private boolean passSendersRestriction(Mail mail) {
-		if(userConfig.getDeletionConfiguration().hasSenderRestriction()){
-			return userConfig.getDeletionConfiguration().passSendersRestriction(mail);
-		}else{
-			if(globalConfig.getDeletionConfiguration().hasSenderRestriction()){
-				return globalConfig.getDeletionConfiguration().passSendersRestriction(mail);
+		if (userConfig.getDeletionConfiguration().hasSenderRestriction()) {
+			return userConfig.getDeletionConfiguration()
+					.passSendersRestriction(mail);
+		} else {
+			if (globalConfig.getDeletionConfiguration().hasSenderRestriction()) {
+				return globalConfig.getDeletionConfiguration()
+						.passSendersRestriction(mail);
 			}
 			return true;
 		}
 	}
-	
-	public DeletionConfiguration getDeletionConfiguration(){
+
+	public DeletionConfiguration getDeletionConfiguration() {
 		return userConfig.getDeletionConfiguration();
 	}
-	
-	public static DeletionConfiguration getGlobalDeletionConfiguration(){
+
+	public static DeletionConfiguration getGlobalDeletionConfiguration() {
 		return globalConfig.getDeletionConfiguration();
 	}
 
 	public boolean hasExternalApps() {
-		// TODO Auto-generated method stub
-		return false;
+		if (userConfig.hasExternalApps()) {
+			return true;
+		} else {
+			return globalConfig.hasExternalApps();
+		}
 	}
 
 	public ExternalProcessChain getExternalProcessChain() {
-		ExternalProcessChain externalProcessChain = new ExternalProcessChain(this.getExternalApps());
+		ExternalProcessChain externalProcessChain = new ExternalProcessChain(
+				this.getExternalApps());
 		return externalProcessChain;
 	}
 
-	private Set<String[]> getExternalApps() {
-		// TODO Auto-generated method stub
-		return null;
+	public Set<String[]> getExternalApps() {
+		return userConfig.getExternalApps();
 	}
 
+	public Set<String[]> getGlobalExternalApps() {
+		return globalConfig.getExternalApps();
+	}
+
+	private void setCustomApp(String app, boolean bool) {
+		String[] application = app.split("\\s");
+		if (bool == true) {
+			userConfig.addExternalApp(application);
+		} else {
+			userConfig.removeExternalApp(application);
+		}
+	}
+
+	private static void setGlobalCustomApp(String app, boolean bool) {
+		String[] application = app.split("\\s");
+		if (bool == true) {
+			globalConfig.addExternalApp(application);
+		} else {
+			globalConfig.removeExternalApp(application);
+		}
+	}
 }
