@@ -308,6 +308,7 @@ public class MailParser {
 					// transform and print text according to its encoding
 					text = decodeQuotedPrintable(text);
 					text = textTransformer.l33t(text);
+					text = encodeQuotedPrintable(text);
 				}else{
 					while (!isEndLine(line = reader.readLine(), boundary)) {
 						// Pongo el texto completo en text
