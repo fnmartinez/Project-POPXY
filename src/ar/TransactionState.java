@@ -30,8 +30,11 @@ public class TransactionState implements State {
 		Response afterReadingFromClient(ClientSession session) {
 			
 			Response response = new Response();
-			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 5).trim());
+			String command = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
+			if(command.length() >= 5){
+				command = command.substring(0, 5);
+			}
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(command);
 
 			String args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4);
 	
@@ -210,7 +213,7 @@ public class TransactionState implements State {
 			response.setMultilineBuffer(mlsb);
 			response.setMultilineResponse(true);
 			this.setFlowToWriteClient();
-			if(BufferUtils.byteBufferToString(mlsb).contains("\r\n.\r\n")){
+			if(BufferUtils.byteBufferToString(mlsb).endsWith("\r\n.\r\n")){
 				this.setWaitingLineFeedEnd(false);
 			}
 			return response;
@@ -219,7 +222,7 @@ public class TransactionState implements State {
 		private Response afterWritingToFile(ClientSession session) {
 
 			if(this.isWaitingLineFeedEnd()){
-				Response response = this.afterWritingToClient(session);
+				Response response = super.afterWritingToClient(session);
 				return response;
 			}
 			
@@ -231,7 +234,6 @@ public class TransactionState implements State {
 				if(session.getClient().hasTransformations()){
 					MailParser parser = new MailParser(session.getFile1(), session.getFile2(), session.getClient());
 					parser.parseMessage();
-					session.getFile2().getFilePointer();
 					session.getFile2().seek(0);
 				} else {
 					session.setFile2(session.getFile1());
@@ -267,7 +269,7 @@ public class TransactionState implements State {
 					response.getBuffers().flip();
 					this.statusIssued = false;
 				}
-				this.setFlowToWriteFile();
+//				this.setFlowToWriteFile();
 				return response;
 			} 
 			
@@ -301,20 +303,21 @@ public class TransactionState implements State {
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
-			response.setChannel(session.getFile2Channel());
 			if(!this.isWaitingLineFeedEnd()){
 				AbstractInnerState tmpState = new NoneState();
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
-//				return response;
+				return response;
 			}
 			
 			if(!this.statusIssued) {
 				this.statusIssued = true;
 				response.setChannel(null);
+				return response;
 			}
 			
-//			this.setFlowToReadFile();
+			response.setChannel(session.getFile2Channel());
+			this.setFlowToReadFile();
 			
 			return response;
 		}

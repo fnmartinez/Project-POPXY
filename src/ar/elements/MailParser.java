@@ -158,12 +158,12 @@ public class MailParser {
 				parseContents(boundary);
 			} while (!(line = reader.readLine()).equals("."));
 		}
-		writeLine(".\r\n");
+		writeLine(".");
 		System.out.println("Parser: OK");
 	}
 
 	private void writeLine(String line) throws IOException {
-		writer.write((line + "\n").getBytes());
+		writer.write((line + "\r\n").getBytes());
 	}
 
 	private void writeLines(String text) throws IOException {

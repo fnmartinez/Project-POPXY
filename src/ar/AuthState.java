@@ -219,7 +219,11 @@ public class AuthState implements State {
 			
 			Response response = new Response();
 			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 4));
+			String command = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
+			if(command.length() >= 5){
+				command = command.substring(0, 5);
+			}
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(command);
 
 			AbstractInnerState tmpState = null;
 			
