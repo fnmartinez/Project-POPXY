@@ -1,6 +1,7 @@
 package ar.elements;
 
 import java.util.Calendar;
+import java.util.Set;
 
 import ar.ExternalProcessChain;
 
@@ -357,6 +358,11 @@ public class User {
 	}
 
 	public ExternalProcessChain getExternalProcessChain() {
+		ExternalProcessChain externalProcessChain = new ExternalProcessChain(this.getExternalApps());
+		return externalProcessChain;
+	}
+
+	private Set<String[]> getExternalApps() {
 		// TODO Auto-generated method stub
 		return null;
 	}
