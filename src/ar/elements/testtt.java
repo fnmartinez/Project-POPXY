@@ -22,8 +22,8 @@ public class testtt {
 		MailParser parser;
 
 		try {
-			writer = new RandomAccessFile(to,"rws");
-			reader = new RandomAccessFile(from,"rws");
+			writer = new RandomAccessFile(to,"rw");
+			reader = new RandomAccessFile(from,"rw");
 			parser = new MailParser(reader, writer, user);
 
 			writer = parser.parseMessage();
