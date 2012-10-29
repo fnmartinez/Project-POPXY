@@ -215,8 +215,8 @@ public class MailParser {
 				return null;
 			}
 		} else {
-			writeLine(line);
 			if(!line.equals(".")){
+				writeLine(line);
 				parseContents(boundary);
 				return null;
 			}else
