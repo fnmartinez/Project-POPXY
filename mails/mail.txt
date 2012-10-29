@@ -35,33 +35,17 @@ X-Forwarded-Message-Id: <2288627285602722312714@operadores2>
 Content-Type: multipart/alternative;
  boundary="------------000106090602010306070501"
 
-This is a multi-part message in MIME format.
 --------------000106090602010306070501
 Content-Type: text/plain; charset=windows-1252http-equivContent-Type; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-
-
--------- Mensaje original --------
-Asunto: 	TR 35 Argentina y Uruguay
-Fecha: 	Mon, 29 Oct 2012 13:17:55 -0300
-De: 	Relaciones Institucionales <jseba@itba.edu.ar>
-Responder-a:: 	jseba@itba.edu.ar
-A: 	kkenny@alu.itba.edu.ar
-
-
-
-<http://www.tr35argentina.com/%20>
-
-
-
-
-
+-------- Mensaje original --------Asunto: 	TR 35 Argentina y UruguayFecha: 	
+Mon, 29 Oct 2012 13:17:55 -0300De: 	Relaciones Institucionales <jseba@itba.e
+du.ar>Responder-a:: 	jseba@itba.edu.arA: 	kkenny@alu.itba.edu.ar<http://www.
+tr35argentina.com/%20>
 --------------000106090602010306070501
 Content-Type: multipart/related;
  boundary="------------000404010306010700020606"
-
 
 --------------000404010306010700020606
 Content-Type: text/html; charset=windows-1252http-equivContent-Type
@@ -3710,6 +3694,10 @@ te4ZNTXT3U5zpZ2qJo0vpqXMoUCX60sbTDy9v7eoWwspluVCA4xgi41n9DqdapBqMbyl1hzs
 nbRn+mI/SuaP/MiPfOfnPteefz3/ev71/Ov51/Ov519PJ8mrymjLLfL5m/L86/nX86/nX8+/
 nn/d+HXy/C14/vX86/nX86/nX8+/bvP1/wUYAEnfM55Tqs69AAAAAElFTkSuQmCC
 --------------000404010306010700020606--
+
+--------------000106090602010306070501--
+.
+-000404010306010700020606--
 
 --------------000106090602010306070501--
 .

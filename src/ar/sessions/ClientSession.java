@@ -283,7 +283,7 @@ public class ClientSession implements Runnable {
 	public RandomAccessFile getFile1(){
 		if(this.file1 == null){
 			try {
-				this.file1 = new RandomAccessFile( this.filename1 = File.createTempFile(this.client.getUser(), ".mail", null), "rws");
+				this.file1 = new RandomAccessFile( this.filename1 = File.createTempFile(this.client.getUser(), ".mail", null), "rw");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -295,7 +295,7 @@ public class ClientSession implements Runnable {
 	public RandomAccessFile getFile2(){
 		if(this.file2 == null){
 			try {
-				this.file2 = new RandomAccessFile( this.filename2 = File.createTempFile(this.client.getUser(), ".mail", null), "rws");
+				this.file2 = new RandomAccessFile( this.filename2 = File.createTempFile(this.client.getUser(), ".mail", null), "rw");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

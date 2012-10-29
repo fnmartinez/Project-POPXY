@@ -195,6 +195,9 @@ public class TransactionState implements State {
 				return response;
 			}
 			
+//			if(session.getClient().hasExternalApps()){
+//				session.getClient().getExternalProcessChain().process(session.getFile1());
+//			}
 			//Llamar aplicación
 			//Trasformer.tranform(file1, session.getUser().getUsername(), ".mail");
 

@@ -2,6 +2,8 @@ package ar.elements;
 
 import java.util.Calendar;
 
+import ar.ExternalProcessChain;
+
 public class User {
 
 	// Configuraciones Generales
@@ -347,6 +349,16 @@ public class User {
 	
 	public static DeletionConfiguration getGlobalDeletionConfiguration(){
 		return globalConfig.getDeletionConfiguration();
+	}
+
+	public boolean hasExternalApps() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public ExternalProcessChain getExternalProcessChain() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
