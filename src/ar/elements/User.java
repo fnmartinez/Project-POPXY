@@ -214,7 +214,7 @@ public class User {
 		} else if (app == "rotate") {
 			this.setRotate(bool);
 		} else if (app == "anonymous") {
-			// this.setAnonymous(bool);
+			 this.setAnonymous(bool);
 		} else {
 			// this.setCustomApp(app, bool);
 		}

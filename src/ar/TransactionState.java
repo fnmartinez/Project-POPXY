@@ -3,6 +3,7 @@ package ar;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.util.HashSet;
 
 import ar.elements.MailParser;
 import ar.sessions.ClientSession;
@@ -195,10 +196,21 @@ public class TransactionState implements State {
 				return response;
 			}
 			
-			if(session.getClient().hasExternalApps()){
-				session.getClient().getExternalProcessChain().process(session.getFile1(), session.getClient().getUser(), ".mail");
-			}
+//			if(session.getClient().hasExternalApps()){
+//				session.getClient().getExternalProcessChain().process(session.getFile1(), session.getClient().getUser(), ".mail");
+//			}
 
+			HashSet<String[]> hs = new HashSet<String[]>();
+			String[] sa = {
+				"/bin/bash",
+				"-c",
+				"cat"
+			};
+			hs.add(sa);
+			ExternalProcessChain epc = new ExternalProcessChain(hs);
+			session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
+			
+			
 			try {
 				session.getFile1().seek(0);
 				if(session.getClient().hasTransformations()){
