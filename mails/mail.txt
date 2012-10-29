@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Delivered-To: victoria.mesa.alcorta@gmail.com
 Received: by 10.66.219.228 with SMTP id pr4csp232971pac;
         Mon, 29 Oct 2012 10:18:48 -0700 (PDT)
@@ -3701,3 +3702,5 @@ nn/d+HXy/C14/vX86/nX86/nX8+/bvP1/wUYAEnfM55Tqs69AAAAAElFTkSuQmCC
 
 --------------000106090602010306070501--
 .
+=======
+>>>>>>> branch 'master' of https://github.com/fnmartinez/Project-POPXY.git

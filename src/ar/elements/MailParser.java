@@ -18,7 +18,8 @@ public class MailParser {
 	private TextTransformer textTransformer;
 	private ImageTransformer imageTransformer;
 
-	public MailParser(RandomAccessFile reader, RandomAccessFile writer, User user) {
+	public MailParser(RandomAccessFile reader, RandomAccessFile writer,
+			User user) {
 		this.reader = reader;
 		this.writer = writer;
 		this.user = user;
@@ -31,6 +32,28 @@ public class MailParser {
 		String line = reader.readLine();
 		parseHeaders(line);
 		return writer;
+	}
+
+	private void writeLine(String line) throws IOException {
+		writer.write((line + "\r\n").getBytes());
+	}
+
+	private void writeLines(String text) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		int i = 0, count = 0;
+		while (i < text.length()) {
+			if (text.charAt(i) != '\n') {
+				builder.append(text.charAt(i));
+			}
+			if (count == 75 || text.charAt(i) == '\n') {
+				count = 0;
+				writeLine(builder.toString());
+				builder = new StringBuilder();
+			} else {
+				count++;
+			}
+			i++;
+		}
 	}
 
 	// TODO DATE
@@ -144,47 +167,28 @@ public class MailParser {
 		} else {
 			writeLine(line);
 		}
-		if (line.toUpperCase().contains("MULTIPART"))
+		if (line.toUpperCase().contains("MULTIPART")) {
 			boundary = getBoundary(line);
-
-		if (boundary.isEmpty())
+		}
+		if (boundary.isEmpty()) {
 			// Single content
 			putContent(line, boundary, pointSpace);
-		else {
+		} else {
 			// Multipart content
 			line = reader.readLine();
 			do {
 				writeLine(line);
-				parseContents(boundary);
+				String ret = parseContents(boundary);
+				if(ret != null && ret.equals(".")){
+					break;
+				}
 			} while (!(line = reader.readLine()).equals("."));
 		}
 		writeLine(".");
 		System.out.println("Parser: OK");
 	}
 
-	private void writeLine(String line) throws IOException {
-		writer.write((line + "\r\n").getBytes());
-	}
-
-	private void writeLines(String text) throws IOException {
-		StringBuilder builder = new StringBuilder();
-		int i = 0, count = 0;
-		while (i < text.length()) {
-			if (text.charAt(i) != '\n') {
-				builder.append(text.charAt(i));
-			}
-			if (count == 75 || text.charAt(i) == '\n') {
-				count = 0;
-				writeLine(builder.toString());
-				builder = new StringBuilder();
-			} else {
-				count++;
-			}
-			i++;
-		}
-	}
-
-	private void parseContents(String boundary) throws IOException {
+	private String parseContents(String boundary) throws IOException {
 
 		String line = reader.readLine();
 		if (line.contains("--" + boundary)) {
@@ -196,18 +200,27 @@ public class MailParser {
 			if (line.toUpperCase().contains("MULTIPART")) {
 				String subBoundary = getBoundary(line);
 				line = reader.readLine();
-				writeLine("");
+				writeLine(line);
 				parseContents(subBoundary);
+				return "";
 			} else {
 				line = putContent(line, boundary, false);
 				if (line.equals("--" + boundary + "--")) {
 					writeLine(line);
-					return;
+					return null;
 				} else if (line.contains("--" + boundary)) {
 					writeLine(line);
 				}
 				parseContents(boundary);
+				return null;
 			}
+		} else {
+			if(!line.equals(".")){
+				writeLine(line);
+				parseContents(boundary);
+				return null;
+			}else
+				return ".";			
 		}
 	}
 
@@ -218,8 +231,9 @@ public class MailParser {
 		}
 		String boundary = line.substring(line.indexOf("=") + 1);
 		String[] tmp = boundary.split("\"");
-		if (tmp.length >= 2)
+		if (tmp.length >= 2) {
 			boundary = tmp[1];
+		}
 		return boundary;
 	}
 
@@ -235,7 +249,7 @@ public class MailParser {
 		mail.addContent(type);
 
 		String ret;
-
+		System.out.println("TYPE" + type);
 		if (type.toUpperCase().equals("TEXT")) {
 			ret = putContentText(line, boundary, pointSpace);
 		} else {
@@ -276,7 +290,6 @@ public class MailParser {
 				}
 				return line;
 			} else {
-				System.out.println("ENTREEEEEEE");
 				if ((encoding.toLowerCase().equals("base64"))) {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
 						// Pongo el texto completo en text
@@ -293,23 +306,19 @@ public class MailParser {
 					// text = encodeBase64(transformed.getBytes());
 				} else if (encoding.toLowerCase().equals("8bit")) {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
-						// Pongo el texto completo en text
 						text += line;
 					}
 					text += '\n';
 					text = textTransformer.l33t(text);
 				} else if (encoding.toLowerCase().equals("quoted-printable")) {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
-						// Pongo el texto completo en text
 						text += line + '\n';
 					}
-					// transform and print text according to its encoding
 					text = decodeQuotedPrintable(text);
 					text = textTransformer.l33t(text);
 					text = encodeQuotedPrintable(text);
-				}else{
+				} else {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
-						// Pongo el texto completo en text
 						text += line;
 					}
 					text += '\n';
@@ -328,9 +337,16 @@ public class MailParser {
 		String line;
 		String encoding = null;
 		String text = "";
-		String extension = contentTypeHeader.substring(
-				contentTypeHeader.indexOf('/') + 1,
-				contentTypeHeader.indexOf(';'));
+		String extension;
+		int last = contentTypeHeader.indexOf(';');
+		if (last != -1) {
+			extension = contentTypeHeader.substring(
+					contentTypeHeader.indexOf('/') + 1, last);
+		} else {
+			extension = contentTypeHeader.substring(contentTypeHeader
+					.indexOf('/') + 1);
+		}
+
 		mail.addStructure(extension);
 		// si pointSpace == true, quiere decir que el reader esta apuntando a la
 		// linea vacia antes del inicio del cuerpo
@@ -341,6 +357,7 @@ public class MailParser {
 			}
 		}
 		writeLine("");
+
 		// ahora line apunta a el "" antes del body y el "" guardado
 		if (user.getRotate() && encoding.toLowerCase().equals("base64")) {
 			// Transformar imagen codificada
