@@ -1,13 +1,6 @@
 package ar.elements;
 
-import java.net.InetAddress;
 import java.util.Calendar;
-import java.util.Set;
-
-import org.joda.time.DateTime;
-
-import ar.POPXY;
-import ar.protocols.ConfigurationProtocol;
 
 public class User {
 

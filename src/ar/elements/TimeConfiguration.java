@@ -3,8 +3,6 @@ package ar.elements;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.joda.time.DateTime;
-
 
 public class TimeConfiguration {
 
@@ -35,7 +33,7 @@ public class TimeConfiguration {
 		this.intervalSet.add(interval);
 	}
 	
-	//Reescribir el mŽtodo en caso de que se quiera iniciar con una config global d tiempo default
+	//Reescribir el mï¿½todo en caso de que se quiera iniciar con una config global d tiempo default
 	public void resetGlobalTimeConfiguration() {
 		User.getGlobalConfiguration().getTimeConfiguration().setIntervalSet(new HashSet<IntervalTime>());
 		User.getGlobalConfiguration().getTimeConfiguration().addInterval(0, 1439);
