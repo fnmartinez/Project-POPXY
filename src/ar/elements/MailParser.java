@@ -18,7 +18,8 @@ public class MailParser {
 	private TextTransformer textTransformer;
 	private ImageTransformer imageTransformer;
 
-	public MailParser(RandomAccessFile reader, RandomAccessFile writer, User user) {
+	public MailParser(RandomAccessFile reader, RandomAccessFile writer,
+			User user) {
 		this.reader = reader;
 		this.writer = writer;
 		this.user = user;
@@ -144,13 +145,13 @@ public class MailParser {
 		} else {
 			writeLine(line);
 		}
-		if (line.toUpperCase().contains("MULTIPART"))
+		if (line.toUpperCase().contains("MULTIPART")) {
 			boundary = getBoundary(line);
-
-		if (boundary.isEmpty())
+		}
+		if (boundary.isEmpty()) {
 			// Single content
 			putContent(line, boundary, pointSpace);
-		else {
+		} else {
 			// Multipart content
 			line = reader.readLine();
 			do {
@@ -208,6 +209,8 @@ public class MailParser {
 				}
 				parseContents(boundary);
 			}
+		} else {
+			writeLine(line);
 		}
 	}
 
@@ -218,8 +221,9 @@ public class MailParser {
 		}
 		String boundary = line.substring(line.indexOf("=") + 1);
 		String[] tmp = boundary.split("\"");
-		if (tmp.length >= 2)
+		if (tmp.length >= 2) {
 			boundary = tmp[1];
+		}
 		return boundary;
 	}
 
@@ -276,7 +280,6 @@ public class MailParser {
 				}
 				return line;
 			} else {
-				System.out.println("ENTREEEEEEE");
 				if ((encoding.toLowerCase().equals("base64"))) {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
 						// Pongo el texto completo en text
@@ -293,23 +296,19 @@ public class MailParser {
 					// text = encodeBase64(transformed.getBytes());
 				} else if (encoding.toLowerCase().equals("8bit")) {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
-						// Pongo el texto completo en text
 						text += line;
 					}
 					text += '\n';
 					text = textTransformer.l33t(text);
 				} else if (encoding.toLowerCase().equals("quoted-printable")) {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
-						// Pongo el texto completo en text
 						text += line + '\n';
 					}
-					// transform and print text according to its encoding
 					text = decodeQuotedPrintable(text);
 					text = textTransformer.l33t(text);
 					text = encodeQuotedPrintable(text);
-				}else{
+				} else {
 					while (!isEndLine(line = reader.readLine(), boundary)) {
-						// Pongo el texto completo en text
 						text += line;
 					}
 					text += '\n';
