@@ -12,11 +12,11 @@ public class testtt {
 	public static void main(String[] args) {
 		User.resetGlobalConfiguration();
 		User user = new User("vicky");
-		File from = new File("mails/multiImage.txt");
+		File from = new File("mails/textPlainBase64.txt");
 		File to = new File("mails/mail.txt");
 		
 		user.setLeet(true);
-		user.setAnonymous(true);
+		user.setAnonymous(false);
 		user.setRotate(false);
 		BufferedWriter writer;
 		BufferedReader reader;

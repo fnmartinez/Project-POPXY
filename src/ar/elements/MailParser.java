@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.net.QuotedPrintableCodec;
 
 public class MailParser {
 
@@ -270,12 +271,35 @@ public class MailParser {
 		// ahora line apunta a el "" antes del body y el "" ya esta guardado en
 		// el file
 		if (user.getLeet()
-				&& contentTypeHeader.toUpperCase().contains("TEXT/PLAIN")
-				&& encoding == null) {
-			while (!isEndLine(line = reader.readLine(), boundary)) {
-				writeLine(textTransformer.l33t(line));
+				&& contentTypeHeader.toUpperCase().contains("TEXT/PLAIN")) {
+			if (encoding == null) {
+				while (!isEndLine(line = reader.readLine(), boundary)) {
+					writeLine(textTransformer.l33t(line));
+				}
+				return line;
+			} else {
+				while (!isEndLine(line = reader.readLine(), boundary)) {
+					// Pongo el texto completo en text
+					text += line;
+				}
+				if ((encoding.toLowerCase().equals("base64"))) {
+//					byte[] txt = decodeBase64(text);
+//					System.out.println("Antes de transformar:" + txt.toString());
+//					String transformed = textTransformer.l33t(txt.toString());
+//					System.out.println("DESPUES de transformar:" + transformed);
+//					text = encodeBase64(transformed.getBytes());
+//					text += '\n';
+				} else if (encoding.toLowerCase().equals("8bit")) {
+					text = textTransformer.l33t(text);
+				} else if (encoding.toLowerCase().equals("quoted-printable")) {
+					// transform and print text according to its encoding
+					 text = decodeQuotedPrintable(text);
+					 text = textTransformer.l33t(text);
+					 writeLines(encodeQuotedPrintable(text));
+				}
+				writeLines(text);
+				return line;
 			}
-			return line;
 		} else {
 			return putLines(boundary);
 		}
@@ -361,6 +385,28 @@ public class MailParser {
 	private String encodeBase64(byte[] encodedText) {
 		String text = Base64.encodeBase64String(encodedText);
 		return text;
+	}
+
+	private String decodeQuotedPrintable(String quotedPrintable) {
+		try {
+			quotedPrintable = quotedPrintable.replaceAll("=\n", "-\n");
+			QuotedPrintableCodec codec = new QuotedPrintableCodec("ISO-8859-1");
+			return codec.decode(quotedPrintable);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private String encodeQuotedPrintable(String text) {
+		try {
+			QuotedPrintableCodec codec = new QuotedPrintableCodec("ISO-8859-1");
+			String ans = codec.encode(text);
+			ans = ans.replaceAll("-=0A", "=\n");
+			ans = ans.replaceAll("=0A", "\n");
+			return ans;
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 }
