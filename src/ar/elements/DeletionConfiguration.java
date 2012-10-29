@@ -12,7 +12,7 @@ public class DeletionConfiguration {
 
 	private DateTime date;
 	private Set<String> senders;
-	private Map<String,Set<String>> headers;
+	private Map<String, Set<String>> headers;
 	private Set<String> contents;
 	private int size;
 	private Set<String> structures;
@@ -24,7 +24,7 @@ public class DeletionConfiguration {
 	public void resetUserConfiguration() {
 		this.date = null;
 		this.senders = new HashSet<String>();
-		this.headers = new HashMap<String,Set<String>>();
+		this.headers = new HashMap<String, Set<String>>();
 		this.contents = new HashSet<String>();
 		this.size = -1;
 		this.structures = new HashSet<String>();
@@ -51,9 +51,9 @@ public class DeletionConfiguration {
 	public void addSender(String sender) {
 		this.senders.add(sender);
 	}
-	
+
 	public void removeSender(String string) {
-		this.senders.remove(string);		
+		this.senders.remove(string);
 	}
 
 	public Set<String> getContents() {
@@ -63,21 +63,20 @@ public class DeletionConfiguration {
 	public void addContentType(String contentType) {
 		this.contents.add(contentType);
 	}
-	
+
 	public void removeContentType(String contentType) {
 		this.contents.remove(contentType);
 	}
 
-
 	public Set<String> getStructure() {
 		return structures;
 	}
-	
+
 	public void addStructure(String structure) {
-		this.structures.add(structure);	
+		this.structures.add(structure);
 	}
-	
-	public void removeStructure(String structure){
+
+	public void removeStructure(String structure) {
 		this.structures.remove(structure);
 	}
 
@@ -101,22 +100,34 @@ public class DeletionConfiguration {
 		this.date = date;
 	}
 
-	public boolean hasStructureRestriction(){
+	public boolean passDateRestriction(Mail mail) {
+		if (mail.getDate() == null || this.date == null) {
+			return true;
+		} else {
+			//No se pueden eliminar mails mas antiguos que el de la fecha de config
+			if(this.date.compareTo(mail.getDate()) < 0){
+				return true;
+			}
+			return false;
+		}
+	}
+
+	public boolean hasStructureRestriction() {
 		return !structures.isEmpty();
 	}
-	
-	public boolean hasContentTypeRestriction(){
+
+	public boolean hasContentTypeRestriction() {
 		return !contents.isEmpty();
 	}
-	
-	public boolean hasHeaderRestriction(){
+
+	public boolean hasHeaderRestriction() {
 		return !headers.isEmpty();
 	}
-	
-	public boolean hasSenderRestriction(){
+
+	public boolean hasSenderRestriction() {
 		return !senders.isEmpty();
 	}
-	
+
 	public boolean hasDeletionRestriction() {
 		if (date == null && senders.isEmpty() && headers.isEmpty()
 				&& contents.isEmpty() && size == -1 && structures.isEmpty()) {
@@ -128,8 +139,8 @@ public class DeletionConfiguration {
 
 	public boolean passStructuresRestriction(Mail mail) {
 		Set<String> fromMail = mail.getStructures();
-		for(String s: fromMail){
-			if(structures.contains(s)){
+		for (String s : fromMail) {
+			if (structures.contains(s)) {
 				return false;
 			}
 		}
@@ -137,42 +148,42 @@ public class DeletionConfiguration {
 	}
 
 	public boolean passSizeRestriction(Mail mail) {
-		return mail.getSize() <= this.size;		
+		return mail.getSize() <= this.size;
 	}
-	
+
 	public boolean passContentTypesRestriction(Mail mail) {
 		Set<String> fromMail = mail.getContents();
-		for(String s: fromMail){
-			if(contents.contains(s)){
+		for (String s : fromMail) {
+			if (contents.contains(s)) {
 				return false;
 			}
 		}
 		return true;
 	}
-	
+
 	public boolean passHeadersRestriction(Mail mail) {
-		Map<String,String> fromMail = mail.getHeaders();
-		for(Entry<String,Set<String>> entry: headers.entrySet()){
-			for(String s: entry.getValue()){
+		Map<String, String> fromMail = mail.getHeaders();
+		for (Entry<String, Set<String>> entry : headers.entrySet()) {
+			for (String s : entry.getValue()) {
 				String value;
-				if((value = fromMail.get(entry.getKey())) != null){
-					if(value.contains(s)){
+				if ((value = fromMail.get(entry.getKey())) != null) {
+					if (value.contains(s)) {
 						return false;
 					}
 				}
 			}
 		}
 		return true;
-	}		
-	
+	}
+
 	public boolean passSendersRestriction(Mail mail) {
 		return !senders.contains(mail.getFrom());
 	}
 
 	public void addHeader(String headerName, String headerValue) {
-		if(headers.containsKey(headerName)){
+		if (headers.containsKey(headerName)) {
 			headers.get(headerName).add(headerValue);
-		}else{
+		} else {
 			Set<String> set = new HashSet<String>();
 			set.add(headerValue);
 			headers.put(headerName, set);
@@ -180,12 +191,12 @@ public class DeletionConfiguration {
 	}
 
 	public void removeHeader(String headerName, String headerValue) {
-		if(headers.containsKey(headerName)){
+		if (headers.containsKey(headerName)) {
 			headers.get(headerName).remove(headerValue);
-			if(headers.get(headerName).isEmpty()){
+			if (headers.get(headerName).isEmpty()) {
 				headers.remove(headerName);
 			}
 		}
 	}
-	
+
 }

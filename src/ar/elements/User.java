@@ -333,18 +333,18 @@ public class User {
 		}
 	}
 
-	// TODO
+	
 	private boolean passDateRestriction(Mail mail) {
-		// if(userConfig.getDeletionConfiguration().hasDateRestriction()){
-		// return
-		// userConfig.getDeletionConfiguration().passDateRestriction(mail);
-		// }else{
-		// if(globalConfig.getDeletionConfiguration().hasDateRestriction()){
-		// return
-		// globalConfig.getDeletionConfiguration().passDateRestriction(mail);
-		// }
-		return true;
-		// }
+		if (userConfig.getDeletionConfiguration().hasDateRestriction()) {
+			return userConfig.getDeletionConfiguration().passDateRestriction(
+					mail);
+		} else {
+			if (globalConfig.getDeletionConfiguration().hasDateRestriction()) {
+				return globalConfig.getDeletionConfiguration()
+						.passDateRestriction(mail);
+			}
+			return true;
+		}
 	}
 
 	private boolean passSendersRestriction(Mail mail) {

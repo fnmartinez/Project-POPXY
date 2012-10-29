@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Delivered-To: victoria.mesa.alcorta@gmail.com
 Received: by 10.66.219.228 with SMTP id pr4csp232971pac;
         Mon, 29 Oct 2012 10:18:48 -0700 (PDT)
@@ -36,6 +35,7 @@ X-Forwarded-Message-Id: <2288627285602722312714@operadores2>
 Content-Type: multipart/alternative;
  boundary="------------000106090602010306070501"
 
+This is a multi-part message in MIME format.
 --------------000106090602010306070501
 Content-Type: text/plain; charset=windows-1252http-equivContent-Type; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -47,6 +47,7 @@ tr35argentina.com/%20>
 --------------000106090602010306070501
 Content-Type: multipart/related;
  boundary="------------000404010306010700020606"
+
 
 --------------000404010306010700020606
 Content-Type: text/html; charset=windows-1252http-equivContent-Type
@@ -3696,11 +3697,5 @@ nbRn+mI/SuaP/MiPfOfnPteefz3/ev71/Ov51/Ov519PJ8mrymjLLfL5m/L86/nX86/nX8+/
 nn/d+HXy/C14/vX86/nX86/nX8+/bvP1/wUYAEnfM55Tqs69AAAAAElFTkSuQmCC
 --------------000404010306010700020606--
 
---------------000106090602010306070501--
+--------------000106090602010306070501
 .
--000404010306010700020606--
-
---------------000106090602010306070501--
-.
-=======
->>>>>>> branch 'master' of https://github.com/fnmartinez/Project-POPXY.git

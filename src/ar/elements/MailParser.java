@@ -2,8 +2,10 @@ package ar.elements;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.net.QuotedPrintableCodec;
+import org.joda.time.DateTime;
 
 public class MailParser {
 
@@ -56,7 +58,6 @@ public class MailParser {
 		}
 	}
 
-	// TODO DATE
 	private void parseOnlyHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
@@ -81,7 +82,15 @@ public class MailParser {
 						.startsWith(".")) && (!line.contains("Content-Type")));
 
 		if (headerName.equals("Date")) {
-			// TODO hacer fecha
+			String[] date = headerValue.split("\\s");
+			String[] compHour = date[4].split(":");
+			int year = Integer.valueOf(date[3]);
+			int month = getMonth(date[2]);
+			int day = Integer.valueOf(date[1])-1;
+			int hour = Integer.valueOf(compHour[0]);
+			int min = Integer.valueOf(compHour[1]);
+			int sec = Integer.valueOf(compHour[2]);
+			mail.setDate(new DateTime(year, month, day, hour, min, sec, 0));	
 		}
 		if (headerName.equals("From")) {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
@@ -108,7 +117,7 @@ public class MailParser {
 		}
 	}
 
-	// TODO DATE
+	
 	private void parseHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
@@ -136,9 +145,17 @@ public class MailParser {
 		} while ((line = reader.readLine()).length() != 0
 				&& (line.startsWith(" ") || line.startsWith("\t") || line
 						.startsWith(".")) && (!line.contains("Content-Type")));
-
+		//Date: Sun, 28 Oct 2012 19:56:58 -0300
 		if (headerName.equals("Date")) {
-			// TODO hacer fecha
+			String[] date = headerValue.split("\\s");
+			String[] compHour = date[4].split(":");
+			int year = Integer.valueOf(date[3]);
+			int month = getMonth(date[2]);
+			int day = Integer.valueOf(date[1])-1;
+			int hour = Integer.valueOf(compHour[0]);
+			int min = Integer.valueOf(compHour[1]);
+			int sec = Integer.valueOf(compHour[2]);
+			mail.setDate(new DateTime(year, month, day, hour, min, sec, 0));			
 		}
 		if (headerName.equals("From")) {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
@@ -441,6 +458,46 @@ public class MailParser {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+	
+	private int getMonth(String string) {
+		if(string.equals("Jan")){
+			return 1;
+		}
+		if(string.equals("Feb")){
+			return 2;
+		}
+		if(string.equals("Mar")){
+			return 3;
+		}
+		if(string.equals("Apr")){
+			return 4;
+		}
+		if(string.equals("May")){
+			return 5;
+		}
+		if(string.equals("Jun")){
+			return 6;
+		}
+		if(string.equals("Jul")){
+			return 7;
+		}
+		if(string.equals("Aug")){
+			return 8;
+		}
+		if(string.equals("Sep")){
+			return 9;
+		}
+		if(string.equals("Oct")){
+			return 10;
+		}
+		if(string.equals("Nov")){
+			return 11;
+		}
+		if(string.equals("Dec")){
+			return 12;
+		}
+		return -1;
 	}
 
 }
