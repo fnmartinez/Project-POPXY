@@ -590,8 +590,8 @@ public class AdminSession implements Session {
 		POPXY popxy = POPXY.getInstance();
 		User user;
 		// Si me pasa como parametro un usuario(no es global):
-		if (parameters.length > 1) {
-			for (int i = 1; i < parameters.length; i++) {
+		if (parameters.length > 2) {
+			for (int i = 2; i < parameters.length; i++) {
 				user = popxy.getUser(parameters[i]);
 				if (command == ConfigurationCommands.SET) {
 					user.getDeletionConfiguration().addHeader(parameters[0],
