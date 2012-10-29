@@ -1,10 +1,9 @@
 package ar.elements;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.net.QuotedPrintableCodec;
 
 public class MailParser {
 
@@ -33,7 +32,60 @@ public class MailParser {
 		parseHeaders(line);
 		return writer;
 	}
-	//TODO
+
+	// TODO DATE
+	private void parseOnlyHeaders(String line) throws IOException {
+		String headerName = null;
+		String headerValue = "";
+		do {
+			// Primero guardo el nombre del header y desp apendeo los
+			// extraValues
+			if (headerName == null) {
+				int separator = line.indexOf(":");
+				if (separator == -1) {
+					System.out.println("Invalid mail: invalid header");
+					return;
+				}
+				headerName = line.substring(0, separator);
+				if (line.length() > separator)
+					// antes de apendear sacar espacios
+					headerValue += line.substring(separator + 2).trim();
+			} else {
+				headerValue += line.trim();
+			}
+		} while ((line = reader.readLine()).length() != 0
+				&& (line.startsWith(" ") || line.startsWith("\t") || line
+						.startsWith(".")) && (!line.contains("Content-Type")));
+
+		if (headerName.equals("Date")) {
+			// TODO hacer fecha
+		}
+		if (headerName.equals("From")) {
+			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
+		}
+		mail.addHeader(headerName, headerValue);
+
+		if (line.contains("Content-Type")) {
+			while ((line = reader.readLine()).length() != 0)
+				;
+		}
+		// Body's start
+		if (line.length() == 0) {
+			line = reader.readLine();
+			if (line.equals(".")) {
+				System.out.println("Parser only headers: OK");
+				return;
+			} else {
+				System.out
+						.println("Invalid mail: Needs \".\" at the end of the mail");
+				return;
+			}
+		} else {
+			parseOnlyHeaders(line);
+		}
+	}
+
+	// TODO DATE
 	private void parseHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
@@ -53,12 +105,14 @@ public class MailParser {
 			}
 			if (headerName.equals("From") && user.getAnonymous()) {
 				writeLine("From: Anonymous <unknown@unknown.com>");
+			} else if (headerName.equals("Return-path") && user.getAnonymous()) {
+				writeLine("Return-path: <unknown@unknown.com>");
 			} else {
 				writeLine(line);
 			}
 		} while ((line = reader.readLine()).length() != 0
-				&& (line.startsWith(" ") || line.startsWith("\t") || line.startsWith("."))
-				&& (!line.contains("Content-Type")));
+				&& (line.startsWith(" ") || line.startsWith("\t") || line
+						.startsWith(".")) && (!line.contains("Content-Type")));
 
 		if (headerName.equals("Date")) {
 			// TODO hacer fecha
@@ -67,7 +121,7 @@ public class MailParser {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
 		}
 		mail.addHeader(headerName, headerValue);
-		
+
 		// Body's start
 		if (line.length() == 0) {
 			writeLine("");
@@ -99,18 +153,15 @@ public class MailParser {
 		else {
 			// Multipart content
 			line = reader.readLine();
-			do{
+			do {
 				writeLine(line);
 				parseContents(boundary);
-			}
-			while (!(line = reader.readLine()).equals("."));
+			} while (!(line = reader.readLine()).equals("."));
 		}
 		writeLine(".");
-		System.out.println("LLEGUEEE AL FINALLLLL");
+		System.out.println("Parser: OK");
 	}
 
-	// Antes de poner la linea en el file, agrego los bytes en las estadisticas
-	// globales y por usuario
 	private void writeLine(String line) throws IOException {
 		writer.write((line + "\n").getBytes());
 	}
@@ -118,29 +169,23 @@ public class MailParser {
 	private void writeLines(String text) throws IOException {
 		StringBuilder builder = new StringBuilder();
 		int i = 0, count = 0;
-		// builder.append(message.charAt(0));
 		while (i < text.length()) {
 			if (text.charAt(i) != '\n') {
 				builder.append(text.charAt(i));
 			}
-
-			if (count == 76 || text.charAt(i) == '\n') {
+			if (count == 75 || text.charAt(i) == '\n') {
 				count = 0;
-				// builder.append('\n');
-				// System.out.println(builder.toString());
 				writeLine(builder.toString());
 				builder = new StringBuilder();
 			} else {
 				count++;
 			}
 			i++;
-
 		}
-
 	}
 
 	private void parseContents(String boundary) throws IOException {
-		
+
 		String line = reader.readLine();
 		if (line.contains("--" + boundary)) {
 			writeLine("--" + boundary);
@@ -203,7 +248,6 @@ public class MailParser {
 		return ret;
 	}
 
-	//TODO
 	private String putContentText(String contentTypeHeader, String boundary,
 			boolean pointSpace) throws IOException {
 
@@ -232,28 +276,52 @@ public class MailParser {
 				}
 				return line;
 			} else {
-
-				while (!isEndLine(line = reader.readLine(), boundary)) {
-					// need to get the entire image to rotate it
-					text += line + "\n";
-				}
-
-				if (encoding.toLowerCase().equals("quoted-printable")) {
-					// transform and print text according to its encoding
-					// text = decodeQuotedPrintable(text);
-					// text = textTransformer.l33t(text);
-					// writeLines(encodeQuotedPrintable(text));
+				System.out.println("ENTREEEEEEE");
+				if ((encoding.toLowerCase().equals("base64"))) {
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line;
+					}
+					text += '\n';
+					// byte[] txt = decodeBase64(text);
+					// System.out.println("Antes de transformar:" +
+					// txt.toString());
+					// String transformed =
+					// textTransformer.l33t(txt.toString());
+					// System.out.println("DESPUES de transformar:" +
+					// transformed);
+					// text = encodeBase64(transformed.getBytes());
 				} else if (encoding.toLowerCase().equals("8bit")) {
-					writeLines(textTransformer.l33t(text));
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line;
+					}
+					text += '\n';
+					text = textTransformer.l33t(text);
+				} else if (encoding.toLowerCase().equals("quoted-printable")) {
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line + '\n';
+					}
+					// transform and print text according to its encoding
+					text = decodeQuotedPrintable(text);
+					text = textTransformer.l33t(text);
+					text = encodeQuotedPrintable(text);
+				}else{
+					while (!isEndLine(line = reader.readLine(), boundary)) {
+						// Pongo el texto completo en text
+						text += line;
+					}
+					text += '\n';
 				}
+				writeLines(text);
 				return line;
-
 			}
 		} else {
 			return putLines(boundary);
 		}
 	}
-	//TODO
+
 	private String putContentImage(String contentTypeHeader, String boundary)
 			throws IOException {
 
@@ -273,15 +341,19 @@ public class MailParser {
 			}
 		}
 		writeLine("");
-		// ahora line apunta a el "" antes del body y el "" ya esta guardado en
-		// el file
-		if (user.getRotate()) {
+		// ahora line apunta a el "" antes del body y el "" guardado
+		if (user.getRotate() && encoding.toLowerCase().equals("base64")) {
 			// Transformar imagen codificada
 			while (!isEndLine(line = reader.readLine(), boundary)) {
-				// pongo en text toda la imagen codificada en base64
-				text += line + "\n";
+				text += line;
 			}
-
+			text += line;
+			if (!text.isEmpty()) {
+				byte[] image = decodeBase64(text);
+				image = imageTransformer.rotateImage(image, extension);
+				text = encodeBase64(image);
+				writeLines(text);
+			}
 			return line;
 		} else {
 			return putLines(boundary);
@@ -307,8 +379,8 @@ public class MailParser {
 		return putLines(boundary);
 	}
 
+	// Escribo linea por linea sin transformar nada
 	private String putLines(String boundary) throws IOException {
-
 		String line;
 		while (!isEndLine(line = reader.readLine(), boundary)) {
 			writeLine(line);
@@ -320,6 +392,38 @@ public class MailParser {
 	private boolean isEndLine(String line, String boundary) {
 		return (boundary == "") ? line.equals(".") : line.contains("--"
 				+ boundary);
+	}
+
+	private byte[] decodeBase64(String text) {
+		byte[] decodedText = Base64.decodeBase64(text);
+		return decodedText;
+	}
+
+	private String encodeBase64(byte[] encodedText) {
+		String text = Base64.encodeBase64String(encodedText);
+		return text;
+	}
+
+	private String decodeQuotedPrintable(String quotedPrintable) {
+		try {
+			quotedPrintable = quotedPrintable.replaceAll("=\n", "-\n");
+			QuotedPrintableCodec codec = new QuotedPrintableCodec("ISO-8859-1");
+			return codec.decode(quotedPrintable);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private String encodeQuotedPrintable(String text) {
+		try {
+			QuotedPrintableCodec codec = new QuotedPrintableCodec("ISO-8859-1");
+			String ans = codec.encode(text);
+			ans = ans.replaceAll("-=0A", "=\n");
+			ans = ans.replaceAll("=0A", "\n");
+			return ans;
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 }
