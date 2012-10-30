@@ -195,10 +195,10 @@ public class TransactionState implements State {
 				Response response = super.afterWritingToClient(session);
 				return response;
 			}
-			
+			System.out.println("");
 			if(session.getClient().hasExternalApps()){
 				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
-				epc.process(session.getFile1(), session.getClient().getUser(), ".moil");
+				session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
 			}
 
 //			HashSet<String[]> hs = new HashSet<String[]>();

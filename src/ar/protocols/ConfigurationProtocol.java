@@ -6,106 +6,157 @@ import ar.sessions.utils.ConfigurationCommands;
 import ar.sessions.utils.IpAndMask;
 
 public class ConfigurationProtocol {
-	
+
 	private static final String OK_MSG = "+OK. ";
 	private static final String ERR_MSG = "-ERR. ";
-	private static final String WELLCOME_MSG = OK_MSG + "Conexion establecida\r\n";
+	private static final String WELLCOME_MSG = OK_MSG
+			+ "Conexion establecida\r\n";
 	private static final String INV_COM_MSG = ERR_MSG + "Comando invalido\r\n";
-	private static final String INV_SUBCOM_MSG = ERR_MSG + "Subcommando invalido\r\n";
-	private static final String INV_CONV_COM_MSG = ERR_MSG + "Uso invalido de los comandos\r\n";
-	private static final String INV_ARG_MSG = ERR_MSG + "Argumentos invalidos\r\n";
-	private static final String INV_USR_MSG = ERR_MSG + "Usuario inexistente\r\n";
-	private static final String EXT_MSG = OK_MSG + "Conexion cerrada exitosamente\r\n";
+	private static final String INV_SUBCOM_MSG = ERR_MSG
+			+ "Subcommando invalido\r\n";
+	private static final String INV_CONV_COM_MSG = ERR_MSG
+			+ "Uso invalido de los comandos\r\n";
+	private static final String INV_ARG_MSG = ERR_MSG
+			+ "Argumentos invalidos\r\n";
+	private static final String INV_USR_MSG = ERR_MSG
+			+ "Usuario inexistente\r\n";
+	private static final String EXT_MSG = OK_MSG
+			+ "Conexion cerrada exitosamente\r\n";
 
-	private static final String[] commands = { "EXT", "SET", "DEL", "STA", "RST"};
-	private static final String[] subCommands = {"TIMELOGIN", "CANTLOGIN", "BLACKIP", "RMFILTERDATE", "RMFILTERSENDER",
-		"RMFILTERHEADER",	"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",	"ORIGINSERVER", "ORIGINSERVERPORT",
-		"CONFIGLISTENINGPORT", "WELLCOMELISTENINGPORT", "STALISTENINGPORT",	"APP"};
-	
-	
+	private static final String[] commands = { "EXT", "SET", "DEL", "STA",
+			"RST" };
+	private static final String[] subCommands = { "TIMELOGIN", "CANTLOGIN",
+			"BLACKIP", "RMFILTERDATE", "RMFILTERSENDER", "RMFILTERHEADER",
+			"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",
+			"ORIGINSERVER", "ORIGINSERVERPORT", "CONFIGLISTENINGPORT",
+			"WELLCOMELISTENINGPORT", "STALISTENINGPORT", "APP" };
+
 	public static ConfigurationCommands getCommand(String command) {
-		
+
 		String[] c = command.split("\\s+");
-		if(c.length == 0){
+		if (c.length == 0) {
 			return null;
 		}
 		command = c[0];
 		command = command.toUpperCase();
-		for(int i=0; i < commands.length; i++){
-			if(command.equals(commands[i])){
+		for (int i = 0; i < commands.length; i++) {
+			if (command.equals(commands[i])) {
 				return ConfigurationCommands.values()[i];
-			}	
+			}
 		}
 		return null;
 	}
 
-	
 	public static ConfigurationCommands getSubCommand(String subCommand) {
-		
+
 		String[] s = subCommand.split("\\s+");
-		if(s.length == 0){
+		if (s.length == 0) {
 			return null;
 		}
 		subCommand = s[0];
 		subCommand = subCommand.toUpperCase();
-		
-		for(int i=0; i < subCommands.length; i++){
-			if(subCommand.equals(subCommands[i])){
-				return ConfigurationCommands.values()[i+5];
-			}	
+
+		for (int i = 0; i < subCommands.length; i++) {
+			if (subCommand.equals(subCommands[i])) {
+				return ConfigurationCommands.values()[i + 5];
+			}
 		}
 		return null;
 	}
-	
-	public static String[] getParameters(String subCommandAndParameters, ConfigurationCommands subCommand) {
+
+	public static String[] getParameters(String subCommandAndParameters,
+			ConfigurationCommands subCommand) {
 
 		String[] commandAndParam = subCommandAndParameters.split("\\s+");
 		String parameters[] = null;
-		
-		switch(subCommand){
-		case TIME_LOGIN:			parameters = getTimeLoginParameters(commandAndParam);break;
-		case CANT_LOGIN:			parameters = getCantLoginParameters(commandAndParam);break;
-		case BLACK_IP: 				parameters = getBlackIpParameters(commandAndParam);break;
-		case RM_FILTER_DATE:		parameters = getRmFilterDateParameters(commandAndParam);break;
-		case RM_FILTER_SENDER:		parameters = getRmFilterSenderParameters(commandAndParam);break;
-		case RM_FILTER_HEADER:		parameters = getRmFilterHeaderParameters(commandAndParam);break;
-		case RM_FILTER_CONTENT:		parameters = getRmFilterContentParameters(commandAndParam);break;
-		case RM_FILTER_SIZE:		parameters = getRmFilterSizeParameters(commandAndParam);break;
-		case RM_FILTER_DISPOSITION:	parameters = getRmFilterDispositionParameters(commandAndParam);break;
-		case ORIGIN_SERVER:			parameters = getOriginServerParameters(commandAndParam);break;
-		case ORIGIN_SERVER_PORT:	parameters = getListeningPortParameters(commandAndParam);break;
-		case CONFIG_LISTENING_PORT: 	parameters = getListeningPortParameters(commandAndParam);break;
-		case WELLCOME_LISTENING_PORT:	parameters = getListeningPortParameters(commandAndParam);break;
-		case STA_LISTENING_PORT:		parameters = getListeningPortParameters(commandAndParam);break;
-		case APP:						parameters = getAppParameters(commandAndParam);break;
-		default: return null;
+
+		switch (subCommand) {
+		case TIME_LOGIN:
+			parameters = getTimeLoginParameters(commandAndParam);
+			break;
+		case CANT_LOGIN:
+			parameters = getCantLoginParameters(commandAndParam);
+			break;
+		case BLACK_IP:
+			parameters = getBlackIpParameters(commandAndParam);
+			break;
+		case RM_FILTER_DATE:
+			parameters = getRmFilterDateParameters(commandAndParam);
+			break;
+		case RM_FILTER_SENDER:
+			parameters = getRmFilterSenderParameters(commandAndParam);
+			break;
+		case RM_FILTER_HEADER:
+			parameters = getRmFilterHeaderParameters(commandAndParam);
+			break;
+		case RM_FILTER_CONTENT:
+			parameters = getRmFilterContentParameters(commandAndParam);
+			break;
+		case RM_FILTER_SIZE:
+			parameters = getRmFilterSizeParameters(commandAndParam);
+			break;
+		case RM_FILTER_DISPOSITION:
+			parameters = getRmFilterDispositionParameters(commandAndParam);
+			break;
+		case ORIGIN_SERVER:
+			parameters = getOriginServerParameters(commandAndParam);
+			break;
+		case ORIGIN_SERVER_PORT:
+			parameters = getListeningPortParameters(commandAndParam);
+			break;
+		case CONFIG_LISTENING_PORT:
+			parameters = getListeningPortParameters(commandAndParam);
+			break;
+		case WELLCOME_LISTENING_PORT:
+			parameters = getListeningPortParameters(commandAndParam);
+			break;
+		case STA_LISTENING_PORT:
+			parameters = getListeningPortParameters(commandAndParam);
+			break;
+		case APP:
+			parameters = getAppParameters(commandAndParam);
+			break;
+		default:
+			return null;
 		}
-		
+
 		return parameters;
 	}
 
-
+	//Ej: set app /bin/bash -c cat -users kkenny mmesa 
 	private static String[] getAppParameters(String[] commandAndParam) {
-		if(commandAndParam.length < 2){
+		if (commandAndParam.length < 2) {
 			return null;
 		}
 		String[] app = new String[1];
-		app[0] = commandAndParam[1];
-		for(int i=1; i < commandAndParam.length-1; i++){
-			app[0] = app[0].concat(" "+ commandAndParam[i+1]);
+		String path = commandAndParam[1];
+		int i;
+		for (i = 2; i < commandAndParam.length; i++) {
+			if (!commandAndParam[i].equals("-users")) {
+				path =path.concat(" " + commandAndParam[i]);
+			} else {
+				break;
+			}
 		}
+		if(i < commandAndParam.length){
+			app = new String[commandAndParam.length-i];
+			for (int j = 1; j+i < commandAndParam.length; j++) {
+				app[j] = commandAndParam[j+i];
+			}
+		}
+		app[0] = path;
 		return app;
 	}
 
-	private static String[] getListeningPortParameters( String[] commandAndParam) {
-		
-		if(commandAndParam.length != 2){
+	private static String[] getListeningPortParameters(String[] commandAndParam) {
+
+		if (commandAndParam.length != 2) {
 			return null;
 		}
 		String port[] = new String[1];
 		port[0] = commandAndParam[1];
-		
-		if(!isValidPort(port[0])){
+
+		if (!isValidPort(port[0])) {
 			return null;
 		}
 
@@ -113,20 +164,20 @@ public class ConfigurationProtocol {
 	}
 
 	private static String[] getOriginServerParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length != 2)
+
+		if (commandAndParam.length != 2)
 			return null;
-		
+
 		String server[] = new String[1];
 		server[0] = commandAndParam[1];
-		
+
 		String[] servAndPort = server[0].split(":");
-		
-		if(servAndPort.length > 2 || servAndPort.length < 1)
+
+		if (servAndPort.length > 2 || servAndPort.length < 1)
 			return null;
-		
-		if(servAndPort.length == 2){
-			if(!isValidPort(servAndPort[1]))
+
+		if (servAndPort.length == 2) {
+			if (!isValidPort(servAndPort[1]))
 				return null;
 		}
 
@@ -140,27 +191,27 @@ public class ConfigurationProtocol {
 	}
 
 	private static String[] getRmFilterSizeParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length < 2){
+
+		if (commandAndParam.length < 2) {
 			return null;
 		}
 		String parameters[] = new String[1];
 		String size = commandAndParam[1];
-		
+
 		Integer c = Integer.parseInt(size);
-		if(c == null){
+		if (c == null) {
 			return null;
 		}
-		
-		if(commandAndParam.length > 2){
-			parameters = new String[commandAndParam.length-1];
-			for(int i = 2; i < commandAndParam.length; i++){
-				parameters[i-1] = commandAndParam[i];
+
+		if (commandAndParam.length > 2) {
+			parameters = new String[commandAndParam.length - 1];
+			for (int i = 2; i < commandAndParam.length; i++) {
+				parameters[i - 1] = commandAndParam[i];
 			}
 		}
-		
+
 		parameters[0] = size;
-		
+
 		return parameters;
 	}
 
@@ -173,160 +224,156 @@ public class ConfigurationProtocol {
 	private static String[] getRmFilterHeaderParameters(String[] commandAndParam) {
 		// TODO Auto-generated method stub
 		return null;
-		
+
 	}
 
 	private static String[] getRmFilterSenderParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length < 2){
+
+		if (commandAndParam.length < 2) {
 			return null;
 		}
 		String parameters[] = new String[1];
 		String sender = commandAndParam[1];
-		
-		if(!isValidSender(sender)){
+
+		if (!isValidSender(sender)) {
 			return null;
 		}
-		
-		if(commandAndParam.length > 2){
-			parameters = new String[commandAndParam.length-1];
-			for(int i = 2; i < commandAndParam.length; i++){
-				parameters[i-1] = commandAndParam[i];
+
+		if (commandAndParam.length > 2) {
+			parameters = new String[commandAndParam.length - 1];
+			for (int i = 2; i < commandAndParam.length; i++) {
+				parameters[i - 1] = commandAndParam[i];
 			}
 		}
-		
+
 		parameters[0] = sender;
-		
+
 		return parameters;
-		
+
 	}
 
-
 	private static String[] getRmFilterDateParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length < 2){
+
+		if (commandAndParam.length < 2) {
 			return null;
 		}
 		String parameters[] = new String[1];
 		String date = commandAndParam[1];
-		
-		if(!isValidDate(date)){
+
+		if (!isValidDate(date)) {
 			return null;
 		}
-		
-		if(commandAndParam.length > 2){
-			parameters = new String[commandAndParam.length-1];
-			for(int i = 2; i < commandAndParam.length; i++){
-				parameters[i-1] = commandAndParam[i];
+
+		if (commandAndParam.length > 2) {
+			parameters = new String[commandAndParam.length - 1];
+			for (int i = 2; i < commandAndParam.length; i++) {
+				parameters[i - 1] = commandAndParam[i];
 			}
 		}
-		
+
 		parameters[0] = date;
-		
+
 		return parameters;
-		
+
 	}
 
 	private static String[] getBlackIpParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length < 2 || commandAndParam.length > 3){
+
+		if (commandAndParam.length < 2 || commandAndParam.length > 3) {
 			return null;
 		}
 		String parameters[] = new String[1];
 		String ip = commandAndParam[1];
-		
-		if(! IpAndMask.isValidIp(ip)){
+
+		if (!IpAndMask.isValidIp(ip)) {
 			return null;
 		}
-		
-		if(commandAndParam.length == 3){
+
+		if (commandAndParam.length == 3) {
 			parameters = new String[2];
 			String mask = commandAndParam[2];
-			if(! IpAndMask.isValidIp(mask)){
+			if (!IpAndMask.isValidIp(mask)) {
 				return null;
 			}
 			parameters[1] = mask;
 		}
-		
+
 		parameters[0] = ip;
-		
+
 		return parameters;
-		
+
 	}
 
 	private static String[] getCantLoginParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length < 2){
+
+		if (commandAndParam.length < 2) {
 			return null;
 		}
 		String parameters[] = new String[1];
 		String cant = commandAndParam[1];
-		
+
 		Integer c = Integer.parseInt(cant);
-		if(c == null){
+		if (c == null) {
 			return null;
 		}
-		
-		if(commandAndParam.length > 2){
-			parameters = new String[commandAndParam.length-1];
-			for(int i = 2; i < commandAndParam.length; i++){
-				parameters[i-1] = commandAndParam[i];
+
+		if (commandAndParam.length > 2) {
+			parameters = new String[commandAndParam.length - 1];
+			for (int i = 2; i < commandAndParam.length; i++) {
+				parameters[i - 1] = commandAndParam[i];
 			}
 		}
-		
+
 		parameters[0] = cant;
-		
+
 		return parameters;
-		
+
 	}
 
 	private static String[] getTimeLoginParameters(String[] commandAndParam) {
-		
-		if(commandAndParam.length < 3){
+
+		if (commandAndParam.length < 3) {
 			return null;
 		}
 		String parameters[] = new String[2];
 		String fromTime = commandAndParam[1];
 		String toTime = commandAndParam[2];
-		
-		if(!isValidDate(fromTime) || !isValidDate(toTime)){
+
+		if (!isValidDate(fromTime) || !isValidDate(toTime)) {
 			return null;
 		}
-		
-		if(commandAndParam.length > 3){
-			parameters = new String[commandAndParam.length-1];
-			for(int i = 3; i < commandAndParam.length; i++){
-				parameters[i-1] = commandAndParam[i];
+
+		if (commandAndParam.length > 3) {
+			parameters = new String[commandAndParam.length - 1];
+			for (int i = 3; i < commandAndParam.length; i++) {
+				parameters[i - 1] = commandAndParam[i];
 			}
 		}
-		
+
 		parameters[0] = timeToMinutes(fromTime);
 		parameters[1] = timeToMinutes(toTime);
-		
-		return parameters;
-		
-	}
 
+		return parameters;
+
+	}
 
 	private static String timeToMinutes(String time) {
 		Integer hour = Integer.parseInt(time.substring(0, 2));
 		Integer min = Integer.parseInt(time.substring(2, 4));
-		
+
 		min = min + (hour * 60);
-		
+
 		return min.toString();
 	}
 
-
-	public static String getWellcomeMsg() {		
+	public static String getWellcomeMsg() {
 		return WELLCOME_MSG;
 	}
 
 	public static String getInvalidCommandMsg() {
 		return INV_COM_MSG;
 	}
-	
-	
+
 	public static String getInvalidSubCommandMsg() {
 		return INV_SUBCOM_MSG;
 	}
@@ -336,7 +383,7 @@ public class ConfigurationProtocol {
 	}
 
 	public static String getOkMsg() {
-		return OK_MSG+"\r\n";
+		return OK_MSG + "\r\n";
 	}
 
 	public static String getInvalidArgumentMsg() {
@@ -350,40 +397,38 @@ public class ConfigurationProtocol {
 	public static String getExitMsg() {
 		return EXT_MSG;
 	}
-	
+
 	private static boolean isValidDate(String time) {
-		if(time.length() != 4)
+		if (time.length() != 4)
 			return false;
-		
+
 		Integer hour, min;
 
-		try{
-			 hour = Integer.parseInt(time.substring(0, 2));
-			 min = Integer.parseInt(time.substring(2, 4));
-		} catch (Exception e){
+		try {
+			hour = Integer.parseInt(time.substring(0, 2));
+			min = Integer.parseInt(time.substring(2, 4));
+		} catch (Exception e) {
 			return false;
 		}
-		
-		if(hour == null || min == null){
+
+		if (hour == null || min == null) {
 			return false;
 		}
-		
-		if(min < 0 || min > 59)
+
+		if (min < 0 || min > 59)
 			return false;
-		
-		if(hour < 0 || hour > 23)
-			return false;		
-		
+
+		if (hour < 0 || hour > 23)
+			return false;
+
 		return true;
 	}
 
-	
 	private static boolean isValidPort(String string) {
 		Integer port;
-		try{
+		try {
 			port = Integer.parseInt(string);
-		}
-		catch(NumberFormatException e){
+		} catch (NumberFormatException e) {
 			return false;
 		}
 		return port != null;
@@ -394,15 +439,15 @@ public class ConfigurationProtocol {
 		return false;
 	}
 
-
 	public static String getStatusMsg(POPXY popxy) {
 		String ret = OK_MSG + "\n";
-		ret = ret + " originserver \t " + User.getGlobalServerAddress()+":"+User.getGlobalServerPort()+"\n";
-		ret = ret + " configListeningPort \t " + popxy.getAdminPort()+"\n";
-		ret = ret + " wellcomeListeningPort \t " + popxy.getWelcomeSocketPort()+"\n";
-		ret = ret + " statsListeningPort \t " + popxy.getStatsPort()+"\n";
-		
-		
+		ret = ret + " originserver \t " + User.getGlobalServerAddress() + ":"
+				+ User.getGlobalServerPort() + "\n";
+		ret = ret + " configListeningPort \t " + popxy.getAdminPort() + "\n";
+		ret = ret + " wellcomeListeningPort \t " + popxy.getWelcomeSocketPort()
+				+ "\n";
+		ret = ret + " statsListeningPort \t " + popxy.getStatsPort() + "\n";
+
 		return ret;
 	}
 }
