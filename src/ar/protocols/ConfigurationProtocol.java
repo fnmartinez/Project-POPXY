@@ -1,7 +1,11 @@
 package ar.protocols;
 
+import java.util.Set;
+
 import ar.POPXY;
+import ar.elements.IntervalTime;
 import ar.elements.User;
+import ar.elements.UserConfiguration;
 import ar.sessions.utils.ConfigurationCommands;
 import ar.sessions.utils.IpAndMask;
 
@@ -439,14 +443,49 @@ public class ConfigurationProtocol {
 		return false;
 	}
 
-	public static String getStatusMsg(POPXY popxy) {
+	public static String getStatusMsg() {
+		POPXY popxy = POPXY.getInstance();
+		UserConfiguration conf = User.getGlobalConfiguration();
 		String ret = OK_MSG + "\n";
-		ret = ret + " originserver \t " + User.getGlobalServerAddress() + ":"
-				+ User.getGlobalServerPort() + "\n";
-		ret = ret + " configListeningPort \t " + popxy.getAdminPort() + "\n";
-		ret = ret + " wellcomeListeningPort \t " + popxy.getWelcomeSocketPort()
-				+ "\n";
-		ret = ret + " statsListeningPort \t " + popxy.getStatsPort() + "\n";
+		ret = ret + "*** Listening Configurations ***\n";
+		ret = ret + "- ORIGINSERVER\t\t" + User.getGlobalServerAddress() + ":"+ User.getGlobalServerPort() + "\n";
+		ret = ret + "- CONFIGLISTENINGPORT\t" + popxy.getAdminPort() + "\n";
+		ret = ret + "- WELLCOMELISTENINGPORT\t" + popxy.getWelcomeSocketPort()+ "\n";
+		ret = ret + "- STATSLISTENINGPORT\t" + popxy.getStatsPort() + "\n";
+		
+		ret = ret + "\n*** Login configuration ***\n";
+		if(conf.getLoginMax() != -1){
+			ret = ret + "- CANTLOGIN\t"+conf.getLoginMax()+"\n";
+		}
+		for(IntervalTime i: conf.getTimeConfiguration().getIntervals()){
+			ret = ret + "- TIMELOGIN\t";
+			Integer hF = i.getMinFrom()/60;
+			Integer hT = i.getMinTo()/60;
+			Integer mF = i.getMinFrom()%60;
+			Integer mT = i.getMinTo()%60;
+			ret = ret + ((hF.toString().length()==2)? hF: "0"+hF);
+			ret = ret + ((mF.toString().length()==2)? mF: "0"+mF);
+			ret = ret + "\t" +((hT.toString().length()==2)? hT: "0"+hT);
+			ret = ret + ((mT.toString().length()==2)? mT: "0"+mT) + "\n";
+		}
+		for(IpAndMask ip: popxy.getBlackIps()){
+			ret = ret + "- BLACKIP\t" + ip.getIp() +"\t"+ ip.getMask()+"\n";
+		}
+				
+		
+		if(conf.hasExternalApps()){
+			ret = ret + "\n*** APPS ***\n";
+			if(conf.getLeet()) ret = ret + "- l33t\n";
+			if(conf.getRotate()) ret = ret + "- Rotate\n";
+			if(conf.getAnonymous()) ret = ret + "- Anonymous\n";
+			for(String[] path: conf.getExternalApps()){
+				ret = ret + "-";
+				for(int i = 0; i < path.length; i++){
+					ret = ret + " " + path[i];
+				}
+				ret = ret + "\n";
+			}			
+		}		
 
 		return ret;
 	}

@@ -21,7 +21,7 @@ public class AdminSession implements Session {
 	private static final int CLOSED_CONNECTION = 2;
 
 	private static final int HEAD_COMMAND_SIZE = 4;
-	private static final int BUF_SIZE = 512;
+	private static final int BUF_SIZE = 1024;
 
 	private static final int WELLCOME_CHANNEL = 0;
 	private static final int CONGIF_CHANNEL = 1;
@@ -119,8 +119,7 @@ public class AdminSession implements Session {
 			}
 
 			if (command == ConfigurationCommands.STATUS) {
-				this.answer(ConfigurationProtocol.getStatusMsg(POPXY
-						.getInstance()));
+				this.answer(ConfigurationProtocol.getStatusMsg());
 				this.key.interestOps(SelectionKey.OP_WRITE);
 				return;
 			}
