@@ -383,7 +383,10 @@ public class User {
 	}
 
 	public Set<String[]> getExternalApps() {
-		return userConfig.getExternalApps();
+		if(!userConfig.getExternalApps().isEmpty()){
+			return userConfig.getExternalApps();
+		}
+		return globalConfig.getExternalApps();
 	}
 
 	public Set<String[]> getGlobalExternalApps() {

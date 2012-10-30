@@ -86,11 +86,14 @@ public class ConfigurationProtocol {
 
 
 	private static String[] getAppParameters(String[] commandAndParam) {
-		if(commandAndParam.length != 2){
+		if(commandAndParam.length < 2){
 			return null;
 		}
-		String app[] = new String[1];
+		String[] app = new String[1];
 		app[0] = commandAndParam[1];
+		for(int i=1; i < commandAndParam.length-1; i++){
+			app[0] = app[0].concat(" "+ commandAndParam[i+1]);
+		}
 		return app;
 	}
 

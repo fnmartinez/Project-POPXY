@@ -197,7 +197,8 @@ public class TransactionState implements State {
 			}
 			
 			if(session.getClient().hasExternalApps()){
-				session.getClient().getExternalProcessChain().process(session.getFile1(), session.getClient().getUser(), ".moil");
+				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
+				epc.process(session.getFile1(), session.getClient().getUser(), ".moil");
 			}
 
 //			HashSet<String[]> hs = new HashSet<String[]>();
