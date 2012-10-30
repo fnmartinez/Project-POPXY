@@ -57,17 +57,25 @@ public class ExternalProcessChain {
 			BufferedWriter pbw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 			BufferedReader pbr = new BufferedReader(new InputStreamReader(p.getInputStream()));
 						
+
 			String line;
 			
 			input.seek(0);
 			while((line = input.readLine()) != null) {
 				pbw.write(line+"\r\n");
+				pbw.flush();
+				while(pbr.ready() && (line =pbr.readLine()) != null) {
+					output.write((line+"\r\n").getBytes());
+				}
 			}
-			char[] buf = new char[10];
-			
+			pbw.close();
+
 			while((line =pbr.readLine()) != null) {
-				output.writeChars(new String(buf));
+				output.write((line+"\r\n").getBytes());
 			}
+		
+			pbr.close();
+			output.seek(0);
 			
 			return output;
 		}

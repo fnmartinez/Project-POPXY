@@ -196,20 +196,20 @@ public class TransactionState implements State {
 				return response;
 			}
 			
-//			if(session.getClient().hasExternalApps()){
-//				session.getClient().getExternalProcessChain().process(session.getFile1(), session.getClient().getUser(), ".mail");
-//			}
+			if(session.getClient().hasExternalApps()){
+				session.getClient().getExternalProcessChain().process(session.getFile1(), session.getClient().getUser(), ".moil");
+			}
 
-			HashSet<String[]> hs = new HashSet<String[]>();
-			String[] sa = {
-				"/bin/bash",
-				"-c",
-				"cat"
-			};
-			hs.add(sa);
-			ExternalProcessChain epc = new ExternalProcessChain(hs);
-			session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
-			
+//			HashSet<String[]> hs = new HashSet<String[]>();
+//			String[] sa = {
+//				"/bin/bash",
+//				"-c",
+//				"cat"
+//			};
+//			hs.add(sa);
+//			ExternalProcessChain epc = new ExternalProcessChain(hs);
+//			session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
+		
 			
 			try {
 				session.getFile1().seek(0);
