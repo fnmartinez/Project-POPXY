@@ -8,8 +8,13 @@ import ar.sessions.utils.BufferUtils;
 
 public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 
+
 	private boolean waitingLineFeedEnd = false;
 	
+	public AbstractMultilinerInnerState(AbstractInnerState callback) {
+		super(callback);
+	}
+
 	@Override
 	Response afterReadingFromServer(ClientSession session) {
 		

@@ -6,7 +6,15 @@ import ar.sessions.ClientSession;
 
 public abstract class AbstractInnerState implements State{
 	
+	private AbstractInnerState callbackState;
+
+	private Object attachment = null;
+	
 	private FlowDirection flowDirection = FlowDirection.WRITE_CLIENT; 
+	
+	public AbstractInnerState(AbstractInnerState callback) {
+		this.callbackState = callback;
+	}
 
 	public Response eval(ClientSession session) {
 		
@@ -95,10 +103,25 @@ public abstract class AbstractInnerState implements State{
 		return response;
 	}
 	
+	public abstract void callbackFunction();
+	
 	public boolean isEndState() {
 		return false;
 	}
 	public FlowDirection getFlowDirection() {
 		return this.flowDirection;
 	}
+	
+	public void setAttachment(Object o) {
+		this.attachment = o;
+	}
+	
+	public Object getAttachment() {
+		return this.attachment;
+	}
+	
+	public AbstractInnerState getCallbackState() {
+		return this.callbackState;
+	}
 }
+

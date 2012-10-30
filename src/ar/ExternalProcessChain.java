@@ -3,10 +3,11 @@ package ar;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.RandomAccessFile;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -26,12 +27,13 @@ public class ExternalProcessChain {
 		}
 	}
 	
-	public RandomAccessFile process(RandomAccessFile input, String prefix, String sufix) {
+	public File process(File input, String prefix, String sufix) throws IOException {
 
 		for(ExternalProcess ep: processes){
-			RandomAccessFile output;
+			File output = File.createTempFile(prefix, sufix);
 			try {
 				output = ep.process(input, prefix, sufix);
+				input.delete();
 				input = output;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -48,34 +50,36 @@ public class ExternalProcessChain {
 			this.cmd = p;
 		}
 
-		public RandomAccessFile process(RandomAccessFile input, String prefix, String sufix) throws IOException {
+		public File process(File input, String prefix, String sufix) throws IOException {
 
-			File f = File.createTempFile(prefix, sufix);
-			RandomAccessFile output = new RandomAccessFile(f, "rw"); 
-			output.seek(0);
+			File output = File.createTempFile(prefix, sufix);
+//			RandomAccessFile output = new RandomAccessFile(f, "rw"); 
+//			output.seek(0);
 			Process p = Runtime.getRuntime().exec(this.cmd);
+			BufferedReader fbr = new BufferedReader(new FileReader(input));
+			BufferedWriter fbw = new BufferedWriter(new FileWriter(output));
 			BufferedWriter pbw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 			BufferedReader pbr = new BufferedReader(new InputStreamReader(p.getInputStream()));
 						
 
 			String line;
 			
-			input.seek(0);
-			while((line = input.readLine()) != null) {
+//			input.seek(0);
+			while((line = fbr.readLine()) != null) {
 				pbw.write(line+"\r\n");
 				pbw.flush();
 				while(pbr.ready() && (line =pbr.readLine()) != null) {
-					output.write((line+"\r\n").getBytes());
+					fbw.write((line+"\r\n"));
 				}
 			}
 			pbw.close();
 
-			while((line =pbr.readLine()) != null) {
-				output.write((line+"\r\n").getBytes());
+			while((line = pbr.readLine()) != null) {
+				fbw.write((line+"\r\n"));
 			}
 		
 			pbr.close();
-			output.seek(0);
+//			output.seek(0);
 			
 			return output;
 		}

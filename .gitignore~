@@ -1,8 +1,0 @@
-#Eclipse IDE files
-*.settings
-*.classpath
-*.project
-*.classpath
-*.class
-/target
-/.gitignore

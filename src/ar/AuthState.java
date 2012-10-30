@@ -17,12 +17,17 @@ public class AuthState implements State {
 
 	public AuthState(){
 		super();
-		this.currentState = new NoneState();
+		this.currentState = new NoneState(null);
 		((AbstractInnerState)this.currentState).setFlowToWriteClient();
 	}
 	
 	
 	private class NoneState extends AbstractInnerState{
+
+		public NoneState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 
 		@Override
 		Response afterReadingFromClient(ClientSession session) {
@@ -49,7 +54,7 @@ public class AuthState implements State {
 						response.setBuffers(bufferToUse);
 						response.setChannel(session.getClientSocket());
 						response.setOperation(SelectionKey.OP_WRITE);
-						response.setState(new QuitState());
+						response.setState(new QuitState(this));
 					} else {
 						if(session.getOriginServerSocket() != null) {
 							try {
@@ -86,7 +91,7 @@ public class AuthState implements State {
 						response.setChannel(session.getOriginServerSocket());
 						response.setBuffers(session.getFirstServerBuffer());
 						response.setOperation(SelectionKey.OP_READ);
-						response.setState(new UserState());
+						response.setState(new UserState(this));
 						((AbstractInnerState)response.getState()).setFlowToReadServer();
 					}
 				}
@@ -103,7 +108,7 @@ public class AuthState implements State {
 				response.setBuffers(bufferToUse);
 				response.setChannel(session.getClientSocket());
 				response.setOperation(SelectionKey.OP_WRITE);
-				response.setState(new QuitState());
+				response.setState(new QuitState(this));
 				break;
 			default:
 				response = invalidCommand(session);
@@ -138,11 +143,22 @@ public class AuthState implements State {
 		public String toString(){
 			return "None";
 		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 
 	private class UserState extends AbstractInnerState{
 		
 		private boolean usernameSend = false;
+		
+		public UserState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		
 		@Override
 		Response afterReadingFromServer(ClientSession session) {
@@ -192,10 +208,18 @@ public class AuthState implements State {
 				state = null;
 			} else if (this.usernameSend && errorRecieved){
 				// The username is not valid
-				state = new NoneState();
+				if(this.getCallbackState() == null) {
+					state = new NoneState(null);
+				} else {
+					state = this.getCallbackState();
+				}
 			} else if (this.usernameSend && !errorRecieved){
 				// The username is valid
-				state = new UserState();
+				if(this.getCallbackState() == null) {
+					state = new UserState(new NoneState(null));
+				} else {
+					state = new UserState(this.getCallbackState());
+				}
 			} else if (!this.usernameSend && !errorRecieved) {
 				// I must send the user name the next time
 				state = this;
@@ -228,10 +252,10 @@ public class AuthState implements State {
 			response = super.afterReadingFromClient(session);
 			switch(cmd){
 			case PASS:
-					tmpState = new PassState();
+					tmpState = new PassState(this);
 				break;
 			case QUIT:
-					tmpState = new QuitState();
+					tmpState = new QuitState(this);
 
 				break;
 			default:
@@ -257,7 +281,13 @@ public class AuthState implements State {
 			response.setBuffers(bufferToUse);
 			response.setChannel(session.getClientSocket());
 			response.setOperation(SelectionKey.OP_WRITE);
-			response.setState(new NoneState());
+			AbstractInnerState tmpState;
+			if(this.getCallbackState() == null) {
+				tmpState = new NoneState(null);
+			} else {
+				tmpState = this.getCallbackState();
+			}
+			response.setState(tmpState);
 			this.setFlowToWriteClient();
 			return response;
 		}
@@ -265,12 +295,23 @@ public class AuthState implements State {
 		public String toString(){
 			return "User";
 		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	
 	}
 	
 	private class PassState extends AbstractInnerState implements EndState {
 		
 		private boolean isFinalState = false;
+		
+		public PassState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		
 		@Override
 		Response afterReadingFromServer(ClientSession session) {
@@ -283,7 +324,13 @@ public class AuthState implements State {
 				this.isFinalState = true;
 				session.getClient().login();
 			} else {
-				response.setState(new NoneState());
+				AbstractInnerState tmpState;
+				if(this.getCallbackState() == null) {
+					tmpState = new NoneState(null);
+				} else {
+					tmpState = this.getCallbackState();
+				}
+				response.setState(tmpState);
 			}
 
 			
@@ -302,11 +349,22 @@ public class AuthState implements State {
 		public String toString(){
 			return "Pass";
 		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 	private class QuitState extends AbstractInnerState implements EndState {
-
+		
 		boolean isFinalState = false;
+
+		public QuitState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		
 		@Override
 		Response afterWritingToClient(ClientSession session) {
@@ -330,6 +388,12 @@ public class AuthState implements State {
 		
 		public String toString(){
 			return "Quit";
+		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 	
