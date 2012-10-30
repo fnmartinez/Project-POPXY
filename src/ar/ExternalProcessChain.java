@@ -52,18 +52,21 @@ public class ExternalProcessChain {
 
 			File f = File.createTempFile(prefix, sufix);
 			RandomAccessFile output = new RandomAccessFile(f, "rw"); 
+			output.seek(0);
 			Process p = Runtime.getRuntime().exec(this.cmd);
 			BufferedWriter pbw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 			BufferedReader pbr = new BufferedReader(new InputStreamReader(p.getInputStream()));
 						
 			String line;
 			
+			input.seek(0);
 			while((line = input.readLine()) != null) {
 				pbw.write(line+"\r\n");
 			}
+			char[] buf = new char[10];
 			
-			while((line = pbr.readLine()) != null) {
-				output.write((line+"\r\n").getBytes());
+			while((line =pbr.readLine()) != null) {
+				output.writeChars(new String(buf));
 			}
 			
 			return output;
