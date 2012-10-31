@@ -55,7 +55,7 @@ public class DeletionConfiguration {
 	public void removeSender(String string) {
 		this.senders.remove(string);
 	}
-
+	
 	public Set<String> getContents() {
 		return contents;
 	}

@@ -8,6 +8,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ServerSocketChannel;
 
+import org.joda.time.DateTime;
+
 import ar.POPXY;
 import ar.elements.User;
 import ar.protocols.ConfigurationProtocol;
@@ -623,8 +625,42 @@ public class AdminSession implements Session {
 
 	private void deletionFilterDate(ConfigurationCommands command,
 			String[] parameters) {
-		// TODO Auto-generated method stub
+		
+		String[] aux = parameters[0].split("-");
+		int day, month, year;
+		day = Integer.parseInt(aux[0]);
+		month = Integer.parseInt(aux[1]);
+		year = Integer.parseInt(aux[2]);
+		DateTime date = new DateTime(year, month, day, 0, 0, 0, 0);
+		
+		POPXY popxy = POPXY.getInstance();
+		User user;
+		// Si me pasa como parametro un usuario(no es global):
+		if (parameters.length > 1) {
+			for (int i = 1; i < parameters.length; i++) {
+				user = popxy.getUser(parameters[i]);
+				if (command == ConfigurationCommands.SET) {
+					user.getDeletionConfiguration().setDateRestriction(date);
+					this.answer(ConfigurationProtocol.getOkMsg());
+				} else if (command == ConfigurationCommands.DELETE) {
+					user.getDeletionConfiguration().setDateRestriction(null);
+					this.answer(ConfigurationProtocol.getOkMsg());
+				}
+			}
 
+		} else {
+
+			// Es una configuracion global
+			if (command == ConfigurationCommands.SET) {
+				User.getGlobalDeletionConfiguration().setDateRestriction(date);
+				this.answer(ConfigurationProtocol.getOkMsg());
+
+			} else if (command == ConfigurationCommands.DELETE) {
+				User.getGlobalDeletionConfiguration().setDateRestriction(null);
+				this.answer(ConfigurationProtocol.getOkMsg());
+			}
+		}
+		return;
 	}
 
 	// parametros: sender

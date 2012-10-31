@@ -2,6 +2,8 @@ package ar.protocols;
 
 import java.util.Set;
 
+import org.joda.time.DateTime;
+
 import ar.POPXY;
 import ar.elements.IntervalTime;
 import ar.elements.User;
@@ -281,6 +283,24 @@ public class ConfigurationProtocol {
 
 	}
 
+	private static boolean isValidDate(String date) {
+		String[] aux = date.split("-");
+		if(aux.length != 3)
+			return false;
+		int day, month, year;
+		try{
+			day = Integer.parseInt(aux[0]);
+			month = Integer.parseInt(aux[1]);
+			year = Integer.parseInt(aux[2]);
+		} catch (NumberFormatException e){
+			return false;
+		}
+		DateTime d = new DateTime(year, month, day, 0, 0, 0, 0);
+		if(d != null)
+			return true;
+		return false;
+	}
+
 	private static String[] getBlackIpParameters(String[] commandAndParam) {
 
 		if (commandAndParam.length < 2 || commandAndParam.length > 3) {
@@ -343,7 +363,7 @@ public class ConfigurationProtocol {
 		String fromTime = commandAndParam[1];
 		String toTime = commandAndParam[2];
 
-		if (!isValidDate(fromTime) || !isValidDate(toTime)) {
+		if (!isValidTime(fromTime) || !isValidTime(toTime)) {
 			return null;
 		}
 
@@ -402,7 +422,7 @@ public class ConfigurationProtocol {
 		return EXT_MSG;
 	}
 
-	private static boolean isValidDate(String time) {
+	private static boolean isValidTime(String time) {
 		if (time.length() != 4)
 			return false;
 
