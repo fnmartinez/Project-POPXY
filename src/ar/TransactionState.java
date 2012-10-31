@@ -1,9 +1,11 @@
 package ar;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
-import java.util.HashSet;
 
 import ar.elements.MailParser;
 import ar.sessions.ClientSession;
@@ -16,11 +18,16 @@ public class TransactionState implements State {
 	
 	public TransactionState(){
 		super();
-		this.currentState = new NoneState();
+		this.currentState = new NoneState(null);
 	}
 	
 	private class NoneState extends AbstractInnerState {
 		
+
+		public NoneState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 
 		@Override
 		Response afterReadingFromClient(ClientSession session) {
@@ -28,7 +35,7 @@ public class TransactionState implements State {
 			Response response = new Response();
 			String command = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
 			if(command.length() >= 5){
-				command = command.substring(0, 5);
+				command = command.substring(0, 4);
 			}
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(command);
 
@@ -39,35 +46,35 @@ public class TransactionState implements State {
 			response = super.afterReadingFromClient(session);
 			switch(cmd) {
 			case STAT:
-				tmpState = new StatState();
+				tmpState = new StatState(this);
 				break;
 			case LIST:
-				tmpState = new ListState(args);
+				tmpState = new ListState(this, args);
 				break;
 			case RETR:
-				tmpState = new RetrState();
+				tmpState = new RetrState(this);
 				break;
 			case DELE:
-				tmpState = new DeleState(args);
+				tmpState = new DeleState(this, args);
 				break;
 			case NOOP:
-				tmpState = new NoopState();
+				tmpState = new NoopState(this);
 				break;
 			case RSET:
-				tmpState = new RsetState();
+				tmpState = new RsetState(this);
 				break;
 			case TOP:
-				tmpState = new TopState();
+				tmpState = new TopState(this);
 				break;
 			case UIDL:
-				tmpState = new UidlState(args);
+				tmpState = new UidlState(this, args);
 				break;
 			case QUIT:
-				tmpState = new QuitState();
+				tmpState = new QuitState(this);
 				break;
+			case UKWN:
 			default:
-				response = super.afterReadingFromClient(session);
-				break;
+				return response = invalidCommand(session);
 			}
 			tmpState.setFlowToWriteServer();
 			response.setState(tmpState);
@@ -83,10 +90,37 @@ public class TransactionState implements State {
 			return "None";
 		}
 		
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
+			ByteBuffer bufferToUse = session.getFirstServerBuffer();
+			bufferToUse.clear();
+			
+			bufferToUse.put("-ERR Invalid command.\r\n".getBytes());
+			
+			bufferToUse.flip();
+			
+			response.setBuffers(bufferToUse);
+			response.setChannel(session.getClientSocket());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setState(this);
+			this.setFlowToWriteClient();
+			return response;
+		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 	
 	private class QuitState extends AbstractInnerState implements EndState{
 		
+		public QuitState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		private boolean isFinalState = false;
 		
 		@Override
@@ -111,6 +145,12 @@ public class TransactionState implements State {
 		public String toString(){
 			return "Quit";
 		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 		
 
 
@@ -118,10 +158,19 @@ public class TransactionState implements State {
 
 	private class StatState extends AbstractInnerState{
 		
+		public StatState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		@Override
 		Response afterWritingToClient(ClientSession session) {
 			Response response = super.afterWritingToClient(session);
-			AbstractInnerState tmpState = new NoneState();
+			AbstractInnerState tmpState;
+			if(this.getCallbackState() == null) {
+				tmpState = new NoneState(null);
+			} else {
+				tmpState = this.getCallbackState();
+			}
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
@@ -129,13 +178,19 @@ public class TransactionState implements State {
 		public String toString(){
 			return "Stat";
 		}
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 
 	private class ListState extends AbstractMultilinerInnerState{
 		
 		private String args;
 		
-		public ListState(String args) {
+		public ListState(AbstractInnerState callback, String args) {
+			super(callback);
 			this.args = args.trim();
 		}
 		
@@ -146,7 +201,12 @@ public class TransactionState implements State {
 			}
 			Response response = super.afterWritingToClient(session);
 			if(!this.isWaitingLineFeedEnd()){
-				AbstractInnerState tmpState = new NoneState();
+				AbstractInnerState tmpState;
+				if(this.getCallbackState() == null) {
+					tmpState = new NoneState(null);
+				} else {
+					tmpState = this.getCallbackState();
+				}
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
 			}
@@ -155,13 +215,29 @@ public class TransactionState implements State {
 		public String toString(){
 			return "List";
 		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 	private class RetrState extends AbstractMultilinerInnerState{
 		
-		private String tmpMailPart;
+		private File incomingMail;
+		private File outcomingMail;
+		private RandomAccessFile incomingMailRAF;
+		private FileChannel incomingFileChannel;
+		private RandomAccessFile outcomingMailRAF;
+		private FileChannel outcomingFileChannel;
+//		private String tmpMailPart;
 		private boolean statusIssued;
 		
+		public RetrState(AbstractInnerState callback) {
+			super(callback);
+		}
+
 		@Override
 		public Response eval(ClientSession session) {
 			
@@ -198,20 +274,32 @@ public class TransactionState implements State {
 			System.out.println("");
 			if(session.getClient().hasExternalApps()){
 				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
-				session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
+				try {
+					this.incomingMail = epc.process(this.incomingMail, session.getClient().getUser(), ".mail");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+//				session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
 			}
 
 			
 			try {
-				session.getFile1().seek(0);
+				this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
+				this.incomingMailRAF.seek(0);
+				this.outcomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
+				this.outcomingMailRAF = new RandomAccessFile(this.outcomingMail, "rw");
+				this.outcomingMailRAF.seek(0);
 				if(session.getClient().hasTransformations()){
-					MailParser parser = new MailParser(session.getFile1(), session.getFile2(), session.getClient());
+					MailParser parser = new MailParser(this.incomingMailRAF, this.outcomingMailRAF, session.getClient());
 					parser.parseMessage();
-					session.getFile2().seek(0);
 				} else {
-					session.setFile2(session.getFile1());
-					session.getFile2().seek(0);
+					this.outcomingMailRAF = this.incomingMailRAF;
+//					session.setFile2(session.getFile1());
+//					session.getFile2().seek(0);
 				}
+				this.outcomingMailRAF.seek(0);
+				this.outcomingFileChannel = this.outcomingMailRAF.getChannel();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -219,7 +307,7 @@ public class TransactionState implements State {
 			Response response = new Response();
 			response.setOperation(SelectionKey.OP_READ);
 			response.setState(this);
-			response.setChannel(session.getFile2Channel());
+			response.setChannel(this.outcomingFileChannel);
 			response.setMultilineBuffer(session.getSecondServerBuffer());
 			response.setMultilineResponse(true);
 			this.setFlowToReadFile();
@@ -236,7 +324,18 @@ public class TransactionState implements State {
 				response = super.afterReadingFromServer(session);
 				if(this.isWaitingLineFeedEnd()) {
 					String responseToClient = BufferUtils.byteBufferToString(response.getBuffers()).split("\\r\\n")[0];
-					tmpMailPart = BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()+2);
+					try {
+						this.incomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
+						this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
+						this.incomingMailRAF.seek(0);
+						this.incomingMailRAF.write(BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()+2).getBytes());
+						this.incomingFileChannel = this.incomingMailRAF.getChannel();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+//					tmpMailPart = BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()+2);
 					response.getBuffers().clear();
 					response.getBuffers().put((responseToClient+"\r\n").getBytes());
 					response.getBuffers().flip();
@@ -248,14 +347,14 @@ public class TransactionState implements State {
 			
 			response = new Response();
 
-			if(tmpMailPart != null) {
-				session.getSecondServerBuffer().clear();
-				session.getSecondServerBuffer().put(tmpMailPart.getBytes());
-				session.getSecondServerBuffer().flip();
-				tmpMailPart = null;
-			}
+//			if(tmpMailPart != null) {
+//				session.getSecondServerBuffer().clear();
+//				session.getSecondServerBuffer().put(tmpMailPart.getBytes());
+//				session.getSecondServerBuffer().flip();
+//				tmpMailPart = null;
+//			}
 			
-			response.setChannel(session.getFile1Channel());
+			response.setChannel(this.incomingFileChannel);
 			
 			ByteBuffer mlsb = session.getSecondServerBuffer();			
 			
@@ -277,7 +376,12 @@ public class TransactionState implements State {
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
 			if(!this.isWaitingLineFeedEnd()){
-				AbstractInnerState tmpState = new NoneState();
+				AbstractInnerState tmpState;
+				if(this.getCallbackState() == null) {
+					tmpState = new NoneState(null);
+				} else {
+					tmpState = this.getCallbackState();
+				}
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
 				return response;
@@ -289,13 +393,19 @@ public class TransactionState implements State {
 				return response;
 			}
 			
-			response.setChannel(session.getFile2Channel());
+			response.setChannel(this.outcomingFileChannel);
 			this.setFlowToReadFile();
 			
 			return response;
 		}
 		public String toString(){
 			return "Retr";
+		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
@@ -304,14 +414,27 @@ public class TransactionState implements State {
 
 		private String args;
 		
-		public DeleState(String args) {
+		public DeleState(AbstractInnerState callback, String args) {
+			super(callback);
 			this.args = args.trim();
+		}
+		
+		@Override
+		Response afterReadingFromClient(ClientSession session) {
+			Response response = new Response();
+			
+			return response;
 		}
 		
 		@Override
 		Response afterWritingToClient(ClientSession session) {
 			Response response = super.afterWritingToClient(session);
-			AbstractInnerState tmpState = new NoneState();
+			AbstractInnerState tmpState;
+			if(this.getCallbackState() == null) {
+				tmpState = new NoneState(null);
+			} else {
+				tmpState = this.getCallbackState();
+			}
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
@@ -319,22 +442,44 @@ public class TransactionState implements State {
 		public String toString(){
 			return "Dele";
 		}
+
+
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	
 	}
 	
 	private class NoopState extends AbstractInnerState{
 		
+		public NoopState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		@Override
 		Response afterWritingToClient(ClientSession session) {
 			Response response = new Response();
 			response = super.afterWritingToClient(session);
-			AbstractInnerState tmpState = new NoneState();
+			AbstractInnerState tmpState;
+			if(this.getCallbackState() == null) {
+				tmpState = new NoneState(null);
+			} else {
+				tmpState = this.getCallbackState();
+			}
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
 		}
 		public String toString(){
 			return "Noop";
+		}
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
 		}
 
 	}
@@ -343,7 +488,8 @@ public class TransactionState implements State {
 
 		private String args;
 		
-		public UidlState(String args) {
+		public UidlState(AbstractInnerState callback, String args) {
+			super(callback);
 			this.args = args.trim();
 		}
 		
@@ -354,7 +500,12 @@ public class TransactionState implements State {
 			}
 			Response response = super.afterWritingToClient(session);
 			if(!this.isWaitingLineFeedEnd()){
-				AbstractInnerState tmpState = new NoneState();
+				AbstractInnerState tmpState;
+				if(this.getCallbackState() == null) {
+					tmpState = new NoneState(null);
+				} else {
+					tmpState = this.getCallbackState();
+				}
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
 			}
@@ -363,15 +514,30 @@ public class TransactionState implements State {
 		public String toString(){
 			return "Uidl";
 		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 	private class TopState extends AbstractMultilinerInnerState{
 		
+		public TopState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
 		@Override
 		Response afterWritingToClient(ClientSession session){
 			Response response = super.afterWritingToClient(session);
 			if(!this.isWaitingLineFeedEnd()){
-				AbstractInnerState tmpState = new NoneState();
+				AbstractInnerState tmpState;
+				if(this.getCallbackState() == null) {
+					tmpState = new NoneState(null);
+				} else {
+					tmpState = this.getCallbackState();
+				}
 				tmpState.setFlowToReadClient();
 				response.setState(tmpState);
 			}
@@ -380,16 +546,31 @@ public class TransactionState implements State {
 		public String toString(){
 			return "Top";
 		}
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 
 	}
 	
 	private class RsetState extends AbstractInnerState{
 		
+		public RsetState(AbstractInnerState callback) {
+			super(callback);
+			// TODO Auto-generated constructor stub
+		}
+
 		@Override
 		Response afterWritingToClient(ClientSession session) {
 			Response response = new Response();
 			response = super.afterWritingToClient(session);
-			AbstractInnerState tmpState = new NoneState();
+			AbstractInnerState tmpState;
+			if(this.getCallbackState() == null) {
+				tmpState = new NoneState(null);
+			} else {
+				tmpState = this.getCallbackState();
+			}
 			tmpState.setFlowToReadClient();
 			response.setState(tmpState);
 			return response;
@@ -397,6 +578,12 @@ public class TransactionState implements State {
 		
 		public String toString(){
 			return "Rset";
+		}
+
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
 		}
 
 	}

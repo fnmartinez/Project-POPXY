@@ -3,13 +3,9 @@ package ar;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.NotYetBoundException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -19,9 +15,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import ar.elements.User;
-import ar.sessions.AdminSession;
-import ar.sessions.ClientSession;
-import ar.sessions.Session;
 import ar.sessions.utils.IpAndMask;
 
 public class POPXY {
