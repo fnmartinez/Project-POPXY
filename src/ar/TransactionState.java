@@ -282,16 +282,6 @@ public class TransactionState implements State {
 //				session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
 			}
 
-//			HashSet<String[]> hs = new HashSet<String[]>();
-//			String[] sa = {
-//				"/bin/bash",
-//				"-c",
-//				"cat"
-//			};
-//			hs.add(sa);
-//			ExternalProcessChain epc = new ExternalProcessChain(hs);
-//			session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
-		
 			
 			try {
 				this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
