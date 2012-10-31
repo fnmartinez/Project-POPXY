@@ -208,6 +208,9 @@ public class MailParser {
 	private String parseContents(String boundary) throws IOException {
 
 		String line = reader.readLine();
+		if(line == null){
+			return ".";
+		}
 		if (line.contains("--" + boundary)) {
 			writeLine("--" + boundary);
 			line = reader.readLine();
@@ -236,8 +239,9 @@ public class MailParser {
 				writeLine(line);
 				parseContents(boundary);
 				return null;
-			}else
-				return ".";			
+			}else{
+				return ".";
+			}
 		}
 	}
 
