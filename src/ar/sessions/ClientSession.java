@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel;
 
 import ar.AuthState;
 import ar.POPXY;
-import ar.Response;
+import ar.Action;
 import ar.State;
 import ar.elements.User;
 import ar.sessions.utils.BufferUtils;
@@ -42,10 +42,6 @@ public class ClientSession implements Runnable {
 	private ByteBuffer bufferToRead;
 	private ByteChannel channelToWrite;
 	private ByteChannel channelToRead;
-//	private RandomAccessFile file1;
-//	private File filename1;
-//	private RandomAccessFile file2;
-//	private File filename2;
 	private boolean firstContact;
 	private boolean useSecondServerBuffer;
 	private int suscriptionMode;
@@ -80,41 +76,13 @@ public class ClientSession implements Runnable {
 	}
 
 	private void write() {
-		//TODO: try to put this in the automaton
-		if (firstContact) {
-			try {
-				this.mockServerBuffer.clear();
-				mockServerBuffer.put("+OK\r\n".getBytes());
-				this.mockServerBuffer.flip();
-
-				logWrite(BufferUtils.byteBufferToString(mockServerBuffer));
-				clientSocket.write(mockServerBuffer);
-			} catch (IOException e) {
-				// TODO: handle exception
-			}
-
-			this.firstContact = false;
-		} else {
-			if(useSecondServerBuffer){
-				try {
-					logWrite(BufferUtils.byteBufferToString(secondServerBuffer));
-					channelToWrite.write(secondServerBuffer);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else {
-				try {
-					logWrite(BufferUtils.byteBufferToString(bufferToRead));
-					channelToWrite.write(bufferToRead);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+		try {
+			logWrite(BufferUtils.byteBufferToString(bufferToRead));
+			channelToWrite.write(bufferToRead);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-		evaluateState();
 		
 	}
 
@@ -128,17 +96,6 @@ public class ClientSession implements Runnable {
 	
 	private void read() {
 		if(this.channelToRead != null){
-			if(useSecondServerBuffer) {
-				secondServerBuffer.clear();
-				try {
-					channelToRead.read(secondServerBuffer);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				secondServerBuffer.flip();
-				logRead(BufferUtils.byteBufferToString(secondServerBuffer));
-			} else {
 				bufferToWrite.clear();
 				try {
 					channelToRead.read(bufferToWrite);
@@ -148,14 +105,12 @@ public class ClientSession implements Runnable {
 				}
 				bufferToWrite.flip();
 				logRead(BufferUtils.byteBufferToString(bufferToWrite));
-			}
 		}
-		evaluateState();
 		
 	}
 	
 	private void evaluateState() {
-		Response r = state.eval(this);
+		Action r = state.eval(this);
 		this.state = r.getState();
 		if(state == null){
 			handleEndConection();
@@ -164,7 +119,6 @@ public class ClientSession implements Runnable {
 		
 		
 		this.suscriptionMode = r.getOperation();
-		this.useSecondServerBuffer = r.isMultilineResponse();
 		switch(suscriptionMode) {
 		case SelectionKey.OP_READ:
 			this.bufferToWrite = r.getBuffers();
@@ -259,7 +213,6 @@ public class ClientSession implements Runnable {
 
 	public void run() {
 		// TODO Auto-generated method stub
-		this.write();
 	
 		while(this.conectionEstablished){
 			switch(suscriptionMode) {
@@ -272,62 +225,10 @@ public class ClientSession implements Runnable {
 			default:
 				break;
 			}
+			evaluateState();
 		}
 		
 	}
 
-//	public FileChannel getFile1Channel() {
-//		return this.getFile1().getChannel();
-//	}
-//	
-//	public RandomAccessFile getFile1(){
-//		if(this.file1 == null){
-//			try {
-//				this.file1 = new RandomAccessFile( this.filename1 = File.createTempFile(this.client.getUser(), ".mail", null), "rw");
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//		return this.file1;
-//	}
-//	
-//	public RandomAccessFile getFile2(){
-//		if(this.file2 == null){
-//			try {
-//				this.file2 = new RandomAccessFile( this.filename2 = File.createTempFile(this.client.getUser(), ".mail", null), "rw");
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//		return this.file2;
-//	}
-//	
-//	public FileChannel getFile2Channel() {
-//		return this.getFile2().getChannel();
-//	}
-//	
-//	public void removeFile1(){
-//		if(this.file1 != null && this.filename1 != null ) {
-//			this.filename1.delete();
-//			this.file1 = null;
-//		}
-//	}
-//	
-//	public void removeFile2(){
-//		if(this.file2 != null && this.filename2 != null) {
-//			this.filename2.delete();
-//			this.file2 = null;
-//		}
-//	}
-//
-//	public void setFile2(RandomAccessFile file) {
-//		this.file2 = file;
-//	}
-//	
-//	public void setFile1(RandomAccessFile file) {
-//		this.file1 = file;
-//	}
 }
 

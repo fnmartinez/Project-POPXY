@@ -1,7 +1,7 @@
 package ar;
 
 import java.nio.channels.SelectionKey;
-
+import ar.Action;
 import ar.sessions.ClientSession;
 
 public abstract class AbstractInnerState implements State{
@@ -16,7 +16,7 @@ public abstract class AbstractInnerState implements State{
 		this.callbackState = callback;
 	}
 
-	public Response eval(ClientSession session) {
+	public Action eval(ClientSession session) {
 		
 		/* Look up for the last action done */
 		switch(flowDirection){
@@ -57,8 +57,8 @@ public abstract class AbstractInnerState implements State{
 	// Once the server was written, this function is called
 	// in order to set it to read from the server channel for
 	// its response.
-	Response afterWritingToServer(ClientSession session) {
-		Response response = new Response();
+	Action afterWritingToServer(ClientSession session) {
+		Action response = new Action();
 		response.setBuffers(session.getFirstServerBuffer());
 		response.setChannel(session.getOriginServerSocket());
 		response.setOperation(SelectionKey.OP_READ);
@@ -69,8 +69,8 @@ public abstract class AbstractInnerState implements State{
 
 	// Once the client was written, this function is called
 	// to read from the client the next instruction.
-	Response afterWritingToClient(ClientSession session) {
-		Response response = new Response();
+	Action afterWritingToClient(ClientSession session) {
+		Action response = new Action();
 		response.setBuffers(session.getClientBuffer());
 		response.setChannel(session.getClientSocket());
 		response.setOperation(SelectionKey.OP_READ);
@@ -81,8 +81,8 @@ public abstract class AbstractInnerState implements State{
 
 	// Once the server was read, we change to write the 
 	// client.
-	Response afterReadingFromServer(ClientSession session) {
-		Response response = new Response();
+	Action afterReadingFromServer(ClientSession session) {
+		Action response = new Action();
 		response.setBuffers(session.getFirstServerBuffer());
 		response.setChannel(session.getClientSocket());
 		response.setOperation(SelectionKey.OP_WRITE);
@@ -93,8 +93,8 @@ public abstract class AbstractInnerState implements State{
 
 	// Once the client was read, we change to write the
 	// server.
-	Response afterReadingFromClient(ClientSession session) {
-		Response response = new Response();
+	Action afterReadingFromClient(ClientSession session) {
+		Action response = new Action();
 		response.setBuffers(session.getClientBuffer());
 		response.setChannel(session.getOriginServerSocket());
 		response.setOperation(SelectionKey.OP_WRITE);
@@ -103,7 +103,7 @@ public abstract class AbstractInnerState implements State{
 		return response;
 	}
 	
-	public abstract void callbackFunction();
+	public abstract InnerStateAction callbackEval(AbstractInnerState s);
 	
 	public boolean isEndState() {
 		return false;
