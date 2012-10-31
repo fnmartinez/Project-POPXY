@@ -123,6 +123,7 @@ public class ClientSession implements Runnable {
 		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
 			System.out.println("changos!");
 		}
+		
 		POPXY.getLogger().info("["+this.state+"] "+ctw+"->P : "+msg);
 	}
 	

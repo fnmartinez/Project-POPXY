@@ -38,8 +38,13 @@ public class TransactionState implements State {
 				command = command.substring(0, 4);
 			}
 			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(command);
-
-			String args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4);
+			
+			String args = BufferUtils.byteBufferToString(session.getClientBuffer());
+			if(args.length() > 5){
+				args = args.substring(5);
+			} else {
+				args = "";
+			}
 	
 			AbstractInnerState tmpState = null;
 
@@ -233,6 +238,7 @@ public class TransactionState implements State {
 		private FileChannel outcomingFileChannel;
 //		private String tmpMailPart;
 		private boolean statusIssued;
+		private Boolean directToClient = null;
 		
 		public RetrState(AbstractInnerState callback) {
 			super(callback);
@@ -271,7 +277,6 @@ public class TransactionState implements State {
 				Response response = super.afterWritingToClient(session);
 				return response;
 			}
-			System.out.println("");
 			if(session.getClient().hasExternalApps()){
 				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
 				try {
@@ -319,7 +324,13 @@ public class TransactionState implements State {
 		Response afterReadingFromServer(ClientSession session){
 			
 			Response response = null;
-
+			
+			if(directToClient == null){
+				directToClient = !session.getClient().hasTransformations();
+			}
+			if(directToClient){
+				return super.afterReadingFromServer(session);
+			}
 			if(!this.isWaitingLineFeedEnd()){
 				response = super.afterReadingFromServer(session);
 				if(this.isWaitingLineFeedEnd()) {
@@ -386,10 +397,14 @@ public class TransactionState implements State {
 				response.setState(tmpState);
 				return response;
 			}
+
+			if(directToClient){
+				return response;
+			}
 			
 			if(!this.statusIssued) {
 				this.statusIssued = true;
-				response.setChannel(null);
+//				response.setChannel(null);
 				return response;
 			}
 			
