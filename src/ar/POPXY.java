@@ -182,6 +182,10 @@ public class POPXY {
 		
 		return false;
 	}
+	
+	public Set<IpAndMask> getBlackIps(){
+		return this.blackIps;
+	}
 
 	public void addIpToBlackList(String ip, String mask) {
 		IpAndMask newOne = new IpAndMask(ip, mask);
