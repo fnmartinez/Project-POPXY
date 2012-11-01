@@ -36,19 +36,26 @@ public class UserConfiguration {
 
 	public void resetGlobalConfiguration() {
 		Properties properties = new Properties();
+
+		String originServer = "pop3.alu.itba.edu.ar";
+		int originPort = 110;
+		int maxLogin = -1;
+		boolean rotate = false;
+		boolean l33t = false;
+		boolean anonymous = false;
+	
 		try {
 			properties.load(new FileInputStream("resources/user.properties"));
+			originServer = properties.getProperty("OriginServer");
+			originPort = Integer.parseInt(properties.getProperty("OriginPort"));
+			maxLogin = Integer.parseInt(properties.getProperty("MaxLogin"));
+			rotate = Boolean.parseBoolean(properties.getProperty("Rotate"));
+			l33t = Boolean.parseBoolean(properties.getProperty("L33t"));
+			anonymous = Boolean.parseBoolean(properties.getProperty("Anonymous"));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("No se pudo leer el archivo de conf de usuarios");
 		}
-		String originServer = properties.getProperty("OriginServer");
-		int originPort = Integer.parseInt(properties.getProperty("OriginPort"));
-		int maxLogin = Integer.parseInt(properties.getProperty("MaxLogin"));
-		boolean rotate = Boolean.parseBoolean(properties.getProperty("Rotate"));
-		boolean l33t = Boolean.parseBoolean(properties.getProperty("L33t"));
-		boolean anonymous = Boolean.parseBoolean(properties.getProperty("Anonymous"));
-		
+
 		User.setGlobalServerAddress(originServer);
 		User.setGlobalServerPort(originPort);
 		User.setGlobalLoginMax(maxLogin);

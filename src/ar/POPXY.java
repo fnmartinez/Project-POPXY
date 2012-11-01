@@ -114,13 +114,15 @@ public class POPXY {
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileInputStream("resources/popxy.properties"));
+			welcomeSocketPort = Integer.parseInt(properties.getProperty("WelcomeSocketPort"));
+			adminPort = Integer.parseInt(properties.getProperty("AdminPort"));
+			statsPort = Integer.parseInt(properties.getProperty("StatsPort"));	
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("No se pudo leer archivo de configuracion del proxy\n");
+			welcomeSocketPort = 1110;
+			adminPort = 12345;
+			statsPort = 10101;	
 		}
-		welcomeSocketPort = Integer.parseInt(properties.getProperty("WelcomeSocketPort"));
-		adminPort = Integer.parseInt(properties.getProperty("AdminPort"));
-		statsPort = Integer.parseInt(properties.getProperty("StatsPort"));	
 		
 		changeAdminPort(adminPort);
 		changeWelcomePort(welcomeSocketPort);
