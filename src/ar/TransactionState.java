@@ -57,6 +57,7 @@ public class TransactionState implements State {
 				tmpState = new ListState(this, args);
 				break;
 			case RETR:
+				session.getClient().readMail();
 				tmpState = new RetrState(this);
 				break;
 			case DELE:

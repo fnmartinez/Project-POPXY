@@ -42,6 +42,7 @@ public class POPXY {
 	
 	private static Thread clientsThread;
 	private static Thread adminsThread;
+	private static Thread statsThread;
 
 	public static void main(String[] args) 
 		throws Exception{
@@ -60,6 +61,7 @@ public class POPXY {
 		}
 		ServerSocketChannel welcomeSocket = ServerSocketChannel.open();
 		ServerSocketChannel adminSocket = ServerSocketChannel.open();
+		ServerSocketChannel statsSocket = ServerSocketChannel.open();
 		try{
 			
 			welcomeSocket.socket().bind(new InetSocketAddress(welcomeSocketPort));
@@ -70,10 +72,16 @@ public class POPXY {
 			adminSocket.socket().bind(new InetSocketAddress(adminPort));
 			adminSocket.configureBlocking(false);
 			
+
+			statsSocket.socket().bind(new InetSocketAddress(statsPort));
+			statsSocket.configureBlocking(false);
+			
 			adminsThread = new AdminWelcomeSocket(adminSocket);
+			statsThread = new StatsWelcomeSocket(statsSocket);
 			
 			threadPool.execute(clientsThread);
 			threadPool.execute(adminsThread);
+			threadPool.execute(statsThread);
 		}
 		catch(NotYetBoundException nybe){
 			//TODO:
@@ -105,6 +113,10 @@ public class POPXY {
 			users.put(userName, user);
 		}
 		return user;
+	}
+	
+	public boolean existingUser(String userName) {
+		return users.containsKey(userName);
 	}
 
 	public boolean userIsBlocked(String username) {
@@ -199,6 +211,14 @@ public class POPXY {
 	
 	public static Logger getLogger() {
 		return logger;
+	}
+
+	public void resetUsers() {
+		this.users.clear();		
+	}
+
+	public Set<String> getUsernames() {
+		return this.users.keySet();
 	}
 	
 }

@@ -53,10 +53,10 @@ public class AdminSession implements Session {
 		this.key = adminChannel.register(this.selector, SelectionKey.OP_WRITE,
 				this);
 
-		this.state = ESTABLISHED_CONNECTION;
 	}
 
 	public void handleConnection() {
+		this.state = ESTABLISHED_CONNECTION;
 
 	}
 
@@ -120,12 +120,6 @@ public class AdminSession implements Session {
 				return;
 			}
 
-			if (command == ConfigurationCommands.STATUS) {
-				this.answer(ConfigurationProtocol.getStatusMsg());
-				this.key.interestOps(SelectionKey.OP_WRITE);
-				return;
-			}
-
 			if (command == ConfigurationCommands.RESET) {
 				User.resetGlobalConfiguration();
 				this.answer(ConfigurationProtocol.getOkMsg());
@@ -135,6 +129,14 @@ public class AdminSession implements Session {
 
 			String subCommandAndParameters = BufferUtils
 					.byteBufferToString(parametersBuf);
+
+			if (command == ConfigurationCommands.STATUS) {
+				this.answer(ConfigurationProtocol.getStatusMsg(subCommandAndParameters));
+				this.key.interestOps(SelectionKey.OP_WRITE);
+				return;
+			}
+
+
 
 			ConfigurationCommands subCommand = ConfigurationProtocol
 					.getSubCommand(subCommandAndParameters);
@@ -205,13 +207,12 @@ public class AdminSession implements Session {
 
 	}
 
-	private void handleEndConection() {
+	public void handleEndConection() {
 		// TODO
-		System.out.println("Se cerro la conexion del administrador!!!");
+		System.out.println("Se cerro la conexion del administrador.");
 		try {
 			adminChannel.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

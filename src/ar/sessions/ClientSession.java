@@ -129,10 +129,11 @@ public class ClientSession implements Runnable {
 	
 	private void read() {
 		if(this.channelToRead != null){
+			int bytesReaded = 0;
 			if(useSecondServerBuffer) {
 				secondServerBuffer.clear();
 				try {
-					channelToRead.read(secondServerBuffer);
+					bytesReaded = channelToRead.read(secondServerBuffer);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -142,13 +143,17 @@ public class ClientSession implements Runnable {
 			} else {
 				bufferToWrite.clear();
 				try {
-					channelToRead.read(bufferToWrite);
+					bytesReaded = channelToRead.read(bufferToWrite);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				bufferToWrite.flip();
 				logRead(BufferUtils.byteBufferToString(bufferToWrite));
+			}
+
+			if(channelToRead == this.originServerSocket){
+				this.client.addTransferedBytes(bytesReaded);
 			}
 		}
 		evaluateState();
