@@ -162,6 +162,10 @@ public class User {
 		globalConfig.resetGlobalConfiguration();
 	}
 
+	public void resetConfiguration() {
+		userConfig.resetUserConfiguration();
+	}
+	
 	public boolean isInInterval() {
 		if (userConfig.hasTimeConfiguration()) {
 			return userConfig.isInIntervalSet();

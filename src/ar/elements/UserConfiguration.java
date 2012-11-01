@@ -1,10 +1,10 @@
 package ar.elements;
 
 
+import java.io.FileInputStream;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
-
-import ar.POPXY;
 
 public class UserConfiguration {
 
@@ -35,16 +35,28 @@ public class UserConfiguration {
 	}
 
 	public void resetGlobalConfiguration() {
-		User.setGlobalServerAddress(POPXY.getInstance()
-				.getDefaultOriginServer());
-		User.setGlobalServerPort(POPXY.getInstance()
-				.getDefaultOriginServerPort());
-		User.getGlobalConfiguration().getDeletionConfiguration()
-				.resetGlobalConfiguration();
-		User.setGlobalLoginMax(-1);
-		User.setGlobalRotate(false);
-		User.setGlobalLeet(false);
-		User.setGlobalAnonymous(false);
+		Properties properties = new Properties();
+		try {
+			properties.load(new FileInputStream("resources/user.properties"));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String originServer = properties.getProperty("OriginServer");
+		int originPort = Integer.parseInt(properties.getProperty("OriginPort"));
+		int maxLogin = Integer.parseInt(properties.getProperty("MaxLogin"));
+		boolean rotate = Boolean.parseBoolean(properties.getProperty("Rotate"));
+		boolean l33t = Boolean.parseBoolean(properties.getProperty("L33t"));
+		boolean anonymous = Boolean.parseBoolean(properties.getProperty("Anonymous"));
+		
+		User.setGlobalServerAddress(originServer);
+		User.setGlobalServerPort(originPort);
+		User.setGlobalLoginMax(maxLogin);
+		User.setGlobalRotate(rotate);
+		User.setGlobalLeet(l33t);
+		User.setGlobalAnonymous(anonymous);
+
+		User.getGlobalConfiguration().getDeletionConfiguration().resetGlobalConfiguration();
 		User.getGlobalConfiguration().getTimeConfiguration().resetGlobalTimeConfiguration();
 	}
 
