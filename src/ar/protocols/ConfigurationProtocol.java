@@ -33,8 +33,8 @@ public class ConfigurationProtocol {
 	private static final String[] subCommands = { "TIMELOGIN", "CANTLOGIN",
 			"BLACKIP", "RMFILTERDATE", "RMFILTERSENDER", "RMFILTERHEADER",
 			"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",
-			"ORIGINSERVER", "ORIGINSERVERPORT", "CONFIGLISTENINGPORT",
-			"WELLCOMELISTENINGPORT", "STALISTENINGPORT", "APP" };
+			"ORIGINSERVER", "ORIGINSERVERPORT", "CONFIGPORT",
+			"WELCOMEPORT", "STATSPORT", "APP" };
 
 	public static ConfigurationCommands getCommand(String command) {
 
@@ -470,9 +470,9 @@ public class ConfigurationProtocol {
 		if(params.length() == 0){
 		
 			ret = ret + "- ORIGINSERVER\t\t" + User.getGlobalServerAddress() + ":"+ User.getGlobalServerPort() + "\n";
-			ret = ret + "- CONFIGLISTENINGPORT\t" + popxy.getAdminPort() + "\n";
-			ret = ret + "- WELLCOMELISTENINGPORT\t" + popxy.getWelcomeSocketPort()+ "\n";
-			ret = ret + "- STATSLISTENINGPORT\t" + popxy.getStatsPort() + "\n";
+			ret = ret + "- CONFIGPORT\t" + popxy.getAdminPort() + "\n";
+			ret = ret + "- WELCOMEPORT\t" + popxy.getWelcomeSocketPort()+ "\n";
+			ret = ret + "- STATSPORT\t" + popxy.getStatsPort() + "\n";
 			
 			for(IpAndMask ip: popxy.getBlackIps()){
 				ret = ret + "- BLACKIP\t" + ip.getIp() +"\t"+ ip.getMask()+"\n";
@@ -481,8 +481,11 @@ public class ConfigurationProtocol {
 			UserConfiguration conf = User.getGlobalConfiguration();
 			ret = ret + getStatusMsg(conf);
 			
+			if(popxy.getUsernames().size() != 0){
+				ret = ret + "- Users:\r\n";
+			}
 			for(String username: popxy.getUsernames()){
-				ret = ret + "- "+ username+"\t";
+				ret = ret + username+"\t";
 			}
 			if(popxy.getUsernames().size() > 0){
 				ret = ret+ "\n";
