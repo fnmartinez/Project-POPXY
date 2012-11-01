@@ -47,16 +47,16 @@ public class StatsSession implements Session {
 			buffer.clear();
 
 			if (this.state == CLOSED_CONNECTION) {
-				handleEndConection();
+				handleEndConnection();
 				return;
 			}
 
 			channel.register(this.selector, SelectionKey.OP_READ, this);
 
 		} catch (ClosedChannelException e) {
-			this.handleEndConection();
+			this.handleEndConnection();
 		} catch (IOException e) {
-			this.handleEndConection();
+			this.handleEndConnection();
 			e.printStackTrace();
 		}
 
@@ -73,7 +73,7 @@ public class StatsSession implements Session {
 			e.printStackTrace();
 		}
 		if (bytesRead == -1) { // El administrador cerro la conexion!
-			handleEndConection();
+			handleEndConnection();
 			return;
 		}
 		buffer.flip();
@@ -164,7 +164,7 @@ public class StatsSession implements Session {
 		this.answer(ConfigurationProtocol.getOkMsg());
 	}
 
-	public void handleEndConection() {
+	public void handleEndConnection() {
 		// TODO
 		System.out.println("Se cerro la conexion de estadisticas.");
 		try {

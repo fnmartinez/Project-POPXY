@@ -33,10 +33,14 @@ public class AuthState implements State {
 		Response afterReadingFromClient(ClientSession session) {
 			
 			Response response = new Response();
-			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 5).trim());
-
-			String[] args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4).trim().split("\\s");
+			String aux = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
+			String command = aux;
+			String[] args = {""};
+			if(aux.length() > 4){
+				command = command.substring(0, 5);
+				args =  BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4).trim().split("\\s");
+			}
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(command);
 	
 			ByteBuffer bufferToUse = null;
 			

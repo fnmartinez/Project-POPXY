@@ -23,7 +23,14 @@ public class ClientWelcomeSocket extends Thread implements WelcomeSocket {
 			SocketChannel s;
 			try {
 				s = this.serverSocketChannel.accept();
-				threadPool.execute(new ClientSession(s));
+				String ip = s.socket().getInetAddress().getHostAddress();
+				POPXY popxy = POPXY.getInstance();
+				if(popxy.isOnTheBlackList(ip)){
+					System.out.println("IP bloqueada!");
+					s.close();
+				} else {
+					threadPool.execute(new ClientSession(s));
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

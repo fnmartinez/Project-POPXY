@@ -48,7 +48,7 @@ public class StatsWelcomeSocket extends Thread implements WelcomeSocket {
 			while (keys.hasNext()) {
 				SelectionKey key = keys.next();
 
-				if (key.isAcceptable()) {
+				if (key.isValid() && key.isAcceptable()) {
 						try {
 							StatsSession s = new StatsSession(key);
 							s.handleConnection();
@@ -57,17 +57,17 @@ public class StatsWelcomeSocket extends Thread implements WelcomeSocket {
 							e.printStackTrace();
 						}
 				}
-				if (key.isConnectable()) {
+				if (key.isValid() && key.isConnectable()) {
 					Session s = (Session) key.attachment();
 					s.handleConnection();
 				}
 
-				if (key.isReadable()) {
+				if (key.isValid() && key.isReadable()) {
 					Session s = (Session) key.attachment();
 					s.handleRead();
 				}
 
-				if (key.isWritable()) {
+				if (key.isValid() && key.isWritable()) {
 					Session s = (Session) key.attachment();
 					s.handleWrite();
 				}

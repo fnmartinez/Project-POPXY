@@ -9,6 +9,6 @@ public interface Session {
 	
 	public void handleRead();
 
-	public void handleEndConection();
+	public void handleEndConnection();
 
 }

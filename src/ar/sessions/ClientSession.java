@@ -73,9 +73,6 @@ public class ClientSession implements Runnable {
 	
 	private void logWrite(String msg) {
 		String ctw = channelToWrite == originServerSocket ? "S":(channelToWrite == clientSocket ? "C" : "F"); 
-		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
-			System.out.println("changos!");
-		}
 		POPXY.getLogger().info("["+this.state+"] P->"+ctw+" : "+msg);
 	}
 
@@ -90,7 +87,7 @@ public class ClientSession implements Runnable {
 				logWrite(BufferUtils.byteBufferToString(mockServerBuffer));
 				clientSocket.write(mockServerBuffer);
 			} catch (IOException e) {
-				// TODO: handle exception
+				this.handleEndConnection();
 			}
 
 			this.firstContact = false;
@@ -100,16 +97,16 @@ public class ClientSession implements Runnable {
 					logWrite(BufferUtils.byteBufferToString(secondServerBuffer));
 					channelToWrite.write(secondServerBuffer);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.handleEndConnection();
+					return;
 				}
 			} else {
 				try {
 					logWrite(BufferUtils.byteBufferToString(bufferToRead));
 					channelToWrite.write(bufferToRead);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.handleEndConnection();
+					return;
 				}
 			}
 		}
@@ -120,10 +117,6 @@ public class ClientSession implements Runnable {
 
 	private void logRead(String msg) {
 		String ctw = channelToRead == originServerSocket ? "S":(channelToRead == clientSocket ? "C" : "F");
-		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
-			System.out.println("changos!");
-		}
-		
 		POPXY.getLogger().info("["+this.state+"] "+ctw+"->P : "+msg);
 	}
 	
@@ -135,8 +128,8 @@ public class ClientSession implements Runnable {
 				try {
 					bytesReaded = channelToRead.read(secondServerBuffer);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.handleEndConnection();
+					return;
 				}
 				secondServerBuffer.flip();
 				logRead(BufferUtils.byteBufferToString(secondServerBuffer));
@@ -145,8 +138,8 @@ public class ClientSession implements Runnable {
 				try {
 					bytesReaded = channelToRead.read(bufferToWrite);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.handleEndConnection();
+					return;
 				}
 				bufferToWrite.flip();
 				logRead(BufferUtils.byteBufferToString(bufferToWrite));
@@ -164,7 +157,7 @@ public class ClientSession implements Runnable {
 		Response r = state.eval(this);
 		this.state = r.getState();
 		if(state == null){
-			handleEndConection();
+			handleEndConnection();
 			return;
 		}
 		
@@ -187,22 +180,22 @@ public class ClientSession implements Runnable {
 		
 		return;
 	}
-
-	private void handleEndConection() {
-		System.out.println("Se cerro la conexion del cliente!!!");
+	
+	private void handleEndConnection() {
 		try {
 			if(this.clientSocket != null){
+				System.out.println("Se cerro la conexion con el cliente.");
 				this.clientSocket.close();
 			}
 			if(this.originServerSocket != null){
+				System.out.println("Se cerro la conexion con el servidor.");
 				this.originServerSocket.close();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		this.conectionEstablished = false;
-		
+		this.conectionEstablished = false;		
 	}
 
 	
@@ -279,7 +272,6 @@ public class ClientSession implements Runnable {
 				break;
 			}
 		}
-		
 	}
 
 //	public FileChannel getFile1Channel() {

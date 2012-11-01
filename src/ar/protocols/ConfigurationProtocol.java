@@ -469,7 +469,6 @@ public class ConfigurationProtocol {
 
 		if(params.length() == 0){
 		
-			ret = ret + "*** Listening Configurations ***\n";
 			ret = ret + "- ORIGINSERVER\t\t" + User.getGlobalServerAddress() + ":"+ User.getGlobalServerPort() + "\n";
 			ret = ret + "- CONFIGLISTENINGPORT\t" + popxy.getAdminPort() + "\n";
 			ret = ret + "- WELLCOMELISTENINGPORT\t" + popxy.getWelcomeSocketPort()+ "\n";
@@ -482,7 +481,6 @@ public class ConfigurationProtocol {
 			UserConfiguration conf = User.getGlobalConfiguration();
 			ret = ret + getStatusMsg(conf);
 			
-			ret = ret + "\n*** Usuarios existentes ***\n";
 			for(String username: popxy.getUsernames()){
 				ret = ret + "- "+ username+"\t";
 			}
@@ -506,7 +504,6 @@ public class ConfigurationProtocol {
 
 	private static String getStatusMsg(UserConfiguration conf) {
 		String ret = "";
-		ret = ret + "\n*** Login configuration ***\n";
 		if(conf.getLoginMax() != -1){
 			ret = ret + "- CANTLOGIN\t"+conf.getLoginMax()+"\n";
 		}
@@ -524,7 +521,6 @@ public class ConfigurationProtocol {
 				
 		
 		if(conf.hasExternalApps()){
-			ret = ret + "\n*** APPS ***\n";
 			if(conf.getLeet()) ret = ret + "- l33t\n";
 			if(conf.getRotate()) ret = ret + "- Rotate\n";
 			if(conf.getAnonymous()) ret = ret + "- Anonymous\n";

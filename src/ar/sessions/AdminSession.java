@@ -67,7 +67,7 @@ public class AdminSession implements Session {
 			answerBuf.clear();
 
 			if (this.state == CLOSED_CONNECTION) {
-				handleEndConection();
+				handleEndConnection();
 				return;
 			}
 
@@ -75,7 +75,7 @@ public class AdminSession implements Session {
 					SelectionKey.OP_READ, this);
 
 		} catch (ClosedChannelException e) {
-			this.handleEndConection();
+			this.handleEndConnection();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -98,7 +98,7 @@ public class AdminSession implements Session {
 		}
 
 		if (bytesRead == -1) { // El administrador cerro la conexion!
-			handleEndConection();
+			handleEndConnection();
 		} else if (bytesRead > 0) {
 
 			commandBuf.flip();
@@ -207,7 +207,7 @@ public class AdminSession implements Session {
 
 	}
 
-	public void handleEndConection() {
+	public void handleEndConnection() {
 		// TODO
 		System.out.println("Se cerro la conexion del administrador.");
 		try {
