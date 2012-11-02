@@ -146,7 +146,7 @@ public class AuthState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -299,7 +299,7 @@ public class AuthState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -353,7 +353,7 @@ public class AuthState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -394,28 +394,28 @@ public class AuthState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 	}
 	
-	public Action eval(ClientSession session) {
+	public Action eval(ClientSession session, Action a) {
 		if(this.firstContact){
-			Action a = new Action();
+			Action a1 = new Action();
 			session.getFirstServerBuffer().clear();
 			session.getFirstServerBuffer().put("+OK\r\n".getBytes());
 			session.getFirstServerBuffer().flip();
 
-			a.setBuffers(session.getFirstServerBuffer());
-			a.setChannel(session.getClientSocket());
-			a.setOperation(SelectionKey.OP_WRITE);
-			a.setState(this);
+			a1.setBuffers(session.getFirstServerBuffer());
+			a1.setChannel(session.getClientSocket());
+			a1.setOperation(SelectionKey.OP_WRITE);
+			a1.setState(this);
 			this.firstContact = false;
-			return a;
+			return a1;
 		}
-		Action response = this.currentState.eval(session);
+		Action response = this.currentState.eval(session, a);
 		this.currentState = response.getState();
 		
 		if(this.currentState.isEndState()){

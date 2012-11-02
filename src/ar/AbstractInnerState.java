@@ -16,17 +16,19 @@ public abstract class AbstractInnerState implements State{
 		this.callbackState = callback;
 	}
 
-	public Action eval(ClientSession session) {
+	public Action eval(ClientSession session, Action a) {
+		Action r = null;
 		
 		/* Look up for the last action done */
 		switch(flowDirection){
-		case READ_CLIENT: 	return afterReadingFromClient(session);	
-		case READ_SERVER:	return afterReadingFromServer(session);
-		case WRITE_CLIENT:	return afterWritingToClient(session);
-		case WRITE_SERVER:	return afterWritingToServer(session);
+		case READ_CLIENT: 	r = afterReadingFromClient(session); break;	
+		case READ_SERVER:	r = afterReadingFromServer(session); break;
+		case WRITE_CLIENT:	r = afterWritingToClient(session); break;
+		case WRITE_SERVER:	r = afterWritingToServer(session); break;
 		
 		}
-		return null;
+		r = this.getCallbackState().callbackEval(this, (a == null)? r: a);
+		return r;
 	}
 	
 	public void setFlowToReadClient(){
@@ -103,7 +105,9 @@ public abstract class AbstractInnerState implements State{
 		return response;
 	}
 	
-	public abstract InnerStateAction callbackEval(AbstractInnerState s);
+	public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
+		return new InnerStateAction(a);
+	}
 	
 	public boolean isEndState() {
 		return false;

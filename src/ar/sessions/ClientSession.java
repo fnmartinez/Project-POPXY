@@ -1,17 +1,14 @@
 package ar.sessions;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
+import ar.Action;
 import ar.AuthState;
 import ar.POPXY;
-import ar.Action;
 import ar.State;
 import ar.elements.User;
 import ar.sessions.utils.BufferUtils;
@@ -42,8 +39,8 @@ public class ClientSession implements Runnable {
 	private ByteBuffer bufferToRead;
 	private ByteChannel channelToWrite;
 	private ByteChannel channelToRead;
-	private boolean firstContact;
-	private boolean useSecondServerBuffer;
+//	private boolean firstContact;
+//	private boolean useSecondServerBuffer;
 	private int suscriptionMode;
 	private boolean conectionEstablished;
 	
@@ -54,8 +51,8 @@ public class ClientSession implements Runnable {
 		this.clientSocket = s;
 		this.state = new AuthState();
 		this.channelToWrite = clientSocket;
-		this.firstContact = true;
-		this.useSecondServerBuffer = false;
+//		this.firstContact = true;
+//		this.useSecondServerBuffer = false;
 		this.conectionEstablished = true;
 	}
 
@@ -110,7 +107,7 @@ public class ClientSession implements Runnable {
 	}
 	
 	private void evaluateState() {
-		Action r = state.eval(this);
+		Action r = state.eval(this, null);
 		this.state = r.getState();
 		if(state == null){
 			handleEndConection();

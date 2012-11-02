@@ -1,6 +1,7 @@
 package ar;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -108,7 +109,7 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -147,7 +148,7 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -177,7 +178,7 @@ public class TransactionState implements State {
 			return "Stat";
 		}
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -216,7 +217,7 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -239,15 +240,18 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public Action eval(ClientSession session) {
+		public Action eval(ClientSession session, Action a) {
 			
+			Action r = null;
 			/* Look up for the last action done */
 			switch(this.getFlowDirection()){	
-			case READ_FILE:	return afterReadingFromFile(session);
-			case WRITE_FILE:return afterWritingToFile(session);
-			default: return super.eval(session);
+			case READ_FILE:	r = afterReadingFromFile(session); break;
+			case WRITE_FILE:r = afterWritingToFile(session); break;
 			
 			}
+			r = super.eval(session, a);
+			
+			return r;
 		}
 
 		private Action afterReadingFromFile(ClientSession session) {
@@ -393,7 +397,7 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -403,15 +407,44 @@ public class TransactionState implements State {
 	private class DeleState extends AbstractInnerState{
 
 		private String args;
+		private File testMail;
+		private File testHeader;
 		
 		public DeleState(AbstractInnerState callback, String args) {
 			super(callback);
 			this.args = args.trim();
+			this.testMail = null;
+			this.testHeader = null;
 		}
 		
 		@Override
 		Action afterReadingFromClient(ClientSession session) {
 			Action response = new Action();
+			AbstractInnerState ais;
+			
+			response.setChannel(session.getOriginServerSocket());
+			response.getBuffers().clear();
+			response.setBuffers(session.getClientBuffer());
+			response.setOperation(SelectionKey.OP_WRITE);
+			response.setMultilineResponse(false);
+
+			if(session.getClient().hasDeletionRestriction()){
+				if(!session.getClient().getDeletionConfiguration().hasContentTypeRestriction() &&
+						!session.getClient().getDeletionConfiguration().hasStructureRestriction()) {
+					response.getBuffers().put(("TOP "+this.args+" 0\r\n").getBytes());
+					ais = new TopState(this);
+				} else {
+					response.getBuffers().put(("RETR "+this.args+"\r\n").getBytes());
+					ais = new RetrState(this);
+				}
+			} else {
+				//TODO: do deletion normally
+				ais = new DeleState(this.getCallbackState(), args);
+			}
+			
+			response.getBuffers().flip();
+			ais.setFlowToWriteServer();
+			response.setState(ais);
 			
 			return response;
 		}
@@ -432,11 +465,70 @@ public class TransactionState implements State {
 		public String toString(){
 			return "Dele";
 		}
+		
+		@Override
+		Action afterReadingFromServer(ClientSession session) {
+			
+			File fin;
+			File fout;
+			RandomAccessFile finRAF = null;
+			RandomAccessFile foutRAF = null;
+			if(this.testHeader != null){
+				//TODO: test header
+				fin = this.testHeader;
+			} else if(this.testMail != null){
+				//TODO: test mail
+				fin = this.testMail;
+			} else {
+				return super.afterReadingFromServer(session);
+			}
+			
+			try {
+				finRAF = new RandomAccessFile(fin, "rw");
+				finRAF.seek(0);
+				fout = File.createTempFile(session.getClient().getUser(), ".mail");
+				foutRAF = new RandomAccessFile(fout, "rw");
+				foutRAF.seek(0);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			MailParser parser = new MailParser(finRAF, foutRAF, session.getClient());
+			if(this.testHeader != null) {
+				
+			} else {
+				try {
+					parser.parseMessage();
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			return null;
+		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
-			return null;
+			InnerStateAction r = new InnerStateAction(a);
+			if(s.getClass() == RetrState.class) {
+				RetrState rs = (RetrState)s;
+				if(rs.getFlowDirection() == FlowDirection.WRITE_CLIENT) {
+					r.setOperation(-1);
+					r.setState(this);
+					this.setFlowToWriteClient();
+					this.testMail = rs.incomingMail;
+				}
+			}
+			if(s.getClass() == TopState.class) {
+				//TODO:
+			}
+			return r;
 		}
 	
 	}
@@ -465,7 +557,7 @@ public class TransactionState implements State {
 			return "Noop";
 		}
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -504,7 +596,7 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -536,7 +628,7 @@ public class TransactionState implements State {
 			return "Top";
 		}
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -570,15 +662,15 @@ public class TransactionState implements State {
 		}
 
 		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s) {
+		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 	}
 	
-	public Action eval(ClientSession session) {
-		Action response = this.currentState.eval(session);
+	public Action eval(ClientSession session, Action a) {
+		Action response = this.currentState.eval(session, a);
 		this.currentState = response.getState();
 		
 		if(this.currentState.isEndState()){
