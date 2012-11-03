@@ -63,7 +63,11 @@ public class TransactionState implements State {
 				break;
 			case DELE:
 				tmpState = new DeleState(this, args);
-				break;
+				tmpState.setFlowToReadClient();
+				response.setState(tmpState);
+				response.setChannel(null);
+				response.setOperation(SelectionKey.OP_READ);
+				return response;
 			case NOOP:
 				tmpState = new NoopState(this);
 				break;
@@ -208,166 +212,10 @@ public class TransactionState implements State {
 	
 	private class RetrState extends AbstractMailFetcherInnerClass{
 		
-//		private File incomingMail;
-//		private File outcomingMail;
-//		private RandomAccessFile incomingMailRAF;
-//		private FileChannel incomingFileChannel;
-//		private RandomAccessFile outcomingMailRAF;
-//		private FileChannel outcomingFileChannel;
-//		private boolean statusIssued;
-//		private Boolean directToClient = null;
-//		
 		public RetrState(AbstractInnerState callback) {
 			super(callback);
 		}
 
-//			}
-//		}
-//
-//		private Action afterReadingFromFile(ClientSession session) {
-//			Action response = new Action();
-//			ByteBuffer mlsb = session.getSecondServerBuffer();			
-//			response.setChannel(session.getClientSocket());
-//			response.setOperation(SelectionKey.OP_WRITE);
-//			response.setState(this);
-//			response.setBuffers(session.getSecondServerBuffer());
-//			this.setFlowToWriteClient();
-//			if(BufferUtils.byteBufferToString(mlsb).endsWith("\r\n.\r\n")){
-//				this.setWaitingLineFeedEnd(false);
-//			}
-//			return response;
-//		}
-//
-//		private Action afterWritingToFile(ClientSession session) {
-//
-//			if(this.isWaitingLineFeedEnd()){
-//				Action response = super.afterWritingToClient(session);
-//				return response;
-//			}
-//			if(session.getClient().hasExternalApps()){
-//				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
-//				try {
-//					this.incomingMail = epc.process(this.incomingMail, session.getClient().getUser(), ".mail");
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//
-//			
-//			try {
-//				this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
-//				this.incomingMailRAF.seek(0);
-//				this.outcomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
-//				this.outcomingMailRAF = new RandomAccessFile(this.outcomingMail, "rw");
-//				this.outcomingMailRAF.seek(0);
-//				if(session.getClient().hasTransformations()){
-//					MailParser parser = new MailParser(this.incomingMailRAF, this.outcomingMailRAF, session.getClient());
-//					parser.parseMessage();
-//				} else {
-//					this.outcomingMailRAF = this.incomingMailRAF;
-//				}
-//				this.outcomingMailRAF.seek(0);
-//				this.outcomingFileChannel = this.outcomingMailRAF.getChannel();
-//			} catch (IOException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//			Action response = new Action();
-//			response.setOperation(SelectionKey.OP_READ);
-//			response.setState(this);
-//			response.setChannel(this.outcomingFileChannel);
-//			response.setBuffers(session.getSecondServerBuffer());
-//			this.setFlowToReadFile();
-//			this.setWaitingLineFeedEnd(true);
-//			return response;
-//		}
-//
-//		@Override
-//		Action afterReadingFromServer(ClientSession session){
-//			
-//			Action response = null;
-//			
-//			if(directToClient == null){
-//				directToClient = !session.getClient().hasTransformations();
-//			}
-//			if(directToClient){
-//				return super.afterReadingFromServer(session);
-//			}
-//			if(!this.isWaitingLineFeedEnd()){
-//				response = super.afterReadingFromServer(session);
-//				if(this.isWaitingLineFeedEnd()) {
-//					String responseToClient = BufferUtils.byteBufferToString(response.getBuffers()).split("\\r\\n")[0];
-//					try {
-//						this.incomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
-//						this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
-//						this.incomingMailRAF.seek(0);
-//						this.incomingMailRAF.write(BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()+2).getBytes());
-//						this.incomingFileChannel = this.incomingMailRAF.getChannel();
-//					} catch (IOException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//					
-//					response.getBuffers().clear();
-//					response.getBuffers().put((responseToClient+"\r\n").getBytes());
-//					response.getBuffers().flip();
-//					this.statusIssued = false;
-//				}
-////				this.setFlowToWriteFile();
-//				return response;
-//			} 
-//			
-//			response = new Action();
-//
-//			
-//			response.setChannel(this.incomingFileChannel);
-//			
-//			ByteBuffer mlsb = session.getSecondServerBuffer();			
-//			
-//			response.setOperation(SelectionKey.OP_WRITE);
-//			response.setState(this);
-//			response.setBuffers(session.getSecondServerBuffer());
-//			this.setFlowToWriteFile();
-//			
-//			if(BufferUtils.byteBufferToString(mlsb).contains("\r\n.\r\n")){
-//				this.setWaitingLineFeedEnd(false);
-//			}
-//			
-//			return response;
-//		}
-//		
-//
-//		@Override
-//		Action afterWritingToClient(ClientSession session){
-//			Action response = super.afterWritingToClient(session);
-//			if(!this.isWaitingLineFeedEnd()){
-//				AbstractInnerState tmpState;
-//				if(this.getCallbackState() == null) {
-//					tmpState = new NoneState(null);
-//				} else {
-//					tmpState = this.getCallbackState();
-//				}
-//				tmpState.setFlowToReadClient();
-//				response.setState(tmpState);
-//				return response;
-//			}
-//
-//			if(directToClient){
-//				return response;
-//			}
-//			
-//			if(!this.statusIssued) {
-//				this.statusIssued = true;
-////				response.setChannel(null);
-//				return response;
-//			}
-//			
-//			response.setChannel(this.outcomingFileChannel);
-//			this.setFlowToReadFile();
-//			
-//			return response;
-//		}
 		public String toString(){
 			return "Retr";
 		}
@@ -382,7 +230,9 @@ public class TransactionState implements State {
 		private boolean alreadyChecked;
 		private File inputFile;
 		private File outputFile;
+		private boolean statusNotified;
 		private Mail mailToCheck = null;
+		private boolean retrievalError;
 		
 		public DeleState(AbstractInnerState callback, String args) {
 			super(callback);
@@ -403,21 +253,24 @@ public class TransactionState implements State {
 			if(!this.hasRestrictions) {
 				return response;
 			}
+			this.statusNotified = false;
 			response.getBuffers().clear();
 			AbstractInnerState ais;
-			if(!session.getClient().getDeletionConfiguration().hasContentTypeRestriction() &&
-					!session.getClient().getDeletionConfiguration().hasStructureRestriction()){
-				//TODO: hacer top n 0
-				response.getBuffers().put(("TOP "+args+" 0\r\n").getBytes());
-				ais = new TopState(this);
-				this.checkOnlyHeaders = true;
-			} else {
+//			if(!session.getClient().getDeletionConfiguration().hasContentTypeRestriction() &&
+//					!session.getClient().getDeletionConfiguration().hasStructureRestriction()){
+//				//TODO: hacer top n 0
+//				response.getBuffers().put(("TOP "+args+" 0\r\n").getBytes());
+//				ais = new TopState(this);
+//				((AbstractMailFetcherInnerClass)ais).setDirectToClient(false);
+//				this.checkOnlyHeaders = true;
+//			} else {
 				//TODO: hacer retr n
 				response.getBuffers().put(("RETR "+args+"\r\n").getBytes());
 				ais = new RetrState(this);
+				((AbstractMailFetcherInnerClass)ais).setDirectToClient(false);
 				this.checkOnlyHeaders = false;
-			}
-			
+//			}
+			response.getBuffers().flip();
 			ais.setFlowToWriteServer();
 			response.setState(ais);
 			
@@ -428,7 +281,21 @@ public class TransactionState implements State {
 		Action afterReadingFromServer(ClientSession session) {
 			
 			if(!this.hasRestrictions) {
-				return super.afterReadingFromServer(session);
+				Action r = super.afterReadingFromServer(session);
+				if(BufferUtils.byteBufferToString(r.getBuffers()).startsWith("+OK")) {
+					session.getClient().dropMail();
+				}
+				return r;
+			}
+			
+			if(this.retrievalError) {
+				this.hasRestrictions = false;
+				this.alreadyChecked = true;
+				Action r = this.afterReadingFromClient(session);
+				r.getBuffers().clear();
+				r.getBuffers().put(("DELE "+args+"\r\n").getBytes());
+				r.getBuffers().flip();
+				return r;
 			}
 			
 			if(this.mailToCheck == null) {
@@ -462,7 +329,12 @@ public class TransactionState implements State {
 			if(session.getClient().passDeletionFilters(mailToCheck)) {
 				this.hasRestrictions = false;
 				this.alreadyChecked = true;
-				return this.afterReadingFromClient(session);
+				Action r = this.afterReadingFromClient(session);
+				r.getBuffers().clear();
+				r.getBuffers().put(("DELE "+args+"\r\n").getBytes());
+				r.getBuffers().flip();
+				session.getClient().dropMail();
+				return r;
 			}
 			
 			Action r = new Action();
@@ -478,6 +350,7 @@ public class TransactionState implements State {
 			
 			return r;
 		}
+		
 		@Override
 		Action afterWritingToClient(ClientSession session) {
 			Action response = super.afterWritingToClient(session);
@@ -502,6 +375,19 @@ public class TransactionState implements State {
 				return super.callbackEval(s, a);
 			}
 			
+			if(!this.statusNotified){
+				this.statusNotified = true;
+				String resp = BufferUtils.byteBufferToString(a.getBuffers());
+				if(resp.startsWith("+OK")){
+					InnerStateAction r = super.callbackEval(s, a);
+					r.setChannel(null);
+					return r;
+				} else if(resp.startsWith("-ERR")){
+					this.retrievalError = true;
+				}
+			} 
+			
+//			return super.callbackEval(s, a);
 			InnerStateAction r = new InnerStateAction();
 			if(s.getClass() == RetrState.class || s.getClass() == TopState.class) {
 				AbstractMailFetcherInnerClass amfis = (AbstractMailFetcherInnerClass)s;
@@ -511,6 +397,8 @@ public class TransactionState implements State {
 			}
 			
 			r.setState(this);
+			r.setOperation(-1);
+//			this.setFlowToWriteFile();
 			this.setFlowToReadServer();
 			return r;
 		}
@@ -592,20 +480,32 @@ public class TransactionState implements State {
 			}
 			
 			try {
-				this.setIncomingMailRAF(new RandomAccessFile(this.getIncomingMail(), "rw"));
-				this.getIncomingMailRAF().seek(0);
-				this.setOutcomingMail(File.createTempFile(session.getClient().getUser(), ".mail"));
-				this.setOutcomingMailRAF(new RandomAccessFile(this.getOutcomingMail(), "rw"));
-				this.getOutcomingMailRAF().seek(0);
+				this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
+			} catch (FileNotFoundException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+			
+			if(session.getClient().hasExternalApps()){
+				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
+				this.incomingMailRAF = epc.process(this.incomingMailRAF, session.getClient().getUser(), ".mail");
+			}
+
+			try {
+				this.incomingMailRAF.seek(0);
+				this.outcomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
+				this.outcomingMailRAF = new RandomAccessFile(this.outcomingMail, "rw");
+				this.outcomingMailRAF.seek(0);
 				if(session.getClient().hasTransformations()){
-					MailParser parser = new MailParser(this.getIncomingMailRAF(), this.getOutcomingMailRAF(), session.getClient());
+					MailParser parser = new MailParser(this.incomingMailRAF, this.outcomingMailRAF, session.getClient());
 					parser.parseOnlyHeadersMessage();
+				//	parser.parseMessage();
 					this.setMail(parser.getMail());
 				} else {
-					this.setOutcomingMailRAF(this.getIncomingMailRAF());
+					this.outcomingMailRAF = this.incomingMailRAF;
 				}
-				this.getOutcomingMailRAF().seek(0);
-				this.setOutcomingFileChannel(this.getOutcomingMailRAF().getChannel());
+				this.outcomingMailRAF.seek(0);
+				this.outcomingFileChannel = this.outcomingMailRAF.getChannel();
 				
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -614,12 +514,13 @@ public class TransactionState implements State {
 			Action response = new Action();
 			response.setOperation(SelectionKey.OP_READ);
 			response.setState(this);
-			response.setChannel(this.getOutcomingFileChannel());
+			response.setChannel(this.outcomingFileChannel);
 			response.setBuffers(session.getSecondServerBuffer());
 			this.setFlowToReadFile();
 			this.setWaitingLineFeedEnd(true);
 			return response;
 		}
+		
 		public String toString(){
 			return "Top";
 		}

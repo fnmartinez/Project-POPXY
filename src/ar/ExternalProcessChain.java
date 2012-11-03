@@ -31,7 +31,8 @@ public class ExternalProcessChain {
 		for(ExternalProcess ep: processes){
 			RandomAccessFile output;
 			try {
-				output = ep.process(input, prefix, sufix);
+				File f = File.createTempFile(prefix, sufix);
+				output = ep.process(f, input, prefix, sufix);
 				input = output;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -48,9 +49,8 @@ public class ExternalProcessChain {
 			this.cmd = p.split("\\s");
 		}
 
-		public RandomAccessFile process(RandomAccessFile input, String prefix, String sufix) throws IOException {
+		public RandomAccessFile process(File f, RandomAccessFile input, String prefix, String sufix) throws IOException {
 
-			File f = File.createTempFile(prefix, sufix);
 			RandomAccessFile output = new RandomAccessFile(f, "rw"); 
 			output.seek(0);
 			Process p = Runtime.getRuntime().exec(this.cmd);

@@ -32,7 +32,13 @@ public class MailParser {
 
 	public RandomAccessFile parseMessage() throws IOException {
 		String line = reader.readLine();
-		parseHeaders(line);
+		parseHeaders(line,"","");
+		return writer;
+	}
+
+	public RandomAccessFile parseOnlyHeadersMessage() throws IOException {
+		String line = reader.readLine();
+		parseOnlyHeaders(line,"","");
 		return writer;
 	}
 
@@ -58,7 +64,8 @@ public class MailParser {
 		}
 	}
 
-	private void parseOnlyHeaders(String line) throws IOException {
+	private void parseOnlyHeaders(String line, String contentType,
+			String boundary) throws IOException {
 		String headerName = null;
 		String headerValue = "";
 		do {
@@ -77,34 +84,45 @@ public class MailParser {
 			} else {
 				headerValue += line.trim();
 			}
+			if (headerName.equals("From") && user.getAnonymous()) {
+				writeLine("From: Anonymous <unknown@unknown.com>");
+			} else if (headerName.equals("Return-path") && user.getAnonymous()) {
+				writeLine("Return-path: <unknown@unknown.com>");
+			} else if (headerName.equals("Content-Type")) {
+				if (line.toUpperCase().contains("MULTIPART")) {
+					contentType = line;
+					writeLine(line);
+					boundary = getBoundary(line);
+				}
+			} else {
+				writeLine(line);
+			}
 		} while ((line = reader.readLine()).length() != 0
 				&& (line.startsWith(" ") || line.startsWith("\t") || line
-						.startsWith(".")) && (!line.contains("Content-Type")));
+						.startsWith(".")));
 
 		if (headerName.equals("Date")) {
 			String[] date = headerValue.split("\\s");
 			String[] compHour = date[4].split(":");
 			int year = Integer.valueOf(date[3]);
 			int month = getMonth(date[2]);
-			int day = Integer.valueOf(date[1])-1;
+			int day = Integer.valueOf(date[1]);
 			int hour = Integer.valueOf(compHour[0]);
 			int min = Integer.valueOf(compHour[1]);
 			int sec = Integer.valueOf(compHour[2]);
-			mail.setDate(new DateTime(year, month, day, hour, min, sec, 0));	
+			mail.setDate(new DateTime(year, month, day, hour, min, sec, 0));
 		}
 		if (headerName.equals("From")) {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
 		}
 		mail.addHeader(headerName, headerValue);
 
-		if (line.contains("Content-Type")) {
-			while ((line = reader.readLine()).length() != 0)
-				;
-		}
 		// Body's start
 		if (line.length() == 0) {
+			writeLine(line);
 			line = reader.readLine();
 			if (line.equals(".")) {
+				writeLine(line);
 				System.out.println("Parser only headers: OK");
 				return;
 			} else {
@@ -113,12 +131,12 @@ public class MailParser {
 				return;
 			}
 		} else {
-			parseOnlyHeaders(line);
+			parseOnlyHeaders(line, contentType, boundary);
 		}
 	}
 
-	
-	private void parseHeaders(String line) throws IOException {
+	private void parseHeaders(String line, String contentType, String boundary)
+			throws IOException {
 		String headerName = null;
 		String headerValue = "";
 		do {
@@ -139,23 +157,29 @@ public class MailParser {
 				writeLine("From: Anonymous <unknown@unknown.com>");
 			} else if (headerName.equals("Return-path") && user.getAnonymous()) {
 				writeLine("Return-path: <unknown@unknown.com>");
+			} else if (headerName.equals("Content-Type")) {
+				if (line.toUpperCase().contains("MULTIPART")) {
+					contentType = line;
+					writeLine(line);
+					boundary = getBoundary(line);
+				}
 			} else {
 				writeLine(line);
 			}
 		} while ((line = reader.readLine()).length() != 0
 				&& (line.startsWith(" ") || line.startsWith("\t") || line
-						.startsWith(".")) && (!line.contains("Content-Type")));
-		//Date: Sun, 28 Oct 2012 19:56:58 -0300
+						.startsWith(".")));
+		// Date: Sun, 28 Oct 2012 19:56:58 -0300
 		if (headerName.equals("Date")) {
 			String[] date = headerValue.split("\\s");
 			String[] compHour = date[4].split(":");
 			int year = Integer.valueOf(date[3]);
 			int month = getMonth(date[2]);
-			int day = Integer.valueOf(date[1])-1;
+			int day = Integer.valueOf(date[1]);
 			int hour = Integer.valueOf(compHour[0]);
 			int min = Integer.valueOf(compHour[1]);
 			int sec = Integer.valueOf(compHour[2]);
-			mail.setDate(new DateTime(year, month, day, hour, min, sec, 0));			
+			mail.setDate(new DateTime(year, month, day, hour, min, sec, 0));
 		}
 		if (headerName.equals("From")) {
 			mail.setFrom(headerValue.split("<")[1].split(">")[0]);
@@ -165,38 +189,36 @@ public class MailParser {
 		// Body's start
 		if (line.length() == 0) {
 			writeLine("");
-			parseBody("");
-			return;
-		} else if (line.contains("Content-Type")) {
-			parseBody(line);
+			parseBody("", contentType, boundary);
 			return;
 		} else
-			parseHeaders(line);
+			parseHeaders(line, contentType, boundary);
 	}
 
-	private void parseBody(String line) throws IOException {
-		String boundary = "";
-		boolean pointSpace = false;// Para saber si salgo por un espacio y no
+	private void parseBody(String line, String contentType, String boundary)
+			throws IOException {
+
+		boolean pointSpace = true;// Para saber si salgo por un espacio y no
 									// existe el header ContentType: text/plain
-		if (line.equals("")) {
+		boolean firstTime = true;
+		if (contentType.equals("")) {
 			line = "Content-Type: text/plain";
-			pointSpace = true;
 		} else {
-			writeLine(line);
-		}
-		if (line.toUpperCase().contains("MULTIPART")) {
-			boundary = getBoundary(line);
+			line = contentType;
 		}
 		if (boundary.isEmpty()) {
 			// Single content
 			putContent(line, boundary, pointSpace);
 		} else {
 			// Multipart content
-			line = reader.readLine();
 			do {
-				writeLine(line);
+				if (firstTime) {
+					firstTime = false;
+				} else {
+					writeLine(line);
+				}
 				String ret = parseContents(boundary);
-				if(ret != null && ret.equals(".")){
+				if (ret != null && ret.equals(".")) {
 					break;
 				}
 			} while (!(line = reader.readLine()).equals("."));
@@ -208,7 +230,7 @@ public class MailParser {
 	private String parseContents(String boundary) throws IOException {
 
 		String line = reader.readLine();
-		if(line == null){
+		if (line == null) {
 			return ".";
 		}
 		if (line.contains("--" + boundary)) {
@@ -235,11 +257,11 @@ public class MailParser {
 				return null;
 			}
 		} else {
-			if(!line.equals(".")){
+			if (!line.equals(".")) {
 				writeLine(line);
 				parseContents(boundary);
 				return null;
-			}else{
+			} else {
 				return ".";
 			}
 		}
@@ -262,9 +284,6 @@ public class MailParser {
 	// guardada
 	private String putContent(String line, String boundary, boolean pointSpace)
 			throws IOException {
-		// si pointSpace == true, quiere decir que el reader esta apuntando a la
-		// linea vacia antes del inicio del cuerpo
-
 		// En type tengo el tipo de contenido
 		String type = line.substring(line.indexOf(':') + 2, line.indexOf('/'));
 		mail.addContent(type);
@@ -402,9 +421,15 @@ public class MailParser {
 			throws IOException {
 
 		String line;
-		String extension = contentTypeHeader.substring(
-				contentTypeHeader.indexOf('/') + 1,
-				contentTypeHeader.indexOf(';'));
+		String extension;
+		int last = contentTypeHeader.indexOf(';');
+		if (last != -1) {
+			extension = contentTypeHeader.substring(
+					contentTypeHeader.indexOf('/') + 1, last);
+		} else {
+			extension = contentTypeHeader.substring(contentTypeHeader
+					.indexOf('/') + 1);
+		}
 		mail.addStructure(extension);
 
 		while ((line = reader.readLine()).length() != 0) {
@@ -463,48 +488,42 @@ public class MailParser {
 			return null;
 		}
 	}
-	
-	 public RandomAccessFile parseOnlyHeadersMessage() throws IOException {
-         String line = reader.readLine();
-         parseOnlyHeaders(line);
-         return writer;
-	 }
-	
+
 	private int getMonth(String string) {
-		if(string.equals("Jan")){
+		if (string.equals("Jan")) {
 			return 1;
 		}
-		if(string.equals("Feb")){
+		if (string.equals("Feb")) {
 			return 2;
 		}
-		if(string.equals("Mar")){
+		if (string.equals("Mar")) {
 			return 3;
 		}
-		if(string.equals("Apr")){
+		if (string.equals("Apr")) {
 			return 4;
 		}
-		if(string.equals("May")){
+		if (string.equals("May")) {
 			return 5;
 		}
-		if(string.equals("Jun")){
+		if (string.equals("Jun")) {
 			return 6;
 		}
-		if(string.equals("Jul")){
+		if (string.equals("Jul")) {
 			return 7;
 		}
-		if(string.equals("Aug")){
+		if (string.equals("Aug")) {
 			return 8;
 		}
-		if(string.equals("Sep")){
+		if (string.equals("Sep")) {
 			return 9;
 		}
-		if(string.equals("Oct")){
+		if (string.equals("Oct")) {
 			return 10;
 		}
-		if(string.equals("Nov")){
+		if (string.equals("Nov")) {
 			return 11;
 		}
-		if(string.equals("Dec")){
+		if (string.equals("Dec")) {
 			return 12;
 		}
 		return -1;

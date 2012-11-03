@@ -15,30 +15,40 @@ import ar.sessions.utils.BufferUtils;
 
 public abstract class AbstractMailFetcherInnerClass extends AbstractMultilinerInnerState {
 
-	private File incomingMail;
-	private File outcomingMail;
-	private RandomAccessFile incomingMailRAF;
-	private FileChannel incomingFileChannel;
-	private RandomAccessFile outcomingMailRAF;
-	private FileChannel outcomingFileChannel;
-	private boolean statusIssued;
-	private Boolean directToClient = null;
-	private Mail mail = null;
+	protected File incomingMail;
+	protected File outcomingMail;
+	protected RandomAccessFile incomingMailRAF;
+	protected FileChannel incomingFileChannel;
+	protected RandomAccessFile outcomingMailRAF;
+	protected FileChannel outcomingFileChannel;
+	protected boolean statusIssued = false;
+	protected Boolean directToClient = null;
+	protected Mail mail = null;
 
 	public AbstractMailFetcherInnerClass(AbstractInnerState callback) {
 		super(callback);
 		// TODO Auto-generated constructor stub
 	}
+	
+	public void setDirectToClient(boolean b){
+		this.directToClient = b;
+	}
 
 	public Action eval(ClientSession session, Action a) {
-		
+		Action r = null;
 		/* Look up for the last action done */
 		switch(this.getFlowDirection()){	
-		case READ_FILE:	return afterReadingFromFile(session);
-		case WRITE_FILE:return afterWritingToFile(session);
-		default: return super.eval(session, a);
-		
+		case READ_FILE:	r = afterReadingFromFile(session); break;
+		case WRITE_FILE:r = afterWritingToFile(session); break;
+		default:
+			return super.eval(session,a);
 		}
+
+		if(this.getCallbackState() != null){
+			r = this.getCallbackState().callbackEval(this, r);
+		}
+		
+		return r;
 	}
 
 	Action afterReadingFromFile(ClientSession session) {
@@ -118,19 +128,19 @@ public abstract class AbstractMailFetcherInnerClass extends AbstractMultilinerIn
 			response = super.afterReadingFromServer(session);
 			if(this.isWaitingLineFeedEnd()) {
 				String responseToClient = BufferUtils.byteBufferToString(response.getBuffers()).split("\\r\\n")[0];
+				responseToClient = responseToClient + "\r\n";
 				try {
 					this.incomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
 					this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
 					this.incomingMailRAF.seek(0);
-					this.incomingMailRAF.write(BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()+2).getBytes());
+					this.incomingMailRAF.write(BufferUtils.byteBufferToString(response.getBuffers()).substring(responseToClient.length()).getBytes());
 					this.incomingFileChannel = this.incomingMailRAF.getChannel();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
 				response.getBuffers().clear();
-				response.getBuffers().put((responseToClient+"\r\n").getBytes());
+				response.getBuffers().put(responseToClient.getBytes());
 				response.getBuffers().flip();
 				this.statusIssued = false;
 			}
@@ -175,7 +185,6 @@ public abstract class AbstractMailFetcherInnerClass extends AbstractMultilinerIn
 		
 		if(!this.statusIssued) {
 			this.statusIssued = true;
-//			response.setChannel(null);
 			return response;
 		}
 		

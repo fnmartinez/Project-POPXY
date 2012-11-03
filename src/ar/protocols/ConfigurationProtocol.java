@@ -15,18 +15,19 @@ public class ConfigurationProtocol {
 
 	public static final String OK_MSG = "+OK ";
 	public static final String ERR_MSG = "-ERR ";
-	private static final String WELLCOME_MSG = OK_MSG+ "Conexion establecida\r\n";
-	private static final String INV_COM_MSG = ERR_MSG + "Comando invalido\r\n";
+	public static final String FEED_TERMINATION = "\r\n.\r\n";
+	private static final String WELLCOME_MSG = OK_MSG+ "Conexion establecida" + FEED_TERMINATION;
+	private static final String INV_COM_MSG = ERR_MSG + "Comando invalido"  + FEED_TERMINATION;
 	private static final String INV_SUBCOM_MSG = ERR_MSG
-			+ "Subcommando invalido\r\n";
+			+ "Subcommando invalido"  + FEED_TERMINATION;
 	private static final String INV_CONV_COM_MSG = ERR_MSG
-			+ "Uso invalido de los comandos\r\n";
+			+ "Uso invalido de los comandos"  + FEED_TERMINATION;
 	private static final String INV_ARG_MSG = ERR_MSG
-			+ "Argumentos invalidos\r\n";
+			+ "Argumentos invalidos"  + FEED_TERMINATION;
 	private static final String INV_USR_MSG = ERR_MSG
-			+ "Usuario inexistente\r\n";
+			+ "Usuario inexistente"  + FEED_TERMINATION;
 	private static final String EXT_MSG = OK_MSG
-			+ "Conexion cerrada exitosamente\r\n";
+			+ "Conexion cerrada exitosamente"  + FEED_TERMINATION;
 
 	private static final String[] commands = { "EXT", "SET", "DEL", "STA",
 			"RST" };
@@ -406,7 +407,7 @@ public class ConfigurationProtocol {
 	}
 
 	public static String getOkMsg() {
-		return OK_MSG + "\r\n";
+		return OK_MSG;
 	}
 
 	public static String getInvalidArgumentMsg() {
@@ -500,7 +501,7 @@ public class ConfigurationProtocol {
 			User user = popxy.getUser(username);
 			ret = ret + getStatusMsg(user.getUserConfig());
 		}
-		ret = ret + ".\r\n";
+		ret = ret + FEED_TERMINATION;
 		return ret;
 	}
 

@@ -1,5 +1,7 @@
 package ar.sessions;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -10,6 +12,7 @@ import ar.Action;
 import ar.AuthState;
 import ar.POPXY;
 import ar.State;
+import ar.TemporaryFilenameFilter;
 import ar.elements.User;
 import ar.sessions.utils.BufferUtils;
 
@@ -66,6 +69,9 @@ public class ClientSession implements Runnable {
 	}
 
 	private void write() {
+		if(this.channelToWrite == null){
+			return;
+		}
 		//TODO: try to put this in the automaton
 		try {
 			logWrite(BufferUtils.byteBufferToString(bufferToRead));
@@ -84,17 +90,19 @@ public class ClientSession implements Runnable {
 	
 	private void read() {
 		int bytesReaded = 0;
-		if(this.channelToRead != null){
-			bufferToWrite.clear();
-			try {
-				bytesReaded = channelToRead.read(bufferToWrite);
-			} catch (IOException e) {
-				this.handleEndConnection();
-				return;
-			}
-			bufferToWrite.flip();
-			logRead(BufferUtils.byteBufferToString(bufferToWrite));
+		if(this.channelToRead == null){
+			return;
 		}
+		bufferToWrite.clear();
+		try {
+			bytesReaded = channelToRead.read(bufferToWrite);
+		} catch (IOException e) {
+			this.handleEndConnection();
+			return;
+		}
+		bufferToWrite.flip();
+		logRead(BufferUtils.byteBufferToString(bufferToWrite));
+		
 
 		if(channelToRead == this.originServerSocket){
 			this.client.addTransferedBytes(bytesReaded);
@@ -141,6 +149,11 @@ public class ClientSession implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		File tmpdir = new File(System.getProperty("java.io.tmpdir"));
+		File[] mytemps = tmpdir.listFiles(new TemporaryFilenameFilter(this.getClient().getUser()));
+		for(File f: mytemps) {
+			f.delete();
 		}
 		this.conectionEstablished = false;		
 	}
