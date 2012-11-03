@@ -2,11 +2,11 @@ package ar.elements;
 
 public class Stats {
 	
-	public long transferedBytes;
-	public long accessCant;
-	public long loginCant;
-	public long mailsReadCant;
-	public long mailsDeletedCant;
+
+	private long transferedBytes;
+	private long loginCant;
+	private long mailsReadCant;
+	private long mailsDeletedCant;
 	
 	public Stats(){
 		this.resetStats();
@@ -14,7 +14,6 @@ public class Stats {
 	
 	public void resetStats(){
 		this.transferedBytes = 0;
-		this.accessCant = 0;
 		this.loginCant = 0;
 		this.mailsDeletedCant = 0;
 		this.mailsReadCant = 0;
@@ -22,10 +21,6 @@ public class Stats {
 	
 	public void addTransferedBytes(long transferedBytes){
 		this.transferedBytes += transferedBytes;
-	}
-	
-	public void incrementAccessCant(){
-		accessCant++;
 	}
 	
 	public void incrementMailsReadCant(){
@@ -38,5 +33,20 @@ public class Stats {
 	
 	public void incrementLoginCant(){
 		loginCant++;
+	}
+	public long getTransferedBytes() {
+		return transferedBytes;
+	}
+	
+	public long getLoginCant() {
+		return loginCant;
+	}
+	
+	public long getMailsReadCant() {
+		return mailsReadCant;
+	}
+	
+	public long getMailsDeletedCant() {
+		return mailsDeletedCant;
 	}
 }

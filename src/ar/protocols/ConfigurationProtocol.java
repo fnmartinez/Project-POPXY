@@ -13,10 +13,9 @@ import ar.sessions.utils.IpAndMask;
 
 public class ConfigurationProtocol {
 
-	private static final String OK_MSG = "+OK. ";
-	private static final String ERR_MSG = "-ERR. ";
-	private static final String WELLCOME_MSG = OK_MSG
-			+ "Conexion establecida\r\n";
+	public static final String OK_MSG = "+OK ";
+	public static final String ERR_MSG = "-ERR ";
+	private static final String WELLCOME_MSG = OK_MSG+ "Conexion establecida\r\n";
 	private static final String INV_COM_MSG = ERR_MSG + "Comando invalido\r\n";
 	private static final String INV_SUBCOM_MSG = ERR_MSG
 			+ "Subcommando invalido\r\n";
@@ -34,8 +33,8 @@ public class ConfigurationProtocol {
 	private static final String[] subCommands = { "TIMELOGIN", "CANTLOGIN",
 			"BLACKIP", "RMFILTERDATE", "RMFILTERSENDER", "RMFILTERHEADER",
 			"RMFILTERCONTENT", "RMFILTERSIZE", "RMFILTERDISPOSITION",
-			"ORIGINSERVER", "ORIGINSERVERPORT", "CONFIGLISTENINGPORT",
-			"WELLCOMELISTENINGPORT", "STALISTENINGPORT", "APP" };
+			"ORIGINSERVER", "ORIGINSERVERPORT", "CONFIGPORT",
+			"WELCOMEPORT", "STATSPORT", "APP" };
 
 	public static ConfigurationCommands getCommand(String command) {
 
@@ -463,17 +462,51 @@ public class ConfigurationProtocol {
 		return false;
 	}
 
-	public static String getStatusMsg() {
-		POPXY popxy = POPXY.getInstance();
-		UserConfiguration conf = User.getGlobalConfiguration();
-		String ret = OK_MSG + "\n";
-		ret = ret + "*** Listening Configurations ***\n";
-		ret = ret + "- ORIGINSERVER\t\t" + User.getGlobalServerAddress() + ":"+ User.getGlobalServerPort() + "\n";
-		ret = ret + "- CONFIGLISTENINGPORT\t" + popxy.getAdminPort() + "\n";
-		ret = ret + "- WELLCOMELISTENINGPORT\t" + popxy.getWelcomeSocketPort()+ "\n";
-		ret = ret + "- STATSLISTENINGPORT\t" + popxy.getStatsPort() + "\n";
+	public static String getStatusMsg(String params) {
 		
-		ret = ret + "\n*** Login configuration ***\n";
+		POPXY popxy = POPXY.getInstance();
+		String ret = OK_MSG + "\n";
+
+		if(params.length() == 0){
+		
+			ret = ret + "- ORIGINSERVER\t\t" + User.getGlobalServerAddress() + ":"+ User.getGlobalServerPort() + "\n";
+			ret = ret + "- CONFIGPORT\t" + popxy.getAdminPort() + "\n";
+			ret = ret + "- WELCOMEPORT\t" + popxy.getWelcomeSocketPort()+ "\n";
+			ret = ret + "- STATSPORT\t" + popxy.getStatsPort() + "\n";
+			
+			for(IpAndMask ip: popxy.getBlackIps()){
+				ret = ret + "- BLACKIP\t" + ip.getIp() +"\t"+ ip.getMask()+"\n";
+			}
+
+			UserConfiguration conf = User.getGlobalConfiguration();
+			ret = ret + getStatusMsg(conf);
+			
+			if(popxy.getUsernames().size() != 0){
+				ret = ret + "- Users:\r\n";
+			}
+			for(String username: popxy.getUsernames()){
+				ret = ret + username+"\t";
+			}
+			if(popxy.getUsernames().size() > 0){
+				ret = ret+ "\n";
+			}
+			
+		}
+		else{
+			String username = params.split("\\s")[0];
+			if(!popxy.existingUser(username)){
+				ret = "-ERR. Usuario inexistente\n";
+				return ret;
+			}
+			User user = popxy.getUser(username);
+			ret = ret + getStatusMsg(user.getUserConfig());
+		}
+		ret = ret + ".\r\n";
+		return ret;
+	}
+
+	private static String getStatusMsg(UserConfiguration conf) {
+		String ret = "";
 		if(conf.getLoginMax() != -1){
 			ret = ret + "- CANTLOGIN\t"+conf.getLoginMax()+"\n";
 		}
@@ -488,13 +521,9 @@ public class ConfigurationProtocol {
 			ret = ret + "\t" +((hT.toString().length()==2)? hT: "0"+hT);
 			ret = ret + ((mT.toString().length()==2)? mT: "0"+mT) + "\n";
 		}
-		for(IpAndMask ip: popxy.getBlackIps()){
-			ret = ret + "- BLACKIP\t" + ip.getIp() +"\t"+ ip.getMask()+"\n";
-		}
 				
 		
 		if(conf.hasExternalApps()){
-			ret = ret + "\n*** APPS ***\n";
 			if(conf.getLeet()) ret = ret + "- l33t\n";
 			if(conf.getRotate()) ret = ret + "- Rotate\n";
 			if(conf.getAnonymous()) ret = ret + "- Anonymous\n";
@@ -505,8 +534,7 @@ public class ConfigurationProtocol {
 				}
 				ret = ret + "\n";
 			}			
-		}		
-
+		}
 		return ret;
 	}
 }

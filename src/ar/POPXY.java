@@ -1,12 +1,15 @@
 package ar;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.NotYetBoundException;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,16 +22,9 @@ import ar.sessions.utils.IpAndMask;
 
 public class POPXY {
 
-	private final static String defaultOriginServer = "pop3.alu.itba.edu.ar";
-	private final static int defaultWelcomeSocketPort = 1110;
-	private final static int defaultAdminPort = 12345;
-	private final static int defaultOriginPort = 110;
-	private final static int defaultStatsPort = 10101;
-	
-	private static int welcomeSocketPort = defaultWelcomeSocketPort;
-	private static int adminPort = defaultAdminPort; 
-	private static int originPort = defaultOriginPort;
-	private static int statsPort = defaultStatsPort;  
+	private static int welcomeSocketPort;
+	private static int adminPort; 
+	private static int statsPort;  
 	
 	private static Logger logger = Logger.getLogger(POPXY.class.getName());
 	
@@ -42,15 +38,18 @@ public class POPXY {
 	
 	private static Thread clientsThread;
 	private static Thread adminsThread;
+	private static Thread statsThread;
 
 	public static void main(String[] args) 
 		throws Exception{
 		
-		//Seteo las configuraciones globales del proxy
+		//Seteo los puertos en los que escucho nuevas conexiones.
+		initPorts();
+		
+		//Seteo las configuraciones globales de los usuarios
 		User.initGlobalConfiguration();
 		
 		//Tomar conf;
-		POPXY proxy = POPXY.getInstance();
 		try {
 			PropertyConfigurator.configure("resources/log4j.properties");
 		} catch (Exception e) {
@@ -60,6 +59,7 @@ public class POPXY {
 		}
 		ServerSocketChannel welcomeSocket = ServerSocketChannel.open();
 		ServerSocketChannel adminSocket = ServerSocketChannel.open();
+		ServerSocketChannel statsSocket = ServerSocketChannel.open();
 		try{
 			
 			welcomeSocket.socket().bind(new InetSocketAddress(welcomeSocketPort));
@@ -70,10 +70,16 @@ public class POPXY {
 			adminSocket.socket().bind(new InetSocketAddress(adminPort));
 			adminSocket.configureBlocking(false);
 			
+
+			statsSocket.socket().bind(new InetSocketAddress(statsPort));
+			statsSocket.configureBlocking(false);
+			
 			adminsThread = new AdminWelcomeSocket(adminSocket);
+			statsThread = new StatsWelcomeSocket(statsSocket);
 			
 			threadPool.execute(clientsThread);
 			threadPool.execute(adminsThread);
+			threadPool.execute(statsThread);
 		}
 		catch(NotYetBoundException nybe){
 			//TODO:
@@ -91,6 +97,54 @@ public class POPXY {
 		}while(clientsThread.isAlive() || adminsThread.isAlive());
 	}
 
+	public  int getAdminPort() {
+		return adminPort;
+	}
+	
+	public int getWelcomeSocketPort() {
+		return welcomeSocketPort;
+	}
+	
+	public int getStatsPort() {
+		return statsPort;
+	}
+	
+	public static void initPorts() {
+		//Levanto del archivo properties con la conf de los puertos.
+		Properties properties = new Properties();
+		try {
+			properties.load(new FileInputStream("resources/popxy.properties"));
+			welcomeSocketPort = Integer.parseInt(properties.getProperty("WelcomeSocketPort"));
+			adminPort = Integer.parseInt(properties.getProperty("AdminPort"));
+			statsPort = Integer.parseInt(properties.getProperty("StatsPort"));	
+		} catch (Exception e) {
+			System.out.println("No se pudo leer archivo de configuracion del proxy\n");
+			welcomeSocketPort = 1110;
+			adminPort = 12345;
+			statsPort = 10101;	
+		}
+		
+		changeAdminPort(adminPort);
+		changeWelcomePort(welcomeSocketPort);
+		changeStatsPort(statsPort);
+	}
+
+	public static void changeAdminPort(int adminPort) {
+		POPXY.adminPort = adminPort;
+		//TODO: Levantar la conexion en ese puerto.
+	}
+	
+	public static void changeWelcomePort(int welcomeSocketPort) {
+		//TODO: Levantar la conexion en ese puerto.
+		POPXY.welcomeSocketPort = welcomeSocketPort;
+	}
+	
+	
+	public static void changeStatsPort(int statsPort) {
+		//TODO: Levantar la conexion en ese puerto.
+		POPXY.statsPort = statsPort;
+	}
+
 	public static POPXY getInstance() {
 		if(instance == null) {
 			instance = new POPXY();
@@ -106,6 +160,10 @@ public class POPXY {
 		}
 		return user;
 	}
+	
+	public boolean existingUser(String userName) {
+		return users.containsKey(userName);
+	}
 
 	public boolean userIsBlocked(String username) {
 		User user = this.getUser(username);
@@ -115,63 +173,7 @@ public class POPXY {
 			return user.isBlocked();
 		}
 	}
-
-	public String getDefaultOriginServer() {
-		return POPXY.defaultOriginServer;
-	}
-
-	public int getDefaultOriginServerPort() {
-		return POPXY.defaultOriginPort;
-	}
 	
-	public void setWellcomePort(Integer port) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void setAdminPort(Integer port) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void setOriginPort(Integer port) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void setStatsPort(Integer port) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public  int getAdminPort() {
-		return adminPort;
-	}
-
-	public void setAdminPort(int adminPort) {
-		POPXY.adminPort = adminPort;
-	}
-
-	public int getWelcomeSocketPort() {
-		return welcomeSocketPort;
-	}
-
-	public void setWelcomeSocketPort(int welcomeSocketPort) {
-		POPXY.welcomeSocketPort = welcomeSocketPort;
-	}
-
-	public int getStatsPort() {
-		return statsPort;
-	}
-
-	public static void setStatsPort(int statsPort) {
-		POPXY.statsPort = statsPort;
-	}
-
-	public void activateApp(String string) {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	public boolean isOnTheBlackList(String ip) {
 		for(IpAndMask net: this.blackIps){
@@ -200,5 +202,18 @@ public class POPXY {
 	public static Logger getLogger() {
 		return logger;
 	}
+
+	public void resetUsers() {
+		this.users.clear();		
+	}
+
+	public Set<String> getUsernames() {
+		return this.users.keySet();
+	}
+
+	public Collection<User> getUsers() {
+		return this.users.values();
+	}
+
 	
 }

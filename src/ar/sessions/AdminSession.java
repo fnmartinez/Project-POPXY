@@ -53,10 +53,10 @@ public class AdminSession implements Session {
 		this.key = adminChannel.register(this.selector, SelectionKey.OP_WRITE,
 				this);
 
-		this.state = ESTABLISHED_CONNECTION;
 	}
 
 	public void handleConnection() {
+		this.state = ESTABLISHED_CONNECTION;
 
 	}
 
@@ -67,7 +67,7 @@ public class AdminSession implements Session {
 			answerBuf.clear();
 
 			if (this.state == CLOSED_CONNECTION) {
-				handleEndConection();
+				handleEndConnection();
 				return;
 			}
 
@@ -75,7 +75,7 @@ public class AdminSession implements Session {
 					SelectionKey.OP_READ, this);
 
 		} catch (ClosedChannelException e) {
-			this.handleEndConection();
+			this.handleEndConnection();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -98,7 +98,7 @@ public class AdminSession implements Session {
 		}
 
 		if (bytesRead == -1) { // El administrador cerro la conexion!
-			handleEndConection();
+			handleEndConnection();
 		} else if (bytesRead > 0) {
 
 			commandBuf.flip();
@@ -120,14 +120,12 @@ public class AdminSession implements Session {
 				return;
 			}
 
-			if (command == ConfigurationCommands.STATUS) {
-				this.answer(ConfigurationProtocol.getStatusMsg());
-				this.key.interestOps(SelectionKey.OP_WRITE);
-				return;
-			}
-
 			if (command == ConfigurationCommands.RESET) {
+				POPXY.initPorts();
 				User.resetGlobalConfiguration();
+				for(User u: POPXY.getInstance().getUsers()){
+					u.resetConfiguration();
+				}
 				this.answer(ConfigurationProtocol.getOkMsg());
 				this.key.interestOps(SelectionKey.OP_WRITE);
 				return;
@@ -135,6 +133,14 @@ public class AdminSession implements Session {
 
 			String subCommandAndParameters = BufferUtils
 					.byteBufferToString(parametersBuf);
+
+			if (command == ConfigurationCommands.STATUS) {
+				this.answer(ConfigurationProtocol.getStatusMsg(subCommandAndParameters));
+				this.key.interestOps(SelectionKey.OP_WRITE);
+				return;
+			}
+
+
 
 			ConfigurationCommands subCommand = ConfigurationProtocol
 					.getSubCommand(subCommandAndParameters);
@@ -205,13 +211,12 @@ public class AdminSession implements Session {
 
 	}
 
-	private void handleEndConection() {
+	public void handleEndConnection() {
 		// TODO
-		System.out.println("Se cerro la conexion del administrador!!!");
+		System.out.println("Se cerro la conexion del administrador.");
 		try {
 			adminChannel.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -221,21 +226,20 @@ public class AdminSession implements Session {
 			String[] parameters) {
 
 		if (command == ConfigurationCommands.SET) {
-			POPXY p = POPXY.getInstance();
 			// El primer parametro es el puerto: SET PORT xxxxx
 			Integer port = Integer.parseInt(parameters[0]);
 			switch (channel) {
 			case WELLCOME_CHANNEL:
-				p.setWellcomePort(port);
+				POPXY.changeWelcomePort(port);
 				break;
 			case CONGIF_CHANNEL:
-				p.setAdminPort(port);
+				POPXY.changeAdminPort(port);
 				break;
 			case ORIGIN_CHANNEL:
 				User.setGlobalServerPort(port);
 				break;
 			case STATS_CHANNEL:
-				p.setStatsPort(port);
+				POPXY.changeStatsPort(port);
 				break;
 			default:
 				System.out.println("ERROR!!!");

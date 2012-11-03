@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Set;
 
 import ar.ExternalProcessChain;
+import ar.POPXY;
 
 public class User {
 
@@ -154,12 +155,17 @@ public class User {
 
 	public static void initGlobalConfiguration() {
 		resetGlobalConfiguration();
+		POPXY.getInstance().resetUsers();
 	}
 
 	public static void resetGlobalConfiguration() {
 		globalConfig.resetGlobalConfiguration();
 	}
 
+	public void resetConfiguration() {
+		userConfig.resetUserConfiguration();
+	}
+	
 	public boolean isInInterval() {
 		if (userConfig.hasTimeConfiguration()) {
 			return userConfig.isInIntervalSet();
@@ -204,8 +210,23 @@ public class User {
 		return globalStats;
 	}
 
+	public Stats getStats() {
+		return stats;
+	}
+	
+	public void readMail(){
+		stats.incrementMailsReadCant();
+		globalStats.incrementMailsReadCant();
+	}
+	
+	public void dropMail(){
+		stats.incrementMailsDeletedCant();
+		globalStats.incrementMailsDeletedCant();
+	}
+	
 	public void addTransferedBytes(long transferedBytes) {
 		stats.addTransferedBytes(transferedBytes);
+		globalStats.addTransferedBytes(transferedBytes);
 	}
 
 	public void setApp(String app, boolean bool) {
@@ -232,10 +253,6 @@ public class User {
 			User.setGlobalCustomApp(app, bool);
 		}
 		return;
-	}
-
-	public static void addGlobalTransferedBytes(long transferedBytes) {
-		globalStats.addTransferedBytes(transferedBytes);
 	}
 
 	public static void setGlobalAnonymous(boolean anonymous) {
@@ -409,5 +426,9 @@ public class User {
 		} else {
 			globalConfig.removeExternalApp(application);
 		}
+	}
+	
+	public UserConfiguration getUserConfig(){
+		return this.userConfig;
 	}
 }

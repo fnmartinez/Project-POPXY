@@ -53,6 +53,7 @@ public class ClientSession implements Runnable {
 		this.channelToWrite = clientSocket;
 //		this.firstContact = true;
 //		this.useSecondServerBuffer = false;
+		this.suscriptionMode = -1;
 		this.conectionEstablished = true;
 	}
 
@@ -66,42 +67,42 @@ public class ClientSession implements Runnable {
 	
 	private void logWrite(String msg) {
 		String ctw = channelToWrite == originServerSocket ? "S":(channelToWrite == clientSocket ? "C" : "F"); 
-		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
-			System.out.println("changos!");
-		}
 		POPXY.getLogger().info("["+this.state+"] P->"+ctw+" : "+msg);
 	}
 
 	private void write() {
-		try {
-			logWrite(BufferUtils.byteBufferToString(bufferToRead));
-			channelToWrite.write(bufferToRead);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		//TODO: try to put this in the automaton
+				try {
+					logWrite(BufferUtils.byteBufferToString(bufferToRead));
+					channelToWrite.write(bufferToRead);
+				} catch (IOException e) {
+					this.handleEndConnection();
+					return;
+				}
+
 	}
 
 	private void logRead(String msg) {
 		String ctw = channelToRead == originServerSocket ? "S":(channelToRead == clientSocket ? "C" : "F");
-		if(msg.compareTo("") == 0 || msg.compareTo(" ") == 0) {
-			System.out.println("changos!");
-		}
 		POPXY.getLogger().info("["+this.state+"] "+ctw+"->P : "+msg);
 	}
 	
 	private void read() {
 		if(this.channelToRead != null){
+			int bytesReaded = 0;
 				bufferToWrite.clear();
 				try {
-					channelToRead.read(bufferToWrite);
+					bytesReaded = channelToRead.read(bufferToWrite);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.handleEndConnection();
+					return;
 				}
 				bufferToWrite.flip();
 				logRead(BufferUtils.byteBufferToString(bufferToWrite));
+
+			if(channelToRead == this.originServerSocket){
+				this.client.addTransferedBytes(bytesReaded);
+			}
 		}
 		
 	}
@@ -110,7 +111,7 @@ public class ClientSession implements Runnable {
 		Action r = state.eval(this, null);
 		this.state = r.getState();
 		if(state == null){
-			handleEndConection();
+			handleEndConnection();
 			return;
 		}
 		
@@ -132,22 +133,22 @@ public class ClientSession implements Runnable {
 		
 		return;
 	}
-
-	private void handleEndConection() {
-		System.out.println("Se cerro la conexion del cliente!!!");
+	
+	private void handleEndConnection() {
 		try {
 			if(this.clientSocket != null){
+				System.out.println("Se cerro la conexion con el cliente.");
 				this.clientSocket.close();
 			}
 			if(this.originServerSocket != null){
+				System.out.println("Se cerro la conexion con el servidor.");
 				this.originServerSocket.close();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		this.conectionEstablished = false;
-		
+		this.conectionEstablished = false;		
 	}
 
 	
@@ -224,8 +225,6 @@ public class ClientSession implements Runnable {
 			}
 			evaluateState();
 		}
-		
 	}
 
 }
-

@@ -5,7 +5,6 @@ import java.nio.channels.SelectionKey;
 
 import ar.sessions.ClientSession;
 import ar.sessions.utils.BufferUtils;
-import ar.Action;
 
 public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 
@@ -35,7 +34,8 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 			response.setChannel(session.getClientSocket());
 			response.setOperation(SelectionKey.OP_WRITE);
 			response.setState(this);
-			response.setBuffers(session.getSecondServerBuffer());
+			response.setMultilineBuffer(mlsb);
+			response.setMultilineResponse(true);
 			this.setFlowToWriteClient();
 			if(BufferUtils.byteBufferToString(mlsb).contains("\r\n.\r\n")){
 				this.waitingLineFeedEnd = false;
@@ -55,7 +55,8 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 		}
 		
 		response = new Action();
-		response.setBuffers(session.getSecondServerBuffer());
+		response.setMultilineBuffer(session.getSecondServerBuffer());
+		response.setMultilineResponse(true);
 		response.setState(this);
 		response.setChannel(session.getOriginServerSocket());
 		response.setOperation(SelectionKey.OP_READ);

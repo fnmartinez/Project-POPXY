@@ -1,12 +1,13 @@
 package ar;
 
 import java.nio.channels.SelectionKey;
-import ar.Action;
+
 import ar.sessions.ClientSession;
 
 public abstract class AbstractInnerState implements State{
 	
 	private AbstractInnerState callbackState;
+
 
 	private Object attachment = null;
 	
@@ -27,7 +28,11 @@ public abstract class AbstractInnerState implements State{
 		case WRITE_SERVER:	r = afterWritingToServer(session); break;
 		
 		}
-		r = this.getCallbackState().callbackEval(this, (a == null)? r: a);
+		
+		if(this.getCallbackState() != null){
+			r = this.getCallbackState().callbackEval(this, ((a == null)? r: a));
+		}
+		
 		return r;
 	}
 	
@@ -127,5 +132,10 @@ public abstract class AbstractInnerState implements State{
 	public AbstractInnerState getCallbackState() {
 		return this.callbackState;
 	}
+
+	public void setCallbackState(AbstractInnerState callbackState) {
+		this.callbackState = callbackState;
+	}
+	
 }
 

@@ -14,11 +14,12 @@ import ar.sessions.utils.POPHeadCommands;
 public class AuthState implements State {
 	
 	State currentState;
-	private boolean firstContact = true;
+	private boolean firstContact;
 
 	public AuthState(){
 		super();
 		this.currentState = new NoneState(null);
+		this.firstContact = true;
 		((AbstractInnerState)this.currentState).setFlowToWriteClient();
 	}
 	
@@ -34,10 +35,14 @@ public class AuthState implements State {
 		Action afterReadingFromClient(ClientSession session) {
 			
 			Action response = new Action();
-			
-			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(BufferUtils.byteBufferToString(session.getClientBuffer()).substring(0, 5).trim());
-
-			String[] args = BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4).trim().split("\\s");
+			String aux = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
+			String command = aux;
+			String[] args = {""};
+			if(aux.length() > 4){
+				command = command.substring(0, 5);
+				args =  BufferUtils.byteBufferToString(session.getClientBuffer()).substring(4).trim().split("\\s");
+			}
+			POPHeadCommands cmd = POPHeadCommands.getLiteralByString(command);
 	
 			ByteBuffer bufferToUse = null;
 			
@@ -143,12 +148,6 @@ public class AuthState implements State {
 		
 		public String toString(){
 			return "None";
-		}
-
-		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
-			// TODO Auto-generated method stub
-			return null;
 		}
 
 	}
@@ -298,12 +297,6 @@ public class AuthState implements State {
 			return "User";
 		}
 
-		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
 	}
 	
 	private class PassState extends AbstractInnerState implements EndState {
@@ -352,12 +345,6 @@ public class AuthState implements State {
 			return "Pass";
 		}
 
-		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
 	}
 	
 	private class QuitState extends AbstractInnerState implements EndState {
@@ -391,12 +378,6 @@ public class AuthState implements State {
 		
 		public String toString(){
 			return "Quit";
-		}
-
-		@Override
-		public InnerStateAction callbackEval(AbstractInnerState s, Action a) {
-			// TODO Auto-generated method stub
-			return null;
 		}
 
 	}

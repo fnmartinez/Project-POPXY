@@ -17,6 +17,10 @@ public class MailParser {
 	private User user;
 	private Mail mail;
 
+	public Mail getMail() {
+		return mail;
+	}
+
 	private TextTransformer textTransformer;
 	private ImageTransformer imageTransformer;
 
@@ -58,7 +62,7 @@ public class MailParser {
 		}
 	}
 
-	private void parseOnlyHeaders(String line) throws IOException {
+	public void parseOnlyHeaders(String line) throws IOException {
 		String headerName = null;
 		String headerValue = "";
 		do {
@@ -117,6 +121,11 @@ public class MailParser {
 		}
 	}
 
+	public RandomAccessFile parseOnlyHeadersMessage() throws IOException {
+		String line = reader.readLine();
+		parseOnlyHeaders(line);
+		return writer;
+	}
 	
 	private void parseHeaders(String line) throws IOException {
 		String headerName = null;
