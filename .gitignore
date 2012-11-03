@@ -7,3 +7,4 @@
 /target
 /.gitignore
 *.log.*
+/proxyPOP3.log

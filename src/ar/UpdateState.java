@@ -4,7 +4,7 @@ import ar.sessions.ClientSession;
 
 public class UpdateState implements State {
 
-	public Action eval(ClientSession session, Action a) {
+	public Response eval(ClientSession session) {
 		// TODO Auto-generated method stub
 		return null;
 	}

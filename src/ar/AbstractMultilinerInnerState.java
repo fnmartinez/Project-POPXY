@@ -16,9 +16,9 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 	}
 
 	@Override
-	Action afterReadingFromServer(ClientSession session) {
+	Response afterReadingFromServer(ClientSession session) {
 		
-		Action response = new Action();
+		Response response = new Response();
 		
 		if(!waitingLineFeedEnd){
 			response = super.afterReadingFromServer(session);
@@ -46,15 +46,15 @@ public abstract class AbstractMultilinerInnerState extends AbstractInnerState {
 	}
 	
 	@Override
-	Action afterWritingToClient(ClientSession session) {
+	Response afterWritingToClient(ClientSession session) {
 		
-		Action response;
+		Response response;
 		
 		if(!waitingLineFeedEnd){
 			return super.afterWritingToClient(session);
 		}
 		
-		response = new Action();
+		response = new Response();
 		response.setMultilineBuffer(session.getSecondServerBuffer());
 		response.setMultilineResponse(true);
 		response.setState(this);
