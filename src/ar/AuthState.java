@@ -14,12 +14,10 @@ import ar.sessions.utils.POPHeadCommands;
 public class AuthState implements State {
 	
 	State currentState;
-	private boolean firstContact;
 
 	public AuthState(){
 		super();
 		this.currentState = new NoneState(null);
-		this.firstContact = true;
 		((AbstractInnerState)this.currentState).setFlowToWriteClient();
 	}
 	
@@ -32,9 +30,9 @@ public class AuthState implements State {
 		}
 
 		@Override
-		Action afterReadingFromClient(ClientSession session) {
+		Response afterReadingFromClient(ClientSession session) {
 			
-			Action response = new Action();
+			Response response = new Response();
 			String aux = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
 			String command = aux;
 			String[] args = {""};
@@ -124,8 +122,8 @@ public class AuthState implements State {
 			return response;
 		}
 
-		private Action invalidCommand(ClientSession session) {
-			Action response = new Action();
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
 			ByteBuffer bufferToUse = session.getFirstServerBuffer();
 			bufferToUse.clear();
 			
@@ -150,6 +148,11 @@ public class AuthState implements State {
 			return "None";
 		}
 
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 
 	private class UserState extends AbstractInnerState{
@@ -162,8 +165,8 @@ public class AuthState implements State {
 		}
 		
 		@Override
-		Action afterReadingFromServer(ClientSession session) {
-			Action response = new Action();
+		Response afterReadingFromServer(ClientSession session) {
+			Response response = new Response();
 			
 			boolean errorRecieved = false;
 			ByteBuffer bufferToUse = session.getFirstServerBuffer();
@@ -238,9 +241,9 @@ public class AuthState implements State {
 		}
 		
 		@Override
-		Action afterReadingFromClient(ClientSession session) {
+		Response afterReadingFromClient(ClientSession session) {
 			
-			Action response = new Action();
+			Response response = new Response();
 			
 			String command = BufferUtils.byteBufferToString(session.getClientBuffer()).trim();
 			if(command.length() >= 5){
@@ -270,8 +273,8 @@ public class AuthState implements State {
 			return response;
 		}
 		
-		private Action invalidCommand(ClientSession session) {
-			Action response = new Action();
+		private Response invalidCommand(ClientSession session) {
+			Response response = new Response();
 			ByteBuffer bufferToUse = session.getFirstServerBuffer();
 			bufferToUse.clear();
 			
@@ -297,6 +300,12 @@ public class AuthState implements State {
 			return "User";
 		}
 
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
+	
 	}
 	
 	private class PassState extends AbstractInnerState implements EndState {
@@ -309,8 +318,8 @@ public class AuthState implements State {
 		}
 		
 		@Override
-		Action afterReadingFromServer(ClientSession session) {
-			Action response = new Action();
+		Response afterReadingFromServer(ClientSession session) {
+			Response response = new Response();
 			
 			response = super.afterReadingFromServer(session);
 			
@@ -345,6 +354,11 @@ public class AuthState implements State {
 			return "Pass";
 		}
 
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 	private class QuitState extends AbstractInnerState implements EndState {
@@ -357,8 +371,8 @@ public class AuthState implements State {
 		}
 		
 		@Override
-		Action afterWritingToClient(ClientSession session) {
-			Action response = new Action();
+		Response afterWritingToClient(ClientSession session) {
+			Response response = new Response();
 			
 			response = super.afterWritingToClient(session);
 			this.isFinalState = true;
@@ -380,23 +394,15 @@ public class AuthState implements State {
 			return "Quit";
 		}
 
+		@Override
+		public void callbackFunction() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
-	public Action eval(ClientSession session, Action a) {
-		if(this.firstContact){
-			Action a1 = new Action();
-			session.getFirstServerBuffer().clear();
-			session.getFirstServerBuffer().put("+OK\r\n".getBytes());
-			session.getFirstServerBuffer().flip();
-
-			a1.setBuffers(session.getFirstServerBuffer());
-			a1.setChannel(session.getClientSocket());
-			a1.setOperation(SelectionKey.OP_WRITE);
-			a1.setState(this);
-			this.firstContact = false;
-			return a1;
-		}
-		Action response = this.currentState.eval(session, a);
+	public Response eval(ClientSession session) {
+		Response response = this.currentState.eval(session);
 		this.currentState = response.getState();
 		
 		if(this.currentState.isEndState()){
