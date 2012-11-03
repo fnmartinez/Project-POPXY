@@ -464,6 +464,12 @@ public class MailParser {
 		}
 	}
 	
+	 public RandomAccessFile parseOnlyHeadersMessage() throws IOException {
+         String line = reader.readLine();
+         parseOnlyHeaders(line);
+         return writer;
+	 }
+	
 	private int getMonth(String string) {
 		if(string.equals("Jan")){
 			return 1;
@@ -502,6 +508,10 @@ public class MailParser {
 			return 12;
 		}
 		return -1;
+	}
+
+	public Mail getMail() {
+		return mail;
 	}
 
 }

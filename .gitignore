@@ -6,5 +6,5 @@
 *.class
 /target
 /.gitignore
-*.log.*
+*.log*
 /proxyPOP3.log
