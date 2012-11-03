@@ -36,7 +36,7 @@ public class UserConfiguration {
 
 	public void resetGlobalConfiguration() {
 		Properties properties = new Properties();
-		
+
 		String originServer = "pop3.alu.itba.edu.ar";
 		int originPort = 110;
 		int maxLogin = -1;
@@ -55,7 +55,7 @@ public class UserConfiguration {
 		} catch (Exception e) {
 			System.out.println("No se pudo leer el archivo de conf de usuarios");
 		}
-		
+
 		User.setGlobalServerAddress(originServer);
 		User.setGlobalServerPort(originPort);
 		User.setGlobalLoginMax(maxLogin);
