@@ -39,6 +39,10 @@ public class POPXY {
 	private static Thread clientsThread;
 	private static Thread adminsThread;
 	private static Thread statsThread;
+	
+	private static ServerSocketChannel welcomeSocket;
+	private static ServerSocketChannel adminSocket;
+	private static ServerSocketChannel statsSocket;
 
 	public static void main(String[] args) 
 		throws Exception{
@@ -57,9 +61,9 @@ public class POPXY {
 			System.out.println("Error loading logger");
 			//return;
 		}
-		ServerSocketChannel welcomeSocket = ServerSocketChannel.open();
-		ServerSocketChannel adminSocket = ServerSocketChannel.open();
-		ServerSocketChannel statsSocket = ServerSocketChannel.open();
+		welcomeSocket = ServerSocketChannel.open();
+		adminSocket = ServerSocketChannel.open();
+		statsSocket = ServerSocketChannel.open();
 		try{
 			
 			welcomeSocket.socket().bind(new InetSocketAddress(welcomeSocketPort));
@@ -91,10 +95,10 @@ public class POPXY {
 			//TODO:
 		}
 		
-		do {
-			clientsThread.join(60000);
-			adminsThread.join(60000);
-		}while(clientsThread.isAlive() || adminsThread.isAlive());
+//		do {
+//			clientsThread.join(60000);
+//			adminsThread.join(60000);
+//		}while(clientsThread.isAlive() || adminsThread.isAlive());
 	}
 
 	public  int getAdminPort() {
@@ -123,26 +127,32 @@ public class POPXY {
 			adminPort = 12345;
 			statsPort = 10101;	
 		}
-		
-		changeAdminPort(adminPort);
-		changeWelcomePort(welcomeSocketPort);
-		changeStatsPort(statsPort);
+}
+
+	
+	public static void changeWelcomePort(int welcomeSocketPort) {
+		POPXY.welcomeSocketPort = welcomeSocketPort;
+		((ClientWelcomeSocket) clientsThread).changePort();		
+	}
+	
+	public static void resetWelcomeSocket(){
+		try {
+			welcomeSocket = ServerSocketChannel.open();
+			welcomeSocket.socket().bind(new InetSocketAddress(welcomeSocketPort));
+			welcomeSocket.configureBlocking(true);
+			clientsThread = new ClientWelcomeSocket(threadPool, welcomeSocket);
+			threadPool.execute(clientsThread);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void changeAdminPort(int adminPort) {
-		POPXY.adminPort = adminPort;
-		//TODO: Levantar la conexion en ese puerto.
+	//	POPXY.adminPort = adminPort;
 	}
-	
-	public static void changeWelcomePort(int welcomeSocketPort) {
-		//TODO: Levantar la conexion en ese puerto.
-		POPXY.welcomeSocketPort = welcomeSocketPort;
-	}
-	
-	
+		
 	public static void changeStatsPort(int statsPort) {
-		//TODO: Levantar la conexion en ese puerto.
-		POPXY.statsPort = statsPort;
+	//	POPXY.statsPort = statsPort;
 	}
 
 	public static POPXY getInstance() {

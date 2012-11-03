@@ -458,8 +458,7 @@ public class ConfigurationProtocol {
 	}
 
 	private static boolean isValidSender(String sender) {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	public static String getStatusMsg(String params) {
@@ -527,12 +526,8 @@ public class ConfigurationProtocol {
 			if(conf.getLeet()) ret = ret + "- l33t\n";
 			if(conf.getRotate()) ret = ret + "- Rotate\n";
 			if(conf.getAnonymous()) ret = ret + "- Anonymous\n";
-			for(String[] path: conf.getExternalApps()){
-				ret = ret + "-";
-				for(int i = 0; i < path.length; i++){
-					ret = ret + " " + path[i];
-				}
-				ret = ret + "\n";
+			for(String path: conf.getExternalApps()){
+				ret = ret + "- path\n";
 			}			
 		}
 		return ret;

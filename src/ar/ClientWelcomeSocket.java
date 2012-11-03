@@ -11,6 +11,7 @@ public class ClientWelcomeSocket extends Thread implements WelcomeSocket {
 	
 	private ExecutorService threadPool;
 	private ServerSocketChannel serverSocketChannel;
+	private boolean portDidntChange = true;
 	
 	public ClientWelcomeSocket(ExecutorService threadPool, ServerSocketChannel serverSocketChannel) {
 		this.threadPool = threadPool;
@@ -19,7 +20,7 @@ public class ClientWelcomeSocket extends Thread implements WelcomeSocket {
 
 	public void run() {
 		
-		while(true) {
+		while(portDidntChange) {
 			SocketChannel s;
 			try {
 				s = this.serverSocketChannel.accept();
@@ -32,12 +33,21 @@ public class ClientWelcomeSocket extends Thread implements WelcomeSocket {
 					threadPool.execute(new ClientSession(s));
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Se cerro el welcome socket del puerto "+this.serverSocketChannel.socket().getLocalPort());
 			}
 		}
+		POPXY.resetWelcomeSocket();
 
 	}
-
+	
+	synchronized public void changePort(){
+		this.portDidntChange = false;
+		try {
+			this.serverSocketChannel.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 }

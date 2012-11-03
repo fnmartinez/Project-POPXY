@@ -1,6 +1,7 @@
 package ar;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -278,20 +279,21 @@ public class TransactionState implements State {
 				Response response = super.afterWritingToClient(session);
 				return response;
 			}
+
+			try {
+				this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
+			} catch (FileNotFoundException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+			
 			if(session.getClient().hasExternalApps()){
 				ExternalProcessChain epc = session.getClient().getExternalProcessChain();
-				try {
-					this.incomingMail = epc.process(this.incomingMail, session.getClient().getUser(), ".mail");
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-//				session.setFile1(epc.process(session.getFile1(), session.getClient().getUser(), ".moil"));
+				this.incomingMailRAF = epc.process(this.incomingMailRAF, session.getClient().getUser(), ".mail");
 			}
 
 			
 			try {
-				this.incomingMailRAF = new RandomAccessFile(incomingMail, "rw");
 				this.incomingMailRAF.seek(0);
 				this.outcomingMail = File.createTempFile(session.getClient().getUser(), ".mail");
 				this.outcomingMailRAF = new RandomAccessFile(this.outcomingMail, "rw");
@@ -301,8 +303,6 @@ public class TransactionState implements State {
 					parser.parseMessage();
 				} else {
 					this.outcomingMailRAF = this.incomingMailRAF;
-//					session.setFile2(session.getFile1());
-//					session.getFile2().seek(0);
 				}
 				this.outcomingMailRAF.seek(0);
 				this.outcomingFileChannel = this.outcomingMailRAF.getChannel();
@@ -327,7 +327,7 @@ public class TransactionState implements State {
 			Response response = null;
 			
 			if(directToClient == null){
-				directToClient = !session.getClient().hasTransformations();
+				directToClient = !(session.getClient().hasTransformations() || session.getClient().hasExternalApps());
 			}
 			if(directToClient){
 				return super.afterReadingFromServer(session);

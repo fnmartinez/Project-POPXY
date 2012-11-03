@@ -399,32 +399,31 @@ public class User {
 		return externalProcessChain;
 	}
 
-	public Set<String[]> getExternalApps() {
+	public Set<String> getExternalApps() {
 		if(!userConfig.getExternalApps().isEmpty()){
 			return userConfig.getExternalApps();
 		}
 		return globalConfig.getExternalApps();
 	}
 
-	public Set<String[]> getGlobalExternalApps() {
+	public Set<String> getGlobalExternalApps() {
 		return globalConfig.getExternalApps();
 	}
 
 	private void setCustomApp(String app, boolean bool) {
-		String[] application = app.split("\\s");
 		if (bool == true) {
-			userConfig.addExternalApp(application);
+			userConfig.addExternalApp(app);
 		} else {
-			userConfig.removeExternalApp(application);
+			userConfig.removeExternalApp(app);
 		}
 	}
 
 	private static void setGlobalCustomApp(String app, boolean bool) {
 		String[] application = app.split("\\s");
 		if (bool == true) {
-			globalConfig.addExternalApp(application);
+			globalConfig.addExternalApp(app);
 		} else {
-			globalConfig.removeExternalApp(application);
+			globalConfig.removeExternalApp(app);
 		}
 	}
 	

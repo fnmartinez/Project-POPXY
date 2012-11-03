@@ -16,7 +16,7 @@ public class UserConfiguration {
 	private Boolean leet;
 	private Boolean anonymous;
 	private TimeConfiguration intervals;
-	private Set<String[]> externalApps;
+	private Set<String> externalApps;
 
 	public UserConfiguration() {
 		resetUserConfiguration();
@@ -31,7 +31,7 @@ public class UserConfiguration {
 		this.leet = null;
 		this.anonymous = null;
 		this.intervals = new TimeConfiguration();
-		this.externalApps = new HashSet<String[]>();
+		this.externalApps = new HashSet<String>();
 	}
 
 	public void resetGlobalConfiguration() {
@@ -143,15 +143,15 @@ public class UserConfiguration {
 		return deletionConfiguration.hasDeletionRestriction();
 	}
 	
-	public void addExternalApp(String[] app){
+	public void addExternalApp(String app){
 		this.externalApps.add(app);
 	}
 	
-	public void removeExternalApp(String[] app){
+	public void removeExternalApp(String app){
 		this.externalApps.remove(app);
 	}
 	
-	public Set<String[]> getExternalApps(){
+	public Set<String> getExternalApps(){
 		return this.externalApps;
 	}
 	
