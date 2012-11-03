@@ -18,22 +18,21 @@ public abstract class AbstractInnerState implements State{
 	}
 
 	public Action eval(ClientSession session, Action a) {
-		Action r = null;
 		
 		/* Look up for the last action done */
 		switch(flowDirection){
-		case READ_CLIENT: 	r = afterReadingFromClient(session); break;	
-		case READ_SERVER:	r = afterReadingFromServer(session); break;
-		case WRITE_CLIENT:	r = afterWritingToClient(session); break;
-		case WRITE_SERVER:	r = afterWritingToServer(session); break;
+		case READ_CLIENT: 	a = afterReadingFromClient(session); break;	
+		case READ_SERVER:	a = afterReadingFromServer(session); break;
+		case WRITE_CLIENT:	a = afterWritingToClient(session); break;
+		case WRITE_SERVER:	a = afterWritingToServer(session); break;
 		
 		}
 		
 		if(this.getCallbackState() != null){
-			r = this.getCallbackState().callbackEval(this, ((a == null)? r: a));
+			a = this.getCallbackState().callbackEval(this, a);
 		}
 		
-		return r;
+		return a;
 	}
 	
 	public void setFlowToReadClient(){

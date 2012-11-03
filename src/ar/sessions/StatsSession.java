@@ -124,20 +124,20 @@ public class StatsSession implements Session {
 		if (parameters.length == 2) {
 			rta = rta + "\r\n";
 			rta = rta + "Bytes: " + s.getTransferedBytes() + "\r\n";
-			rta = rta + "Readed Mails: " + s.getMailsReadCant() + "\r\n";
-			rta = rta + "Droped Mails: " + s.getMailsDeletedCant() + "\r\n";
-			rta = rta + "Conections: " + s.getLoginCant() + "\r\n";
-			rta = rta + ".\r\n";
+			rta = rta + "Mails-Read: " + s.getMailsReadCant() + "\r\n";
+			rta = rta + "Mails-Dropped: " + s.getMailsDeletedCant() + "\r\n";
+			rta = rta + "Conections: " + s.getLoginCant();
 		} else if (parameters[2].equalsIgnoreCase("bytes")) {
-			rta = rta + s.getTransferedBytes() + "\r\n";
-		} else if (parameters[2].equalsIgnoreCase("mails")) {
-			rta = rta  + s.getMailsReadCant() + "\r\n";
-		} else if (parameters[2].equalsIgnoreCase("drops")) {
-			rta = rta + s.getMailsDeletedCant() + "\r\n";
+			rta = rta + s.getTransferedBytes();
+		} else if (parameters[2].equalsIgnoreCase("mails-read")) {
+			rta = rta  + s.getMailsReadCant();
+		} else if (parameters[2].equalsIgnoreCase("mails-dropped")) {
+			rta = rta + s.getMailsDeletedCant();
 		} else if (parameters[2].equalsIgnoreCase("conections")) {
-			rta = rta  + s.getLoginCant() + "\r\n";
+			rta = rta  + s.getLoginCant();
 		}
 
+		rta += ConfigurationProtocol.FEED_TERMINATION;
 		this.answer(rta);
 	}
 
